@@ -1,27 +1,29 @@
 !==========================================================================
-function gsw_sp_from_sr(sr)  
+elemental function gsw_sp_from_sr (sr)  
 !==========================================================================
-
+!
 ! Calculates Practical Salinity, sp, from Reference Salinity, sr. 
 !
 ! sr     : Reference Salinity                              [g/kg]
 !
 ! gsw_sp_from_sr  : Practical Salinity                     [unitless]
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_ups
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sr, gsw_sp_from_sr
+real (r14), intent(in) :: sr  
 
-gsw_sp_from_sr = 0.995306702338459d0*sr;
+real (r14) :: gsw_sp_from_sr
 
-if (gsw_sp_from_sr.gt.1d10) then
-    gsw_sp_from_sr = 9d15
-end if
+gsw_sp_from_sr = sr/gsw_ups
 
 return
 end function
 
 !--------------------------------------------------------------------------
+
+
 

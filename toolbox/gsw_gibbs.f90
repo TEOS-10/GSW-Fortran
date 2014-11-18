@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_gibbs(ns,nt,np,sa,t,p)
+elemental function gsw_gibbs (ns, nt, np, sa, t, p)
 !==========================================================================
-
+!
 ! seawater specific Gibbs free energy and derivatives up to order 2
 !
 ! ns     : order of s derivative
@@ -12,17 +12,21 @@ function gsw_gibbs(ns,nt,np,sa,t,p)
 ! p      : sea pressure                                    [dbar]
 ! 
 ! gsw_gibbs  : specific Gibbs energy or its derivative
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-integer :: ns, nt, np
-real (r14) :: sa, t, p, gsw_gibbs
-real (r14) :: sfac, x2, x, y, z, g03, g08
+integer, intent(in) :: ns, nt, np
+real (r14), intent(in) :: sa, t, p
 
-sfac = 0.0248826675584615d0              
+real (r14) :: gsw_gibbs
 
-x2 = sfac*sa
+real (r14) :: x2, x, y, z, g03, g08
+
+x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = t*0.025d0
 z = p*1d-4
@@ -66,9 +70,8 @@ if(ns.eq.0 .and. nt.eq.0 .and. np.eq.0) then
         z*(-860.764303783977d0 + z*(337.409530269367d0 + &
         z*(-178.314556207638d0 + (44.2040358308d0 - 7.92001547211682d0*z)*z))))))
         
-  if(sa.gt.0.d0) then
-      g08 = g08 + x2*(5812.81456626732d0 + 851.226734946706d0*y)*log(x)
-  endif
+  if(sa.gt.0.d0) &
+        g08 = g08 + x2*(5812.81456626732d0 + 851.226734946706d0*y)*log(x)
 
   gsw_gibbs = g03 + g08
   
@@ -101,7 +104,7 @@ elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.0) then
     g08 = 0.d0
   endif
   
-  gsw_gibbs = 0.5*sfac*g08
+  gsw_gibbs = 0.5*gsw_sfac*g08
 
 elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.0) then
                
@@ -132,9 +135,7 @@ elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.0) then
         z*(-1721.528607567954d0 + z*(674.819060538734d0 + &
         z*(-356.629112415276d0 + (88.4080716616d0 - 15.84003094423364d0*z)*z)))))
       
-  if(sa.gt.0.d0) then
-    g08 = g08 + 851.226734946706d0*x2*log(x)
-  end if
+  if(sa.gt.0.d0) g08 = g08 + 851.226734946706d0*x2*log(x)
   
   gsw_gibbs = (g03 + g08)*0.025d0
 
@@ -211,11 +212,9 @@ elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.1) then
         y*(-1721.528607567954d0 + y*(1388.489628266536d0 + &
         y*(-595.457483974374d0 + (298.904564555024d0 - 218.92375140095282d0*z)*z) + &
         z*(-819.558567859612d0 + (681.370187043564d0 - 89.0261874611304d0*z)*z)) + &
-        z*(1349.638121077468d0 + z*(-1069.887337245828d0 + (353.6322866464d0 - 79.20015472116819d0*z)*z))));    
+        z*(1349.638121077468d0 + z*(-1069.887337245828d0 + (353.6322866464d0 - 79.20015472116819d0*z)*z))))    
                                                           
-  g08 = g08
-                                                                   
-  gsw_gibbs = g08*sfac*0.5d-8
+  gsw_gibbs = g08*gsw_sfac*0.5d-8
          
 elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.1) then
 
@@ -268,4 +267,3 @@ return
 end function
 
 !--------------------------------------------------------------------------
-

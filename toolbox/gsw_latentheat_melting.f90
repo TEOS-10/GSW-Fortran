@@ -1,17 +1,23 @@
 !==========================================================================
-function gsw_latentheat_melting(sa,p)  
+elemental function gsw_latentheat_melting (sa, p)  
 !==========================================================================
-
+!
 ! Calculates latent heat, or enthalpy, of melting.
 !
 ! sa     : Absolute Salinity                               [g/kg]
 ! p      : sea pressure                                    [dbar]
 ! 
 ! gsw_latentheat_melting : latent heat of melting          [kg/m^3]
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
+
+real (r14), intent(in) :: sa, p  
+
+real (r14) :: gsw_latentheat_melting
 
 real (r14), parameter :: c0 =  3.334265169240710d5, c1 = -2.789444646733159d0
 real (r14), parameter :: c2 = -1.822150156453350d4, c3 = -4.984585692734338d3
@@ -28,10 +34,9 @@ real (r14), parameter :: c22 = -5.775033277201674d2, c23 = -3.019749254648732d2
 real (r14), parameter :: c24 = -6.420420579160927d2, c25 = -2.657570848596042d2
 real (r14), parameter :: c26 = -1.646738151143109d1, c27 =  4.618228988300871d0
 
-real (r14) :: sa, p, s_u, x, y, gsw_latentheat_melting
+real (r14) :: x, y
 
-s_u = 40d0*(35.16504d0/35d0)
-x = sqrt(sa/s_u)
+x = sqrt(gsw_sfac*sa)
 y = p*1d-4
 
 gsw_latentheat_melting = c0 + x*(c1 + c4*y + x*(c3   &
@@ -41,7 +46,6 @@ gsw_latentheat_melting = c0 + x*(c1 + c4*y + x*(c3   &
     + y*(c14 + x*(c19 + c25*x) + y*(c20 + c26*x + c27*y)))))
 
 return
-end
+end function
 
 !--------------------------------------------------------------------------
-

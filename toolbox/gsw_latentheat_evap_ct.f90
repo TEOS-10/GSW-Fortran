@@ -1,17 +1,23 @@
 !==========================================================================
-function gsw_latentheat_evap_ct(sa,ct) 
+elemental function gsw_latentheat_evap_ct (sa, ct) 
 !==========================================================================
-
+!
 ! Calculates latent heat, or enthalpy, of evaporation.
 !
 ! sa     : Absolute Salinity                               [g/kg]
 ! ct     : Conservative Temperature                        [deg C]
 ! 
 ! gsw_latentheat_evaporation : latent heat of evaporation  [J/kg]
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
+
+real (r14), intent(in) :: sa, ct 
+
+real (r14) :: gsw_latentheat_evap_ct
 
 real (r14), parameter :: c0 =   2.499065844825125d6, c1 =  -1.544590633515099d-1
 real (r14), parameter :: c2 =  -9.096800915831875d4, c3 =   1.665513670736000d2
@@ -28,11 +34,10 @@ real (r14), parameter :: c22 =  4.351585544019463d1, c23 = -8.062279018001309d2
 real (r14), parameter :: c24 =  7.510134932437941d2, c25 =  1.797443329095446d2
 real (r14), parameter :: c26 = -2.389853928747630d1, c27 =  1.021046205356775d2
 
-real (r14) :: sa, ct, s_u, x, y, gsw_latentheat_evap_ct
+real (r14) :: x, y
 
-s_u = 40d0*(35.16504d0/35d0)
-x = sqrt(sa/s_u)
-y = ct/40
+x = sqrt(gsw_sfac*sa)
+y = ct/40d0
 
 gsw_latentheat_evap_ct = c0 + x*(c1 + c4*y + x*(c3   &
     + y*(c7 + c12*y) + x*(c6 + y*(c11 + y*(c17 + c24*y)) &
@@ -41,7 +46,6 @@ gsw_latentheat_evap_ct = c0 + x*(c1 + c4*y + x*(c3   &
     + y*(c14 + x*(c19 + c25*x) + y*(c20 + c26*x + c27*y)))))
 
 return
-end
+end function
 
 !--------------------------------------------------------------------------
-

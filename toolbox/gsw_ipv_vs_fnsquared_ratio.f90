@@ -1,5 +1,6 @@
 !==========================================================================
-subroutine gsw_ipv_vs_fnsquared_ratio (sa, ct, p, nz, ipv_vs_fnsquared_ratio, p_mid)
+pure subroutine gsw_ipv_vs_fnsquared_ratio (sa, ct, p, p_ref, &
+                                            ipv_vs_fnsquared_ratio, p_mid)
 !==========================================================================
 !
 !  Calculates the ratio of the vertical gradient of potential density to 
@@ -23,7 +24,8 @@ subroutine gsw_ipv_vs_fnsquared_ratio (sa, ct, p, nz, ipv_vs_fnsquared_ratio, p_
 ! sa      : Absolute Salinity         (a profile (length nz))     [g/kg]
 ! ct      : Conservative Temperature  (a profile (length nz))     [deg C]
 ! p       : sea pressure              (a profile (length nz))     [dbar]
-! nz      : number of bottles                             
+! p_ref   : reference sea pressure of the potential density surface
+!        ( i.e. absolute reference pressure - 10.1325 dbar )      [dbar]
 ! IPV_vs_fNsquared_ratio
 !         : The ratio of the vertical gradient of potential density
 !           referenced to p_ref, to the vertical gradient of locally-
@@ -33,41 +35,63 @@ subroutine gsw_ipv_vs_fnsquared_ratio (sa, ct, p, nz, ipv_vs_fnsquared_ratio, p_
 ! p_mid   : Mid pressure between p grid  (length nz-1)           [dbar]
 !--------------------------------------------------------------------------
 
+use gsw_mod_toolbox, only : gsw_alpha, gsw_beta
+
+use gsw_mod_error_functions, only : gsw_error_code
+
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
-integer :: nz, k
 
-real (r14) :: dsa, sa_mid, dct, ct_mid, dp, p_ref
-real (r14) :: alpha_mid, gsw_alpha, beta_mid, gsw_beta
-real (r14) :: alpha_pref, beta_pref, numerator, denominator
-real (r14), dimension(nz) :: sa, ct, p
-real (r14), dimension(nz-1) :: ipv_vs_fnsquared_ratio, p_mid
+real (r14), intent(in) :: sa(:), ct(:), p(:), p_ref
+real (r14), intent(out) :: ipv_vs_fnsquared_ratio(:), p_mid(:)
 
-do k = 1, nz-1
-	dsa = (sa(k+1) - sa(k))
-	sa_mid = 0.5d0*(sa(k) + sa(k+1))
-	dct = (ct(k+1) - ct(k))
-	ct_mid = 0.5d0*(ct(k) + ct(k+1))
-	dp = (p(k+1) - p(k))
-	p_mid(k) = 0.5d0*(p(k) + p(k+1))
+integer :: nz, i
+real (r14), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, dp, vp_ref
+real (r14), dimension(:), allocatable :: alpha_mid, beta_mid, alpha_pref
+real (r14), dimension(:), allocatable :: beta_pref, numerator, denominator
 
-	alpha_mid = gsw_alpha(sa_mid,ct_mid,p_mid(k))
-	beta_mid = gsw_beta(sa_mid,ct_mid,p_mid(k))
-	alpha_pref = gsw_alpha(sa_mid,ct_mid,p_ref)
-	beta_pref = gsw_beta(sa_mid,ct_mid,p_ref)
+character (*), parameter :: func_name = "gsw_ipv_vs_fnsquared_ratio"
 
-	numerator = dct*alpha_pref - dsa*beta_pref
-	denominator = dct*alpha_mid - dsa*beta_mid
+nz = size(sa)
+if (size(ipv_vs_fnsquared_ratio).lt.nz-1 .or. size(p_mid).lt.nz-1) then
+    ipv_vs_fnsquared_ratio = gsw_error_code(1,func_name)
+    p_mid = ipv_vs_fnsquared_ratio(1)
+    return
+end if
 
-	if (denominator.eq.0d0) then
-		ipv_vs_fnsquared_ratio(k) = 9d15
-	else
-		ipv_vs_fnsquared_ratio(k) = numerator/denominator
-	end if
-end do
+allocate (dsa(nz-1), sa_mid(nz-1), dct(nz-1), ct_mid(nz-1), dp(nz-1))
+allocate (vp_ref(nz-1), alpha_mid(nz-1), beta_mid(nz-1), alpha_pref(nz-1))
+allocate (beta_pref(nz-1), numerator(nz-1), denominator(nz-1))
+
+forall (i = 1: nz-1)
+    dsa(i) = sa(i+1) - sa(i)
+    sa_mid(i) = 0.5d0*(sa(i) + sa(i+1))
+    dct(i) = ct(i+1) - ct(i)
+    ct_mid(i) = 0.5d0*(ct(i) + ct(i+1))
+    dp(i) = p(i+1) - p(i)
+    p_mid(i) = 0.5d0*(p(i) + p(i+1))
+end forall
+
+vp_ref = p_ref
+alpha_mid = gsw_alpha(sa_mid,ct_mid,p_mid(1:nz-1))
+beta_mid = gsw_beta(sa_mid,ct_mid,p_mid(1:nz-1))
+alpha_pref = gsw_alpha(sa_mid,ct_mid,vp_ref)
+beta_pref = gsw_beta(sa_mid,ct_mid,vp_ref)
+
+numerator = dct*alpha_pref - dsa*beta_pref
+denominator = dct*alpha_mid - dsa*beta_mid
+
+where (denominator /= 0d0)
+    ipv_vs_fnsquared_ratio = numerator/denominator
+elsewhere
+    ipv_vs_fnsquared_ratio = gsw_error_code(2,func_name)
+end where
+
+deallocate (dsa, sa_mid, dct, ct_mid, dp)
+deallocate (vp_ref, alpha_mid, beta_mid, alpha_pref)
+deallocate (beta_pref, numerator, denominator)
 
 return
-end
+end subroutine
 
 !--------------------------------------------------------------------------

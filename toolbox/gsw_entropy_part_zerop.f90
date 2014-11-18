@@ -1,23 +1,27 @@
 !==========================================================================
-function gsw_entropy_part_zerop(sa,pt0)
+elemental function gsw_entropy_part_zerop (sa, pt0)
 !==========================================================================
-
+!
 ! entropy part evaluated at the sea surface
 !
 ! sa     : Absolute Salinity                               [g/kg]
 ! pt0    : insitu temperature                              [deg C]
 ! 
 ! gsw_entropy_part_zerop : entropy part at the sea surface
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, pt0, sfac, x2, x, y, g03, g08, gsw_entropy_part_zerop
+real (r14), intent(in) :: sa, pt0
 
-sfac = 0.0248826675584615d0
+real (r14) :: gsw_entropy_part_zerop
 
-x2 = sfac*sa
+real (r14) :: x2, x, y, g03, g08
+
+x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = pt0*0.025d0
 
@@ -37,4 +41,3 @@ return
 end function
 
 !--------------------------------------------------------------------------
-

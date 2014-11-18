@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_sigma2(sa,ct) 
+elemental function gsw_sigma2 (sa, ct) 
 !==========================================================================
-
+!
 !  Calculates potential density anomaly with reference pressure of 2000 dbar,
 !  this being this particular potential density minus 1000 kg/m^3.  This
 !  function has inputs of Absolute Salinity and Conservative Temperature.
@@ -13,17 +13,20 @@ function gsw_sigma2(sa,ct)
 ! 
 ! gsw_sigma2  : potential density anomaly with reference pressure of 2000
 !                                                      (48 term equation)
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_rho
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, ct, gsw_sigma2, gsw_rho
+real (r14), intent(in) :: sa, ct 
 
-gsw_sigma2 = gsw_rho(sa,ct,2000d0) - 1000
+real (r14) :: gsw_sigma2
+
+gsw_sigma2 = gsw_rho(sa,ct,2d3) - 1d3
 
 return
 end function
 
 !--------------------------------------------------------------------------
-

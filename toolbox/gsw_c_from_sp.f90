@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_c_from_sp(sp,t,p)       
+elemental function gsw_c_from_sp (sp, t, p)       
 !==========================================================================
-
+!
 !  Calculates conductivity, C, from (SP,t,p) using PSS-78 in the range 
 !  2 < SP < 42.  If the input Practical Salinity is less than 2 then a 
 !  modified form of the Hill et al. (1986) fomula is used for Practical 
@@ -28,23 +28,35 @@ function gsw_c_from_sp(sp,t,p)
 ! p      : sea pressure                                     [dbar]
 !
 ! c      : conductivity                                     [ mS/cm ]
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_hill_ratio_at_sp2
+
+use gsw_mod_teos10_constants, only : gsw_c3515
+
+use gsw_mod_sp_coefficients
 
 implicit none
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), parameter :: a0 = 0.0080d0, a1 = -0.1692d0, a2 = 25.3851d0
-real (r14), parameter :: a3 = 14.0941d0, a4 = -7.0261d0, a5 = 2.7081d0
-real (r14), parameter :: b0 = 0.0005d0, b1 = -0.0056d0, b2 = -0.0066d0
-real (r14), parameter :: b3 = -0.0375d0, b4 = 0.0636d0, b5 = -0.0144d0
-real (r14), parameter :: c0 = 0.6766097d0, c1 = 2.00564d-2, c2 = 1.104259d-4
-real (r14), parameter :: c3 = -6.9698d-7, c4 = 1.0031d-9, d1 = 3.426d-2
-real (r14), parameter :: d2 = 4.464d-4, d3 = 4.215d-1, d4 = -3.107d-3
-real (r14), parameter :: e1 = 2.070d-5, e2 = -6.370d-10, e3 = 3.989d-15
-real (r14), parameter :: p0 = 4.577801212923119d-3, p1 = 1.924049429136640d-1
-real (r14), parameter :: p2 = 2.183871685127932d-5, p3 = -7.292156330457999d-3
-real (r14), parameter :: p4 = 1.568129536470258d-4, p5 = -1.478995271680869d-6
-real (r14), parameter :: p6 = 9.086442524716395d-4, p7 = -1.949560839540487d-5
-real (r14), parameter :: p8 = -3.223058111118377d-6, p9 = 1.175871639741131d-7
+real (r14), intent(in) :: sp, t, p       
+
+real (r14) :: gsw_c_from_sp
+
+real (r14) :: t68, ft68, x, rtx, dsp_drtx, sqrty
+real (r14) :: part1, part2, hill_ratio, sp_hill_raw, sp_est
+real (r14) :: rtx_old, rt, aa, bb, cc, dd, ee, ra,r, rt_lc, rtxm
+
+real (r14), parameter :: p0 = 4.577801212923119d-3
+real (r14), parameter :: p1 = 1.924049429136640d-1
+real (r14), parameter :: p2 = 2.183871685127932d-5
+real (r14), parameter :: p3 = -7.292156330457999d-3
+real (r14), parameter :: p4 = 1.568129536470258d-4
+real (r14), parameter :: p5 = -1.478995271680869d-6
+real (r14), parameter :: p6 = 9.086442524716395d-4
+real (r14), parameter :: p7 = -1.949560839540487d-5
+real (r14), parameter :: p8 = -3.223058111118377d-6
+real (r14), parameter :: p9 = 1.175871639741131d-7
 real (r14), parameter :: p10 = -7.522895856600089d-5
 real (r14), parameter :: p11 = -2.254458513439107d-6
 real (r14), parameter :: p12 = 6.179992190192848d-7
@@ -56,7 +68,9 @@ real (r14), parameter :: p17 = -5.931857989915256d-9
 real (r14), parameter :: p18 = -4.693392029005252d-9
 real (r14), parameter :: p19 = 2.571854839274148d-10
 real (r14), parameter :: p20 = 4.198786822861038d-12
-real (r14), parameter :: q0 = 5.540896868127855d-5, q1 = 2.015419291097848d-1
+
+real (r14), parameter :: q0 = 5.540896868127855d-5
+real (r14), parameter :: q1 = 2.015419291097848d-1
 real (r14), parameter :: q2 = -1.445310045430192d-5 
 real (r14), parameter :: q3 = -1.567047628411722d-2
 real (r14), parameter :: q4 = 2.464756294660119d-4
@@ -76,11 +90,17 @@ real (r14), parameter :: q17 = -4.774829347564670d-8
 real (r14), parameter :: q18 = -4.279037686797859d-9
 real (r14), parameter :: q19 = -2.045829202713288d-10
 real (r14), parameter :: q20 = 5.025109163112005d-12
-real (r14), parameter :: s0 = 3.432285006604888d-3, s1 = 1.672940491817403d-1
-real (r14), parameter :: s2 = 2.640304401023995d-5, s3 = 1.082267090441036d-1
-real (r14), parameter :: s4 = -6.296778883666940d-5, s5 = -4.542775152303671d-7
-real (r14), parameter :: s6 = -1.859711038699727d-1, s7 = 7.659006320303959d-4
-real (r14), parameter :: s8 = -4.794661268817618d-7, s9 = 8.093368602891911d-9
+
+real (r14), parameter :: s0 = 3.432285006604888d-3
+real (r14), parameter :: s1 = 1.672940491817403d-1
+real (r14), parameter :: s2 = 2.640304401023995d-5
+real (r14), parameter :: s3 = 1.082267090441036d-1
+real (r14), parameter :: s4 = -6.296778883666940d-5
+real (r14), parameter :: s5 = -4.542775152303671d-7
+real (r14), parameter :: s6 = -1.859711038699727d-1
+real (r14), parameter :: s7 = 7.659006320303959d-4
+real (r14), parameter :: s8 = -4.794661268817618d-7
+real (r14), parameter :: s9 = 8.093368602891911d-9
 real (r14), parameter :: s10 = 1.001140606840692d-1 
 real (r14), parameter :: s11 = -1.038712945546608d-3
 real (r14), parameter :: s12 = -6.227915160991074d-6
@@ -92,11 +112,17 @@ real (r14), parameter :: s17 = 4.466087528793912d-6
 real (r14), parameter :: s18 = 1.960872795577774d-8
 real (r14), parameter :: s19 = -2.723159418888634d-10
 real (r14), parameter :: s20 = 1.122200786423241d-12
-real (r14), parameter :: u0 = 5.180529787390576d-3, u1 = 1.052097167201052d-3
-real (r14), parameter :: u2 = 3.666193708310848d-5, u3 = 7.112223828976632d0
-real (r14), parameter :: u4 = -3.631366777096209d-4, u5 = -7.336295318742821d-7
-real (r14), parameter :: u6 = -1.576886793288888d+2, u7 = -1.840239113483083d-3
-real (r14), parameter :: u8 = 8.624279120240952d-6, u9 = 1.233529799729501d-8
+
+real (r14), parameter :: u0 = 5.180529787390576d-3
+real (r14), parameter :: u1 = 1.052097167201052d-3
+real (r14), parameter :: u2 = 3.666193708310848d-5
+real (r14), parameter :: u3 = 7.112223828976632d0
+real (r14), parameter :: u4 = -3.631366777096209d-4
+real (r14), parameter :: u5 = -7.336295318742821d-7
+real (r14), parameter :: u6 = -1.576886793288888d+2
+real (r14), parameter :: u7 = -1.840239113483083d-3
+real (r14), parameter :: u8 = 8.624279120240952d-6
+real (r14), parameter :: u9 = 1.233529799729501d-8
 real (r14), parameter :: u10 = 1.826482800939545d+3
 real (r14), parameter :: u11 = 1.633903983457674d-1
 real (r14), parameter :: u12 = -9.201096427222349d-5
@@ -107,12 +133,7 @@ real (r14), parameter :: u16 = -1.408635241899082d0
 real (r14), parameter :: u17 = 1.660164829963661d-4
 real (r14), parameter :: u18 = 6.797409608973845d-7
 real (r14), parameter :: u19 = 3.345074990451475d-10
-real (r14), parameter :: u20 = 8.285687652694768d-13, k = 0.0162d0
-
-real (r14) :: sp, t, p, gsw_c_from_sp, t68, ft68, x, rtx, dsp_drtx, sqrty
-real (r14) :: part1, part2, hill_ratio, gsw_hill_ratio_at_sp2, sp_est
-real (r14) :: rtx_old, rt, aa, bb, cc, dd, ee, ra,r, rt_lc, rtxm
-real (r14) :: sp_hill_raw
+real (r14), parameter :: u20 = 8.285687652694768d-13
 
 t68 = t*1.00024d0
 ft68 = (t68 - 15d0)/(1d0 + k*(t68 - 15d0))
@@ -124,32 +145,34 @@ x = sqrt(sp)
 ! different polynomials of SP and t68.  
 !--------------------------------------------------------------------------
 
-if (sp.ge.9) then
+if (sp.ge.9d0) then
+
     rtx = p0 + x*(p1 + p4*t68 + x*(p3 + p7*t68 + x*(p6  &
         + p11*t68 + x*(p10 + p16*t68 + x*p15))))  &
         + t68*(p2+ t68*(p5 + x*x*(p12 + x*p17) + p8*x  &
         + t68*(p9 + x*(p13 + x*p18)+ t68*(p14 + p19*x + p20*t68))))
-end if
 
-if (sp.ge.0.25.and.sp.lt.9) then
+else if (sp.ge.0.25d0.and.sp.lt.9d0) then
+
     rtx = q0 + x*(q1 + q4*t68 + x*(q3 + q7*t68 + x*(q6  &
         + q11*t68 + x*(q10 + q16*t68 + x*q15))))  &
         + t68*(q2+ t68*(q5 + x*x*(q12 + x*q17) + q8*x  &
         + t68*(q9 + x*(q13 + x*q18)+ t68*(q14 + q19*x + q20*t68))))
-end if
 
-if (sp.ge.0.003.and.sp.lt.0.25) then
-    rtx =  s0 + x*(s1 + s4*t68 + x*(s3 + s7*t68 + x*(s6  &
+else if (sp.ge.0.003d0.and.sp.lt.0.25d0) then
+
+    rtx = s0 + x*(s1 + s4*t68 + x*(s3 + s7*t68 + x*(s6  &
         + s11*t68 + x*(s10 + s16*t68 + x*s15))))  &
         + t68*(s2+ t68*(s5 + x*x*(s12 + x*s17) + s8*x  &
         + t68*(s9 + x*(s13 + x*s18)+ t68*(s14 + s19*x + s20*t68))))
-end if
 
-if (sp.lt.0.003) then
-    rtx =  u0 + x*(u1 + u4*t68 + x*(u3 + u7*t68 + x*(u6  &
+else if (sp.lt.0.003d0) then
+
+    rtx = u0 + x*(u1 + u4*t68 + x*(u3 + u7*t68 + x*(u6  &
         + u11*t68 + x*(u10 + u16*t68 + x*u15))))  &
         + t68*(u2+ t68*(u5 + x*x*(u12 + x*u17) + u8*x  &
         + t68*(u9 + x*(u13 + x*u18)+ t68*(u14 + u19*x + u20*t68))))
+
 end if
 
 !--------------------------------------------------------------------------
@@ -159,7 +182,7 @@ end if
 dsp_drtx =  a1 + (2d0*a2 + (3d0*a3 + (4d0*a4 + 5d0*a5*rtx)*rtx)*rtx)*rtx  &
     + ft68*(b1 + (2d0*b2 + (3d0*b3 + (4d0*b4 + 5d0*b5*rtx)*rtx)*rtx)*rtx)
 
-if (sp.lt.2) then
+if (sp.lt.2d0) then
     x = 400d0*(rtx*rtx)
     sqrty = 10*rtx
     part1 = 1d0 + x*(1.5d0 + x) 
@@ -201,8 +224,8 @@ end if
     rtxm = 0.5d0*(rtx + rtx_old)      ! This mean value of Rtx, Rtxm, is the  
 !                 value of Rtx at which the derivative dSP_dRtx is evaluated.
     
-    dsp_drtx =  a1 + (2d0*a2 + (3d0*a3 + (4d0*a4 + 5d0*a5*rtxm)*rtxm)*rtxm)*rtxm  &
-        + ft68*(b1 + (2d0*b2 + (3d0*b3 + (4d0*b4 + 5d0*b5*rtxm)*rtxm)*rtxm)*rtxm)
+    dsp_drtx = a1 + (2d0*a2 + (3d0*a3 + (4d0*a4 + 5d0*a5*rtxm)*rtxm)*rtxm)*rtxm&
+       + ft68*(b1 + (2d0*b2 + (3d0*b3 + (4d0*b4 + 5d0*b5*rtxm)*rtxm)*rtxm)*rtxm)
     if (sp_est .lt. 2) then
         x = 400d0*(rtxm*rtxm)
         sqrty = 10d0*rtxm
@@ -224,7 +247,7 @@ end if
 ! Now we do another half iteration of the modified Newton-Raphson  
 ! technique, making a total of one and a half modified N-R iterations.
 !-------------------------------------------------------------------------- 
-sp_est = a0 + (a1 + (a2 + (a3 + (a4 + a5*rtx)*rtx)*rtx)*rtx)*rtx  &
+    sp_est = a0 + (a1 + (a2 + (a3 + (a4 + a5*rtx)*rtx)*rtx)*rtx)*rtx  &
         + ft68*(b0 + (b1 + (b2+ (b3 + (b4 + b5*rtx)*rtx)*rtx)*rtx)*rtx)
     if (sp_est .lt. 2) then
         x = 400d0*(rtx*rtx)
@@ -256,10 +279,10 @@ r  = 0.5d0*ra/aa
 ! The dimensionless conductivity ratio, R, is the conductivity input, C,
 ! divided by the present estimate of C(SP=35, t_68=15, p=0) which is 
 ! 42.9140 mS/cm (=4.29140 S/m^). 
-gsw_c_from_sp = 42.9140d0*r      
+
+gsw_c_from_sp = gsw_c3515*r      
 
 return
 end function
 
 !--------------------------------------------------------------------------
-

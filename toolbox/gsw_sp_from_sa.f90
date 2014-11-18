@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_sp_from_sa(sa,p,long,lat) 
+elemental function gsw_sp_from_sa (sa, p, long, lat) 
 !==========================================================================
-
+!
 ! Calculates Practical salinity, sp, from Absolute salinity, sa  
 !
 ! sa     : Absolute Salinity                               [g/kg]
@@ -10,30 +10,43 @@ function gsw_sp_from_sa(sa,p,long,lat)
 ! lat    : latitude                                        [DEG N]
 !
 ! gsw_sp_from_sa      : Practical Salinity                 [unitless]
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_saar, gsw_sp_from_sa_baltic
+
+use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
+
+use gsw_mod_teos10_constants, only : gsw_ups
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, long, lat, p, gsw_sp_from_sa, gsw_saar, saar
-real (r14) :: gsw_sp_baltic, gsw_sp_from_sa_baltic
+real (r14), intent(in) :: sa, p, long, lat 
 
-saar = gsw_saar(p,long,lat)
+real (r14) :: gsw_sp_from_sa
 
-gsw_sp_from_sa = (35.d0/35.16504d0)*sa/(1d0 + saar)
+real (r14) :: saar, sp_baltic
 
-gsw_sp_baltic = gsw_sp_from_sa_baltic(sa,long,lat);
+character (*), parameter :: func_name = "gsw_sp_from_sa"
 
-if (gsw_sp_baltic.lt.1d10) then
-   gsw_sp_from_sa = gsw_sp_baltic
-end if
+sp_baltic = gsw_sp_from_sa_baltic(sa,long,lat)
 
-if (saar.eq.9d15) then
-   gsw_sp_from_sa = 9d15
+if (sp_baltic .lt. 1d10) then
+
+   gsw_sp_from_sa = sp_baltic
+
+else
+
+   saar = gsw_saar(p,long,lat)
+   if (saar .gt. gsw_error_limit) then
+      gsw_sp_from_sa = gsw_error_code(1,func_name,saar)
+   else
+      gsw_sp_from_sa = (sa/gsw_ups)/(1d0 + saar)
+   end if
+
 end if
 
 return
 end function
 
 !--------------------------------------------------------------------------
-
