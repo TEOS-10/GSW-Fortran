@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_deltasa_from_sp(sp,p,long,lat) 
+elemental function gsw_deltasa_from_sp (sp, p, long, lat) 
 !==========================================================================
-
+!
 ! Calculates Absolute Salinity Anomaly, deltaSA, from Practical Salinity, SP. 
 !
 ! sp     : Practical Salinity                              [unitless]
@@ -10,22 +10,27 @@ function gsw_deltasa_from_sp(sp,p,long,lat)
 ! lat    : latitude                                        [deg N]
 !
 ! gsw_deltasa_from_sp : Absolute Salinty Anomaly           [g/kg]
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_sa_from_sp, gsw_sr_from_sp
+
+use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sp, long, lat, p, gsw_sa_from_sp, gsw_sr_from_sp
+real (r14), intent(in) :: sp, p, long, lat 
+
 real (r14) :: gsw_deltasa_from_sp
+
+character (*), parameter :: func_name = "gsw_deltasa_from_sp"
 
 gsw_deltasa_from_sp = gsw_sa_from_sp(sp,p,long,lat) - gsw_sr_from_sp(sp)
 
-if (gsw_deltasa_from_sp.gt.1d10) then
-    gsw_deltasa_from_sp = 9d15
-end if
+if (gsw_deltasa_from_sp.gt.gsw_error_limit) &
+	gsw_deltasa_from_sp = gsw_error_code(1,func_name)
 
 return
 end function
 
 !--------------------------------------------------------------------------
-

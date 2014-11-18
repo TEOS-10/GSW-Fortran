@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_entropy_part(sa,t,p)
+elemental function gsw_entropy_part (sa, t, p)
 !==========================================================================
-
+!
 ! entropy minus the terms that are a function of only SA
 !
 ! sa     : Absolute Salinity                               [g/kg]
@@ -9,16 +9,20 @@ function gsw_entropy_part(sa,t,p)
 ! p      : sea pressure                                    [dbar]
 ! 
 ! gsw_entropy_part : entropy part
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, t, p, sfac, x2, x, y, z, g03, g08, gsw_entropy_part
+real (r14), intent(in) :: sa, t, p
 
-sfac = 0.0248826675584615d0
+real (r14) :: gsw_entropy_part
 
-x2 = sfac*sa
+real (r14) :: x2, x, y, z, g03, g08
+
+x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = t*0.025d0
 z = p*1d-4
@@ -55,4 +59,3 @@ return
 end function
 
 !--------------------------------------------------------------------------
-

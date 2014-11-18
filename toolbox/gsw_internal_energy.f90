@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_internal_energy(sa,ct,p)  
+elemental function gsw_internal_energy (sa, ct, p)  
 !==========================================================================
-
+!
 !  Calculates internal energy of seawater using the computationally
 !  efficient 48-term expression for density in terms of SA, CT and p
 !  (IOC et al., 2010)
@@ -11,19 +11,24 @@ function gsw_internal_energy(sa,ct,p)
 ! p      : sea pressure                                    [dbar]
 ! 
 ! gsw_internal_energy  :  internal_energy of seawater (48 term equation)
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_enthalpy, gsw_specvol
+
+use gsw_mod_teos10_constants, only : gsw_p0, db2pa
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), parameter :: p0 = 101325d0, db2pa = 1d4
+real (r14), intent(in) :: sa, ct, p  
 
-real (r14) :: sa, ct, p, gsw_internal_energy, gsw_enthalpy, gsw_specvol
+real (r14) :: gsw_internal_energy
 
-gsw_internal_energy = gsw_enthalpy(sa,ct,p) - (p0 + db2pa*p)*gsw_specvol(sa,ct,p)
-
+gsw_internal_energy = gsw_enthalpy(sa,ct,p) - &
+				(gsw_p0 + db2pa*p)*gsw_specvol(sa,ct,p)
 return
 end function
 
 !--------------------------------------------------------------------------
+
 

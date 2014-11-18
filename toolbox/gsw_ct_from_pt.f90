@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_ct_from_pt(sa,pt) 
+elemental function gsw_ct_from_pt (sa, pt) 
 !==========================================================================
-
+!
 ! Calculates Conservative Temperature from potential temperature of seawater  
 !
 ! sa      : Absolute Salinity                              [g/kg]
@@ -9,17 +9,20 @@ function gsw_ct_from_pt(sa,pt)
 !           reference pressure of 0 dbar
 !
 ! gsw_ct_from_pt : Conservative Temperature                [deg C]
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_cp0, gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, pt, p, pot_enthalpy, gsw_ct_from_pt, sfac 
-real (r14) :: x2, x, y, cp0
+real (r14), intent(in) :: sa, pt 
 
-sfac = 0.0248826675584615d0 
+real (r14) :: gsw_ct_from_pt
 
-x2 = sfac*sa
+real (r14) :: pot_enthalpy, x2, x, y
+
+x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = pt*0.025d0        ! normalize for F03 and F08
 
@@ -40,11 +43,9 @@ pot_enthalpy =  61.01362420681071d0 + y*(168776.46138048015d0 + &
                y*(-942.7827304544439d0 + y*(369.4389437509002d0 + &
                (-33.83664947895248d0 - 9.987880382780322d0*y)*y))))))
 
-cp0 = 3991.86795711963d0
+gsw_ct_from_pt = pot_enthalpy/gsw_cp0
 
-gsw_ct_from_pt = pot_enthalpy/cp0
-
-end
+return
+end function
 
 !--------------------------------------------------------------------------
-

@@ -1,23 +1,27 @@
 !==========================================================================
-function gsw_gibbs_pt0_pt0(sa,pt0)
+elemental function gsw_gibbs_pt0_pt0 (sa, pt0)
 !==========================================================================
-
+!
 ! gibbs_tt at (sa,pt,0)
 !
 ! sa     : Absolute Salinity                            [g/kg]
 ! pt0    : potential temperature                        [deg C]
 ! 
 ! gsw_gibbs_pt0_pt0 : gibbs_tt at (sa,pt,0)         
+!--------------------------------------------------------------------------
+
+use gsw_mod_teos10_constants, only : gsw_sfac
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, pt0, sfac, x2, x, y, g03, g08, gsw_gibbs_pt0_pt0
+real (r14), intent(in) :: sa, pt0
 
-sfac = 0.0248826675584615d0
+real (r14) :: gsw_gibbs_pt0_pt0
 
-x2 = sfac*sa
+real (r14) :: x2, x, y, g03, g08
+
+x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = pt0*0.025d0
 
@@ -40,4 +44,3 @@ return
 end function
 
 !--------------------------------------------------------------------------
-

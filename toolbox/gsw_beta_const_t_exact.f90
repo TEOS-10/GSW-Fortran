@@ -1,7 +1,7 @@
 !==========================================================================
-function gsw_beta_const_t_exact(sa,t,p)  
+elemental function gsw_beta_const_t_exact (sa, t, p)  
 !==========================================================================
-
+!
 ! Calculates saline (haline) contraction coefficient of seawater at 
 ! constant in-situ temperature.
 !
@@ -10,16 +10,18 @@ function gsw_beta_const_t_exact(sa,t,p)
 ! p      : sea pressure                                    [dbar]
 ! 
 ! gsw_beta_const_t_exact : haline contraction coefficient  [kg/g]
+!--------------------------------------------------------------------------
+
+use gsw_mod_toolbox, only : gsw_gibbs
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-integer :: n0, n1
-real (r14) :: sa, t, p, gsw_beta_const_t_exact, gsw_gibbs, uPS
+real (r14), intent(in) :: sa, t, p  
 
-n0 = 0
-n1 = 1 
+real (r14) :: gsw_beta_const_t_exact
+
+integer, parameter :: n0=0, n1=1
 
 gsw_beta_const_t_exact = -gsw_gibbs(n1,n0,n1,sa,t,p)/gsw_gibbs(n0,n0,n1,sa,t,p)
 
@@ -27,4 +29,3 @@ return
 end function
 
 !--------------------------------------------------------------------------
-

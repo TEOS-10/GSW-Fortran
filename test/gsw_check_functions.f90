@@ -1,5 +1,7 @@
 program gsw_check_functions
 
+use gsw_mod_toolbox
+
 implicit none
 integer, parameter :: r14 = selected_real_kind(14,30)
 integer  :: gsw_error_flag, nz = 3
@@ -102,6 +104,7 @@ real (r14), parameter :: sa_from_rho_t_exact_ca = 1.304769625676272d-010, t_from
 real (r14), parameter :: fdelta_ca = 2.702939055302528d-014, deltasa_atlas_ca = 6.945514042372425d-013
 
 
+real (r14)  :: pref
 !real (r14)  :: sp, sa, sstar, sr, t, ct, pt, p, p_bs, p_ref 
 !real (r14)  :: long, long_bs, lat, lat_bs, saturation_fraction
 real (r14)  :: gsw_sa_from_sp, gsw_sp_from_sa, gsw_fdelta, gsw_ct_from_t
@@ -164,6 +167,8 @@ lat_profile(2) = 10d0
 lat_profile(3) = 10d0
 
 gsw_error_flag = 0;
+
+call gsw_saar_init (.true.)
 
 print*; print *, '============================================================================'
 print*; print *, ' Gibbs SeaWater (GSW) Oceanographic Toolbox of TEOS-10 version 3.01 (Fortran)'
@@ -591,7 +596,8 @@ endif
 print*; print *, ' '
 print*; print *, 'water column properties, based on the 48-term expression for density'
 
-call gsw_nsquared(sa_profile,ct_profile,p_profile,lat_profile,nz,n2,p_mid_n2)
+call gsw_nsquared(sa_profile,ct_profile,p_profile,lat_profile,n2,p_mid_n2)
+!call gsw_nsquared(sa_profile,ct_profile,p_profile,lat_profile,nz,n2,p_mid_n2)
 
 n2_error(1) = abs(n2(1) + 0.070960392693051d-3)
 n2_error(2) = abs(n2(2) - 0.175435821615983d-3)
@@ -606,7 +612,8 @@ else
   print*;
 endif
 
-call gsw_turner_rsubrho(sa_profile,ct_profile,p_profile,nz,tu,rsubrho,p_mid_tursr)
+call gsw_turner_rsubrho(sa_profile,ct_profile,p_profile,tu,rsubrho,p_mid_tursr)
+!call gsw_turner_rsubrho(sa_profile,ct_profile,p_profile,nz,tu,rsubrho,p_mid_tursr)
 
 tu_error(1) = abs(tu(1) + 1.187243981606485d2)
 tu_error(2) = abs(tu(2) - 0.494158257088517d2)
@@ -626,7 +633,9 @@ else
   print*;
 endif
 
-call gsw_ipv_vs_fnsquared_ratio(sa_profile,ct_profile,p_profile,nz,ipvfn2,p_mid_ipvfn2)
+pref = 0d0
+call gsw_ipv_vs_fnsquared_ratio(sa_profile,ct_profile,p_profile,pref,ipvfn2,p_mid_ipvfn2)
+!call gsw_ipv_vs_fnsquared_ratio(sa_profile,ct_profile,p_profile,nz,ipvfn2,p_mid_ipvfn2)
 
 ipvfn2_error(1) = abs(ipvfn2(1) - 0.996783975249010d0)
 ipvfn2_error(2) = abs(ipvfn2(2) - 0.992112251478320d0)

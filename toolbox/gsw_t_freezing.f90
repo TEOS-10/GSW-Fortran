@@ -1,38 +1,44 @@
 !==========================================================================
-function gsw_t_freezing(sa,p,saturation_fraction) 
+elemental function gsw_t_freezing (sa, p, saturation_fraction, exact)
 !==========================================================================
+!
+!  Calculates the in-situ temperature at which seawater freezes.
+!
+!  SA  =  Absolute Salinity                                        [ g/kg ]
+!  p   =  sea pressure                                             [ dbar ]
+!         ( i.e. absolute pressure - 10.1325 dbar ) 
+!  saturation_fraction = the saturation fraction of dissolved air in 
+!                        seawater
+!
+!  t_freezing = in-situ temperature at which seawater freezes.    [ deg C ]
+!               (ITS-90)                
+!--------------------------------------------------------------------------
 
-! Calculates the in-situ temperature at which of seawater freezes 
-! from Absolute Salinity and pressure.
-!
-! sa     : Absolute Salinity                                 [g/kg]
-! p      : sea pressure                                      [dbar]
-! saturation_fraction : saturation fraction
-!
-! gsw_t_freezing : in-situ temperature freezing point  [deg C]
+use gsw_mod_toolbox, only : gsw_t_freezing_exact, gsw_t_freezing_poly
 
 implicit none
-
 integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14) :: sa, p, saturation_fraction, ct_freezing, gsw_ct_freezing
-real (r14) :: gsw_t_from_ct, t_freezing, gsw_t_freezing
+real (r14), intent(in) :: sa, p, saturation_fraction
+logical, intent(in), optional :: exact
 
-ct_freezing = gsw_CT_freezing(sa,p,saturation_fraction)
-t_freezing = gsw_t_from_ct(sa,ct_freezing,p)
+real (r14) :: gsw_t_freezing
 
-if (ct_freezing.gt.9d10) then
- t_freezing = 9d15
+logical :: do_exact
+
+if (present(exact)) then
+	do_exact = exact
+else
+	do_exact = .false.
 end if
 
-gsw_t_freezing = t_freezing
+if (do_exact) then
+	gsw_t_freezing = gsw_t_freezing_exact(sa,p,saturation_fraction)
+else
+	gsw_t_freezing = gsw_t_freezing_poly(sa,p,saturation_fraction)
+end if
 
 return
 end function
 
 !--------------------------------------------------------------------------
-
-!--------------------------------------------------------------------------
-! isobaric melting enthalpy and isobaric evaporation enthalpy
-!--------------------------------------------------------------------------
-
