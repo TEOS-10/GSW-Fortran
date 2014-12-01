@@ -11,7 +11,7 @@ logical, public :: gsw_abort_on_error = .true.
 
 real (gef_r14), parameter, public :: gsw_error_limit = 1d10
 
-integer, parameter, private :: nfuncs = 25
+integer, parameter, private :: nfuncs = 26
 integer, parameter, private :: maxlen = 40
 character (len=maxlen), dimension(nfuncs), private :: func_list
 
@@ -23,6 +23,7 @@ data func_list / &
 		"gsw_deltasa_atlas", &
 		"gsw_deltasa_from_sp", &
 		"gsw_fdelta", &
+		"gsw_ice_fraction_to_freeze_seawater", &
 		"gsw_ipv_vs_fnsquared_ratio", &
 		"gsw_melting_ice_into_seawater", &
 		"gsw_melting_ice_sa_ct_ratio", &

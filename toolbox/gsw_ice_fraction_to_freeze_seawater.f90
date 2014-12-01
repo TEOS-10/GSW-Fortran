@@ -37,6 +37,8 @@ use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
 use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
 use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 
+use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
+
 implicit none
 integer, parameter :: r14 = selected_real_kind(14,30)
 
@@ -50,9 +52,25 @@ real (r14) :: saf, saf_mean, saf_old, tf, h_hat_sa, h_hat_ct, ctf_sa
 
 real (r14), parameter :: sa0 = 0d0
 
-!ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+character (*), parameter :: func_name = "gsw_ice_fraction_to_freeze_seawater"
 
-!tf = gsw_t_freezing(sa0,p,saturation_fraction)
+ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+if (ct .lt. ctf) then
+    ! The seawater ct input is below the freezing temp
+    sa_freeze = gsw_error_code(1,func_name)
+    ct_freeze = sa_freeze
+    w_ih = sa_freeze
+    return
+end if
+
+tf = gsw_t_freezing(sa0,p,saturation_fraction)
+if (t_ih .gt. tf) then
+    ! The input, t_Ih, exceeds the freezing temperature at sa = 0
+    sa_freeze = gsw_error_code(2,func_name)
+    ct_freeze = sa_freeze
+    w_ih = sa_freeze
+    return
+end if
 
 h = gsw_enthalpy(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_ih,p)
@@ -66,7 +84,6 @@ func_plus1 = sa*(gsw_enthalpy(sa+1d0,ctf_plus1,p) - h) - (h - h_ih)
 saf = -(sa+1d0)*func_zero/(func_plus1 - func_zero) ! initial guess of sa_freeze
 ctf = gsw_ct_freezing(saf,p,saturation_fraction)
 call gsw_enthalpy_first_derivatives(saf,ctf,p,h_hat_sa,h_hat_ct)
-!! should 1d0 be saturation_fraction??
 call gsw_ct_freezing_first_derivatives(saf,p,1d0,ctfreezing_sa=ctf_sa)
 
 dfunc_dsaf = sa*(h_hat_sa + h_hat_ct*ctf_sa) - (h - h_ih)
