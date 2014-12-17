@@ -102,10 +102,14 @@ contains
 
     character (*), intent(in) :: func_name
 
-    integer :: gsw_error_fnum, i
+    integer :: gsw_error_fnum
 
+    integer :: i
+    character (len=maxlen) :: fname
+
+    fname = func_name
     do i = 1, nfuncs
-        if (func_name == trim(func_list(i))) goto 100
+        if (fname == func_list(i)) goto 100
     end do
     gsw_error_fnum = 99
     return

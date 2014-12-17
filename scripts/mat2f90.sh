@@ -133,7 +133,7 @@ NF > 0	&& $0 !~ /transposed/ {
 		list = "";
 	}
 	if (list == "")
-		list = "use gsw_toolbox, only : " $0;
+		list = "use gsw_mod_toolbox, only : " $0;
 	else
 		list = list ", " $0;
 }

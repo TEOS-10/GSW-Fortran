@@ -22,6 +22,7 @@ public :: gsw_c_from_sp
 public :: gsw_chem_potential_water_ice
 public :: gsw_chem_potential_water_t_exact
 public :: gsw_cp_ice
+public :: gsw_ct_first_derivatives
 public :: gsw_ct_first_derivatives_wrt_t_exact
 public :: gsw_ct_freezing_derivative_poly
 public :: gsw_ct_freezing_exact
@@ -32,6 +33,7 @@ public :: gsw_ct_from_enthalpy
 public :: gsw_ct_from_entropy
 public :: gsw_ct_from_pt
 public :: gsw_ct_from_t
+public :: gsw_ct_second_derivatives
 public :: gsw_deltasa_atlas
 public :: gsw_deltasa_from_sp
 public :: gsw_dilution_coefficient_t_exact
@@ -41,11 +43,13 @@ public :: gsw_enthalpy_first_derivatives
 public :: gsw_enthalpy_ice
 public :: gsw_enthalpy_sso_0_p
 public :: gsw_enthalpy_t_exact
+public :: gsw_entropy_first_derivatives
 public :: gsw_entropy_from_pt
 public :: gsw_entropy_from_t
 public :: gsw_entropy_ice
 public :: gsw_entropy_part
 public :: gsw_entropy_part_zerop
+public :: gsw_entropy_second_derivatives
 public :: gsw_fdelta
 public :: gsw_frazil_ratios
 public :: gsw_gibbs
@@ -83,6 +87,7 @@ public :: gsw_pressure_freezing_ct
 public :: gsw_pt0_cold_ice_poly
 public :: gsw_pt0_from_t
 public :: gsw_pt0_from_t_ice
+public :: gsw_pt_first_derivatives
 public :: gsw_pt_from_ct
 public :: gsw_pt_from_entropy
 public :: gsw_pt_from_pot_enthalpy_ice
@@ -90,6 +95,7 @@ public :: gsw_pt_from_pot_enthalpy_ice_poly_dh
 public :: gsw_pt_from_pot_enthalpy_ice_poly
 public :: gsw_pt_from_t
 public :: gsw_pt_from_t_ice
+public :: gsw_pt_second_derivatives
 public :: gsw_rho
 public :: gsw_rho_first_derivatives
 public :: gsw_rho_ice
@@ -283,6 +289,13 @@ interface
     real (r14) :: gsw_cp_ice
     end function gsw_cp_ice
     
+    elemental subroutine gsw_ct_first_derivatives (sa, pt, ct_sa, ct_pt)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, pt
+    real (r14), intent(out), optional :: ct_sa, ct_pt
+    end subroutine gsw_ct_first_derivatives
+    
     elemental subroutine gsw_ct_first_derivatives_wrt_t_exact (sa, t, p, &
     				       ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t)
     implicit none
@@ -357,6 +370,14 @@ interface
     real (r14) :: gsw_ct_from_t
     end function gsw_ct_from_t
     
+    elemental subroutine gsw_ct_second_derivatives (sa, pt, ct_sa_sa, ct_sa_pt, &
+                                                    ct_pt_pt)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, pt
+    real (r14), intent(out), optional :: ct_sa_sa, ct_sa_pt, ct_pt_pt
+    end subroutine gsw_ct_second_derivatives
+    
     elemental function gsw_deltasa_atlas (p, long, lat)
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
@@ -420,6 +441,13 @@ interface
     real (r14) :: gsw_enthalpy_t_exact
     end function gsw_enthalpy_t_exact
     
+    elemental subroutine gsw_entropy_first_derivatives (sa, ct, eta_sa, eta_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct
+    real (r14), intent(out), optional :: eta_sa, eta_ct
+    end subroutine gsw_entropy_first_derivatives
+    
     elemental function gsw_entropy_from_pt (sa, pt)
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
@@ -454,6 +482,14 @@ interface
     real (r14), intent(in) :: sa, pt0
     real (r14) :: gsw_entropy_part_zerop
     end function gsw_entropy_part_zerop
+    
+    elemental subroutine gsw_entropy_second_derivatives (sa, ct, eta_sa_sa, &
+                                                         eta_sa_ct, eta_ct_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct
+    real (r14), intent(out), optional :: eta_sa_sa, eta_sa_ct, eta_ct_ct
+    end subroutine gsw_entropy_second_derivatives
     
     elemental function gsw_fdelta (p, long, lat)
     implicit none
@@ -727,6 +763,13 @@ interface
     real (r14) :: gsw_pt0_from_t_ice
     end function gsw_pt0_from_t_ice
     
+    elemental subroutine gsw_pt_first_derivatives (sa, ct, pt_sa, pt_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct
+    real (r14), intent(out), optional :: pt_sa, pt_ct
+    end subroutine gsw_pt_first_derivatives
+    
     elemental function gsw_pt_from_ct (sa, ct) 
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
@@ -775,6 +818,14 @@ interface
     real (r14), intent(in) :: t, p, p_ref
     real (r14) :: gsw_pt_from_t_ice
     end function gsw_pt_from_t_ice
+    
+    elemental subroutine gsw_pt_second_derivatives (sa, ct, pt_sa_sa, &
+                                                    pt_sa_ct, pt_ct_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct
+    real (r14), intent(out), optional :: pt_sa_sa, pt_sa_ct, pt_ct_ct
+    end subroutine gsw_pt_second_derivatives
     
     elemental function gsw_rho (sa, ct, p) 
     implicit none
