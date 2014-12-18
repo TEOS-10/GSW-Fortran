@@ -68,12 +68,12 @@ if (present(ct_sa_pt) .or. present(ct_pt_pt)) then
         call gsw_ct_first_derivatives(sa,pt_l,ct_sa_l,ct_pt_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_sa_u,ct_pt_u)
 
-    else if (present(ct_sa_pt)) then
+    else if (present(ct_sa_pt) .and. .not. present(ct_pt_pt)) then
 
         call gsw_ct_first_derivatives(sa,pt_l,ct_sa=ct_sa_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_sa=ct_sa_u)
 
-    else if (present(ct_pt_pt)) then
+    else if (.not. present(ct_sa_pt) .and. present(ct_pt_pt)) then
 
         call gsw_ct_first_derivatives(sa,pt_l,ct_pt=ct_pt_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_pt=ct_pt_u)
