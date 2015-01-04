@@ -46,7 +46,7 @@ real (r14), intent(in) :: sa(:), ct(:), p(:), p_ref
 real (r14), intent(out) :: ipv_vs_fnsquared_ratio(:), p_mid(:)
 
 integer :: nz, i
-real (r14), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, dp, vp_ref
+real (r14), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, vp_ref
 real (r14), dimension(:), allocatable :: alpha_mid, beta_mid, alpha_pref
 real (r14), dimension(:), allocatable :: beta_pref, numerator, denominator
 
@@ -59,16 +59,15 @@ if (size(ipv_vs_fnsquared_ratio).lt.nz-1 .or. size(p_mid).lt.nz-1) then
     return
 end if
 
-allocate (dsa(nz-1), sa_mid(nz-1), dct(nz-1), ct_mid(nz-1), dp(nz-1))
+allocate (dsa(nz-1), sa_mid(nz-1), dct(nz-1), ct_mid(nz-1))
 allocate (vp_ref(nz-1), alpha_mid(nz-1), beta_mid(nz-1), alpha_pref(nz-1))
 allocate (beta_pref(nz-1), numerator(nz-1), denominator(nz-1))
 
 forall (i = 1: nz-1)
-    dsa(i) = sa(i+1) - sa(i)
+    dsa(i) = sa(i) - sa(i+1)
+    dct(i) = ct(i) - ct(i+1)
     sa_mid(i) = 0.5d0*(sa(i) + sa(i+1))
-    dct(i) = ct(i+1) - ct(i)
     ct_mid(i) = 0.5d0*(ct(i) + ct(i+1))
-    dp(i) = p(i+1) - p(i)
     p_mid(i) = 0.5d0*(p(i) + p(i+1))
 end forall
 
@@ -87,7 +86,7 @@ elsewhere
     ipv_vs_fnsquared_ratio = gsw_error_code(2,func_name)
 end where
 
-deallocate (dsa, sa_mid, dct, ct_mid, dp)
+deallocate (dsa, sa_mid, dct, ct_mid)
 deallocate (vp_ref, alpha_mid, beta_mid, alpha_pref)
 deallocate (beta_pref, numerator, denominator)
 
