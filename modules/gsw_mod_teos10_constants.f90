@@ -13,6 +13,10 @@ real (gtc_r14), parameter :: pa2db = 1d-4
 real (gtc_r14), parameter :: rec_pa2db = 1d4
 
 real (gtc_r14), parameter :: pi = 3.141592653589793d0
+real (gtc_r14), parameter :: deg2rad = pi/180d0
+real (gtc_r14), parameter :: rad2deg = 180d0/pi
+
+real (gtc_r14), parameter :: gamma = 2.26d-7
 
 !  cp0  =  The "specific heat" for use                         [ J/(kg K) ]
 !          with Conservative Temperature   

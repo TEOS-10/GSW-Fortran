@@ -33,7 +33,7 @@ pure subroutine gsw_turner_rsubrho (sa, ct, p, tu, rsubrho, p_mid)
 
 use gsw_mod_toolbox, only : gsw_alpha, gsw_beta
 
-use gsw_mod_teos10_constants, only : pi
+use gsw_mod_teos10_constants, only : rad2deg
 
 use gsw_mod_error_functions, only : gsw_error_code
 
@@ -72,7 +72,7 @@ end forall
 alpha_mid = gsw_alpha(sa_mid,ct_mid,p_mid(1:nz-1))
 beta_mid = gsw_beta(sa_mid,ct_mid,p_mid(1:nz-1))
 
-tu(1:nz-1) = (180d0/pi)*atan2((alpha_mid*dct + beta_mid*dsa), &
+tu(1:nz-1) = rad2deg*atan2((alpha_mid*dct + beta_mid*dsa), &
                               (alpha_mid*dct - beta_mid*dsa))
 
 where (dsa .ne. 0d0)
