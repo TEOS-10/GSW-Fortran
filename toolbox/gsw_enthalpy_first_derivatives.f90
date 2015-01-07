@@ -35,8 +35,9 @@ real (r14), intent(out), optional :: h_sa, h_ct
 
 real (r14) :: ct_l, ct_u, dct, dsa, hct_l, hct_u, hsa_l, hsa_u, sa_l, sa_u
 
+real (r14), parameter :: dsa = 0.01d0, dct = 0.005d0
+
 if (present(h_sa)) then
-    dsa = 0.01d0               ! increment in absolute salinity is 1e-2 g kg^-1
     sa_l = max(sa - dsa, 0.d0)
     sa_u = sa + dsa
 
@@ -47,7 +48,6 @@ if (present(h_sa)) then
 endif
 
 if (present(h_ct)) then
-    dct = 0.005d0        ! increment in conservative temperature is 5e-3 deg c.
     ct_l = ct - dct
     ct_u = ct + dct
 

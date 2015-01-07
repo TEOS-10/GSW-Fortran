@@ -32,15 +32,20 @@ public :: gsw_ct_freezing_poly
 public :: gsw_ct_from_enthalpy
 public :: gsw_ct_from_entropy
 public :: gsw_ct_from_pt
+public :: gsw_ct_from_rho
 public :: gsw_ct_from_t
+public :: gsw_ct_maxdensity
 public :: gsw_ct_second_derivatives
 public :: gsw_deltasa_atlas
 public :: gsw_deltasa_from_sp
 public :: gsw_dilution_coefficient_t_exact
 public :: gsw_dynamic_enthalpy
+public :: gsw_enthalpy_diff
 public :: gsw_enthalpy
 public :: gsw_enthalpy_first_derivatives
 public :: gsw_enthalpy_ice
+public :: gsw_enthalpy_second_derivatives_ct_exact
+public :: gsw_enthalpy_second_derivatives
 public :: gsw_enthalpy_sso_0_p
 public :: gsw_enthalpy_t_exact
 public :: gsw_entropy_first_derivatives
@@ -96,6 +101,7 @@ public :: gsw_pt_from_pot_enthalpy_ice_poly
 public :: gsw_pt_from_t
 public :: gsw_pt_from_t_ice
 public :: gsw_pt_second_derivatives
+public :: gsw_rho_alpha_beta
 public :: gsw_rho
 public :: gsw_rho_first_derivatives
 public :: gsw_rho_ice
@@ -363,12 +369,27 @@ interface
     real (r14) :: gsw_ct_from_pt
     end function gsw_ct_from_pt
     
+    elemental subroutine gsw_ct_from_rho (rho, sa, p, ct, ct_multiple)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: rho, sa, p
+    real (r14), intent(out) :: ct
+    real (r14), intent(out), optional :: ct_multiple
+    end subroutine gsw_ct_from_rho
+    
     elemental function gsw_ct_from_t (sa, t, p) 
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
     real (r14), intent(in) :: sa, t, p 
     real (r14) :: gsw_ct_from_t
     end function gsw_ct_from_t
+    
+    elemental function gsw_ct_maxdensity (sa, p)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, p
+    real (r14) :: gsw_ct_maxdensity
+    end function gsw_ct_maxdensity
     
     elemental subroutine gsw_ct_second_derivatives (sa, pt, ct_sa_sa, ct_sa_pt, &
                                                     ct_pt_pt)
@@ -406,6 +427,13 @@ interface
     real (r14) :: gsw_dynamic_enthalpy
     end function gsw_dynamic_enthalpy
     
+    elemental function gsw_enthalpy_diff (sa, ct, p_shallow, p_deep)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p_shallow, p_deep
+    real (r14) :: gsw_enthalpy_diff
+    end function gsw_enthalpy_diff
+    
     elemental function gsw_enthalpy (sa, ct, p)  
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
@@ -426,6 +454,22 @@ interface
     real (r14), intent(in) :: t, p
     real (r14) :: gsw_enthalpy_ice
     end function gsw_enthalpy_ice
+    
+    elemental subroutine gsw_enthalpy_second_derivatives_ct_exact (sa, ct, p, &
+                                                     h_sa_sa, h_sa_ct, h_ct_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p
+    real (r14), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
+    end subroutine gsw_enthalpy_second_derivatives_ct_exact
+    
+    elemental subroutine gsw_enthalpy_second_derivatives (sa, ct, p, &
+                                                     h_sa_sa, h_sa_ct, h_ct_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p
+    real (r14), intent(out) :: h_sa_sa, h_sa_ct, h_ct_ct
+    end subroutine gsw_enthalpy_second_derivatives
     
     elemental function gsw_enthalpy_sso_0_p (p) 
     implicit none
@@ -826,6 +870,13 @@ interface
     real (r14), intent(in) :: sa, ct
     real (r14), intent(out), optional :: pt_sa_sa, pt_sa_ct, pt_ct_ct
     end subroutine gsw_pt_second_derivatives
+    
+    elemental subroutine gsw_rho_alpha_beta (sa, ct, p, rho, alpha, beta)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p
+    real (r14), intent(out), optional :: rho, alpha, beta
+    end subroutine gsw_rho_alpha_beta
     
     elemental function gsw_rho (sa, ct, p) 
     implicit none

@@ -21,6 +21,7 @@ sed -n '
 	s/(:)//g
 	s/\.\//\//g
 	s/\.\*/\*/g
+	s/\.^/\*\*/g
 	s/\.+/+/g
 	s/\.-/-/g
 	s/\.'"'"'//g
@@ -81,7 +82,7 @@ $ {
 # Add arguments from subroutine calls to variable list in $tmpfile2
 
 sed -n '
-/ *call / {
+/ *call *(/ {
 	s/.*(\(.*\)).*/\1/
 	s/ //g
 	p
@@ -155,12 +156,13 @@ sed -n '
 	y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/
 /^function / {
 	h
-	s/,/, /g
+	s/, */, /g
 	s/.*(\(.*\))/real (r14), intent(in) :: \1/
 	p
 	g
 }
 /^function *\[/ {
+	s/, */, /g
 	s/function *\[\(.*\)\] *= *\(.*\)(\(.*\))/real (r14), intent(out) :: \1/
 	p
 	b

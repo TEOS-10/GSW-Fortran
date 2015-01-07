@@ -11,7 +11,7 @@ logical, public :: gsw_abort_on_error = .true.
 
 real (gef_r14), parameter, public :: gsw_error_limit = 1d10
 
-integer, parameter, private :: nfuncs = 26
+integer, parameter, private :: nfuncs = 27
 integer, parameter, private :: maxlen = 40
 character (len=maxlen), dimension(nfuncs), private :: func_list
 
@@ -20,6 +20,7 @@ data func_list / &
 		"gsw_brinesa_ct_poly", &
 		"gsw_brinesa_t", &
 		"gsw_brinesa_t_poly", &
+		"gsw_ct_from_rho", &
 		"gsw_deltasa_atlas", &
 		"gsw_deltasa_from_sp", &
 		"gsw_fdelta", &
