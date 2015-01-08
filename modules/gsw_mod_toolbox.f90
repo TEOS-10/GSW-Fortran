@@ -307,7 +307,7 @@ interface
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
     real (r14), intent(in) :: sa, t, p
-    real (r14), intent(out) :: ct_p_wrt_t, ct_sa_wrt_t, ct_t_wrt_t
+    real (r14), intent(out), optional :: ct_p_wrt_t, ct_sa_wrt_t, ct_t_wrt_t
     end subroutine gsw_ct_first_derivatives_wrt_t_exact
     
     elemental function gsw_ct_freezing_derivative_poly (sa, p, &
@@ -468,7 +468,7 @@ interface
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
     real (r14), intent(in) :: sa, ct, p
-    real (r14), intent(out) :: h_sa_sa, h_sa_ct, h_ct_ct
+    real (r14), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
     end subroutine gsw_enthalpy_second_derivatives
     
     elemental function gsw_enthalpy_sso_0_p (p) 
@@ -890,7 +890,7 @@ interface
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
     real (r14), intent(in) :: sa, ct, p
-    real (r14), intent(out) :: drho_dsa, drho_dct, drho_dp
+    real (r14), intent(out), optional :: drho_dsa, drho_dct, drho_dp
     end subroutine gsw_rho_first_derivatives
     
     elemental function gsw_rho_ice (t, p)

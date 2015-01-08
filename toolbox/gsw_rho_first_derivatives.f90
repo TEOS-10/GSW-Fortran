@@ -29,7 +29,7 @@ implicit none
 integer, parameter :: r14 = selected_real_kind(14,30)
 
 real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out) :: drho_dsa, drho_dct, drho_dp
+real (r14), intent(out), optional :: drho_dsa, drho_dct, drho_dp
 
 real (r14) :: sqrtsa, v_hat_denominator, v_hat_numerator
 real (r14) :: dvhatden_dct, dvhatnum_dct, dvhatden_dsa, dvhatnum_dsa
@@ -51,44 +51,56 @@ v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
              + p*(v43 + ct*(v44 + v45*ct + v46*sa) &
              + p*(v47 + v48*ct)))
        
-dvhatden_dct = a01 + ct*(a02 + a03*ct) &
-         + sa*(a04 + a05*ct &
-     + sqrtsa*(a06 + ct*(a07 + a08*ct))) &
-          + p*(a09 + a10*ct + a11*sa &
-          + p*(a12 + a13*ct))
-
-dvhatnum_dct = a14 + ct*(a15 + ct*(a16 + a17*ct)) &
-         + sa*(a18 + ct*(a19 + ct*(a20 + a21*ct)) &
-     + sqrtsa*(a22 + ct*(a23 + ct*(a24 + a25*ct)))) &
-          + p*(a26 + ct*(a27 + a28*ct) + a29*sa &
-          + p*(a30 + a31*ct + a32*sa + a33*p))
-
-dvhatden_dsa = b01 + ct*(b02 + b03*ct) &
-     + sqrtsa*(b04 + ct*(b05 + ct*(b06 + b07*ct))) &
-          + p*(b08 + b09*ct + b10*p) 
-
-dvhatnum_dsa = b11 + ct*(b12 + ct*(b13 + ct*(b14 + b15*ct))) &
-     + sqrtsa*(b16 + ct*(b17 + ct*(b18 + ct*(b19 + b20*ct)))) + b21*sa &
-          + p*(b22 + ct*(b23 + b24*p))
-		
-dvhatden_dp = c01 + ct*(c02 + c03*ct) &
-    + sa*(c04 + c05*ct) &
-    + p*(c06 + ct*(c07 + c08*ct) + c09*sa)
-
-dvhatnum_dp = c10 + ct*(c11 + ct*(c12 + c13*ct)) &
-    + sa*(c14 + c15*ct) &
-    + p*(c16 + ct*(c17 + c18*ct + c19*sa) &
-    + p*(c20 + c21*ct))
-
 rec_num = 1d0/v_hat_numerator
        
 rho = rec_num*v_hat_denominator
 
-drho_dsa = (dvhatden_dsa - dvhatnum_dsa*rho)*rec_num
+if (present(drho_dsa)) then
 
-drho_dct = (dvhatden_dct - dvhatnum_dct*rho)*rec_num
+    dvhatden_dsa = b01 + ct*(b02 + b03*ct) &
+         + sqrtsa*(b04 + ct*(b05 + ct*(b06 + b07*ct))) &
+              + p*(b08 + b09*ct + b10*p) 
 
-drho_dp = pa2db*(dvhatden_dp - dvhatnum_dp*rho)*rec_num
+    dvhatnum_dsa = b11 + ct*(b12 + ct*(b13 + ct*(b14 + b15*ct))) &
+         + sqrtsa*(b16 + ct*(b17 + ct*(b18 + ct*(b19 + b20*ct)))) + b21*sa &
+              + p*(b22 + ct*(b23 + b24*p))
+		
+    drho_dsa = (dvhatden_dsa - dvhatnum_dsa*rho)*rec_num
+
+end if
+
+if (present(drho_dct)) then
+
+    dvhatden_dct = a01 + ct*(a02 + a03*ct) &
+             + sa*(a04 + a05*ct &
+         + sqrtsa*(a06 + ct*(a07 + a08*ct))) &
+              + p*(a09 + a10*ct + a11*sa &
+              + p*(a12 + a13*ct))
+
+    dvhatnum_dct = a14 + ct*(a15 + ct*(a16 + a17*ct)) &
+             + sa*(a18 + ct*(a19 + ct*(a20 + a21*ct)) &
+         + sqrtsa*(a22 + ct*(a23 + ct*(a24 + a25*ct)))) &
+              + p*(a26 + ct*(a27 + a28*ct) + a29*sa &
+              + p*(a30 + a31*ct + a32*sa + a33*p))
+
+    drho_dct = (dvhatden_dct - dvhatnum_dct*rho)*rec_num
+
+end if
+
+if (present(drho_dp)) then
+
+    dvhatden_dp = c01 + ct*(c02 + c03*ct) &
+        + sa*(c04 + c05*ct) &
+        + p*(c06 + ct*(c07 + c08*ct) + c09*sa)
+
+    dvhatnum_dp = c10 + ct*(c11 + ct*(c12 + c13*ct)) &
+        + sa*(c14 + c15*ct) &
+        + p*(c16 + ct*(c17 + c18*ct + c19*sa) &
+        + p*(c20 + c21*ct))
+
+    drho_dp = pa2db*(dvhatden_dp - dvhatnum_dp*rho)*rec_num
+
+end if
 
 return
 end subroutine

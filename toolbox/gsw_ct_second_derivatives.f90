@@ -41,12 +41,12 @@ integer, parameter :: r14 = selected_real_kind(14,30)
 real (r14), intent(in) :: sa, pt
 real (r14), intent(out), optional :: ct_sa_sa, ct_sa_pt, ct_pt_pt
 
-real (r14) :: ct_pt_l, ct_pt_u, ct_sa_l, ct_sa_u, dpt, dsa, pt_l, pt_u
-real (r14) :: sa_l, sa_u
+real (r14) :: ct_pt_l, ct_pt_u, ct_sa_l, ct_sa_u, pt_l, pt_u, sa_l, sa_u
+
+real (r14), parameter :: dsa = 1d-3, dpt = 1d-2
 
 if (present(ct_sa_sa)) then
 
-    dsa  = 1d-3        ! increment of absolute salinity is 0.001 g/kg.
     sa_l = max(sa - dsa, 0d0)
     sa_u = sa + dsa
 
@@ -59,7 +59,6 @@ end if
 
 if (present(ct_sa_pt) .or. present(ct_pt_pt)) then
 
-    dpt  = 1d-2        ! increment of potential temperature is 0.01 degrees c.
     pt_l = pt - dpt
     pt_u = pt + dpt
 
@@ -68,21 +67,24 @@ if (present(ct_sa_pt) .or. present(ct_pt_pt)) then
         call gsw_ct_first_derivatives(sa,pt_l,ct_sa_l,ct_pt_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_sa_u,ct_pt_u)
 
+        ct_sa_pt = (ct_sa_u - ct_sa_l)/(pt_u - pt_l)
+        ct_pt_pt = (ct_pt_u - ct_pt_l)/(pt_u - pt_l)
+
     else if (present(ct_sa_pt) .and. .not. present(ct_pt_pt)) then
 
         call gsw_ct_first_derivatives(sa,pt_l,ct_sa=ct_sa_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_sa=ct_sa_u)
+
+        ct_sa_pt = (ct_sa_u - ct_sa_l)/(pt_u - pt_l)
 
     else if (.not. present(ct_sa_pt) .and. present(ct_pt_pt)) then
 
         call gsw_ct_first_derivatives(sa,pt_l,ct_pt=ct_pt_l)
         call gsw_ct_first_derivatives(sa,pt_u,ct_pt=ct_pt_u)
 
+        ct_pt_pt = (ct_pt_u - ct_pt_l)/(pt_u - pt_l)
+
     end if
-
-    if (present(ct_sa_pt)) ct_sa_pt = (ct_sa_u - ct_sa_l)/(pt_u - pt_l)
-
-    if (present(ct_pt_pt)) ct_pt_pt = (ct_pt_u - ct_pt_l)/(pt_u - pt_l)
 
 end if
 

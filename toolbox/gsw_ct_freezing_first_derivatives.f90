@@ -35,13 +35,36 @@ real (r14), intent(out), optional :: ctfreezing_sa, ctfreezing_p
 real (r14) :: tf_sa, tf_p, ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t, tf
 
 tf = gsw_t_freezing_exact(sa,p,saturation_fraction)
-call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction,tf_sa,tf_p)
-call gsw_ct_first_derivatives_wrt_t_exact(sa,tf,p,ct_sa_wrt_t,ct_t_wrt_t, &
-                                          ct_p_wrt_t)
 
-if (present(ctfreezing_sa)) ctfreezing_sa = ct_sa_wrt_t + ct_t_wrt_t*tf_sa
+if (present(ctfreezing_sa) .and. present(ctfreezing_p)) then
 
-if (present(ctfreezing_p)) ctfreezing_p = ct_p_wrt_t + ct_t_wrt_t*tf_p
+    call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction, &
+                                          tfreezing_sa=tf_sa,tfreezing_p=tf_p)
+    call gsw_ct_first_derivatives_wrt_t_exact(sa,tf,p, &
+          ct_sa_wrt_t=ct_sa_wrt_t,ct_t_wrt_t=ct_t_wrt_t,ct_p_wrt_t=ct_p_wrt_t)
+
+    ctfreezing_sa = ct_sa_wrt_t + ct_t_wrt_t*tf_sa
+    ctfreezing_p  = ct_p_wrt_t  + ct_t_wrt_t*tf_p
+
+else if (present(ctfreezing_sa) .and. .not. present(ctfreezing_p)) then
+
+    call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction, &
+                                          tfreezing_sa=tf_sa)
+    call gsw_ct_first_derivatives_wrt_t_exact(sa,tf,p, &
+          ct_sa_wrt_t=ct_sa_wrt_t,ct_t_wrt_t=ct_t_wrt_t)
+
+    ctfreezing_sa = ct_sa_wrt_t + ct_t_wrt_t*tf_sa
+
+else if (.not. present(ctfreezing_sa) .and. present(ctfreezing_p)) then
+
+    call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction, &
+                                          tfreezing_p=tf_p)
+    call gsw_ct_first_derivatives_wrt_t_exact(sa,tf,p, &
+          ct_t_wrt_t=ct_t_wrt_t,ct_p_wrt_t=ct_p_wrt_t)
+
+    ctfreezing_p  = ct_p_wrt_t  + ct_t_wrt_t*tf_p
+
+end if
 
 return
 end subroutine
