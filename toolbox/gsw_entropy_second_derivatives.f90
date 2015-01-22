@@ -37,7 +37,7 @@ integer, parameter :: r14 = selected_real_kind(14,30)
 real (r14), intent(in) :: sa, ct
 real (r14), intent(out), optional :: eta_sa_sa, eta_sa_ct, eta_ct_ct
 
-real (r14) :: abs_pt, ct_pt, ct_sa, pt
+real (r14) :: abs_pt, ct_pt, ct_sa, pt, ct_ct
 
 integer, parameter :: n0=0, n1=1, n2=2
 real (r14), parameter :: pr0 = 0d0
@@ -45,24 +45,22 @@ real (r14), parameter :: pr0 = 0d0
 pt = gsw_pt_from_ct(sa,ct)
 abs_pt = gsw_t0 + pt
 
-if (present(eta_ct_ct)) then
+ct_pt = -(abs_pt*gsw_gibbs(n0,n2,n0,sa,pt,pr0))/gsw_cp0
 
-    ct_pt = -(abs_pt*gsw_gibbs(n0,n2,n0,sa,pt,pr0))/gsw_cp0
-
-    eta_ct_ct = -gsw_cp0/(ct_pt*abs_pt*abs_pt)
-
-end if
+ct_ct = -gsw_cp0/(ct_pt*abs_pt*abs_pt)
 
 if (present(eta_sa_ct) .or. present(eta_sa_sa)) then
 
     ct_sa = (gsw_gibbs(n1,n0,n0,sa,pt,pr0) - &
                (abs_pt*gsw_gibbs(n1,n1,n0,sa,pt,pr0)))/gsw_cp0
 
-    if (present(eta_sa_ct)) eta_sa_ct = -ct_sa*eta_ct_ct
+    if (present(eta_sa_ct)) eta_sa_ct = -ct_sa*ct_ct
 
-    if (present(eta_sa_sa)) eta_sa_sa = -gsw_gibbs(n2,n0,n0,sa,pt,pr0)/abs_pt -&
-                                     ct_sa*eta_sa_ct
+    if (present(eta_sa_sa)) eta_sa_sa = -gsw_gibbs(n2,n0,n0,sa,pt,pr0)/abs_pt +&
+                                     ct_sa*ct_sa*ct_ct
 end if
+
+if (present(eta_ct_ct)) eta_ct_ct = ct_ct
 
 return
 end subroutine

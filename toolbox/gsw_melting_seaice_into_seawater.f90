@@ -88,6 +88,7 @@ sa_brine = gsw_brinesa_t(t_seaice,p,saturation_fraction)
 if (sa_brine .gt. gsw_error_limit) then
     sa_final = gsw_error_code(3,func_name,sa_brine)
     ct_final = sa_final
+    return
 end if
 h_brine = gsw_enthalpy_t_exact(sa_brine,t_seaice,p)
 
@@ -105,6 +106,7 @@ if (h_final .lt. gsw_enthalpy(sa_final,ctf,p)) then
     ! frozen seawater
     sa_final = gsw_error_code(4,func_name)
     ct_final = sa_final
+    return
 end if
 
 ct_final = gsw_ct_from_enthalpy(sa_final,h_final,p)

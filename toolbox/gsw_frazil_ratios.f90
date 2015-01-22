@@ -54,8 +54,8 @@ h_ih = gsw_enthalpy_ice(tf,p)
 cp_ih = gsw_cp_ice(tf,p)
 gamma_ih = gsw_adiabatic_lapse_rate_ice(tf,p)
 call gsw_enthalpy_first_derivatives(sa,ctf,p,h_hat_sa,h_hat_ct)
-call gsw_t_freezing_first_derivatives(sa,p,tf_sa,tf_p)
-call gsw_ct_freezing_first_derivatives(sa,p,ctf_sa,ctf_p)
+call gsw_t_freezing_first_derivatives(sa,p,1d0,tf_sa,tf_p)
+call gsw_ct_freezing_first_derivatives(sa,p,1d0,ctf_sa,ctf_p)
 
 wcp = cp_ih*w_ih/(1d0 - w_ih)
 part = (tf_p - gamma_ih)/ctf_p
