@@ -40,8 +40,10 @@ public :: gsw_deltasa_atlas
 public :: gsw_deltasa_from_sp
 public :: gsw_dilution_coefficient_t_exact
 public :: gsw_dynamic_enthalpy
+public :: gsw_enthalpy_ct_exact
 public :: gsw_enthalpy_diff
 public :: gsw_enthalpy
+public :: gsw_enthalpy_first_derivatives_ct_exact
 public :: gsw_enthalpy_first_derivatives
 public :: gsw_enthalpy_ice
 public :: gsw_enthalpy_second_derivatives_ct_exact
@@ -427,6 +429,13 @@ interface
     real (r14) :: gsw_dynamic_enthalpy
     end function gsw_dynamic_enthalpy
     
+    elemental function gsw_enthalpy_ct_exact (sa, ct, p)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p
+    real (r14) :: gsw_enthalpy_ct_exact
+    end function gsw_enthalpy_ct_exact
+    
     elemental function gsw_enthalpy_diff (sa, ct, p_shallow, p_deep)
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
@@ -440,6 +449,14 @@ interface
     real (r14), intent(in) :: sa, ct, p  
     real (r14) :: gsw_enthalpy
     end function gsw_enthalpy
+    
+    elemental subroutine gsw_enthalpy_first_derivatives_ct_exact (sa, ct, p, &
+                                                                  h_sa, h_ct)
+    implicit none
+    integer, parameter :: r14 = selected_real_kind(14,30)
+    real (r14), intent(in) :: sa, ct, p
+    real (r14), intent(out), optional :: h_sa, h_ct
+    end subroutine gsw_enthalpy_first_derivatives_ct_exact
     
     elemental subroutine gsw_enthalpy_first_derivatives (sa, ct, p, h_sa, h_ct)
     implicit none
