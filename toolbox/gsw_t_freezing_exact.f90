@@ -39,7 +39,7 @@ real (r14) :: gsw_t_freezing_exact
 real (r14) :: df_dt, p_r, sa_r, tf, tfm, tf_old, x, f
 
 ! The initial value of t_freezing_exact (for air-free seawater)
-tf = gsw_t_freezing_poly(sa,p)
+tf = gsw_t_freezing_poly(sa,p,polynomial=.true.)
 
 df_dt = 1d3*gsw_t_deriv_chem_potential_water_t_exact(sa,tf,p) - &
 		gsw_gibbs_ice(1,0,tf,p)

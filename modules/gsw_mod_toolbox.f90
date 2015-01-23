@@ -1166,11 +1166,12 @@ interface
     real (r14), intent(out), optional :: tfreezing_sa, tfreezing_p
     end subroutine gsw_t_freezing_first_derivatives
     
-    elemental function gsw_t_freezing_poly (sa, p, saturation_fraction)
+    elemental function gsw_t_freezing_poly (sa, p, saturation_fraction, polynomial)
     implicit none
     integer, parameter :: r14 = selected_real_kind(14,30)
     real (r14), intent(in) :: sa, p
     real (r14), intent(in), optional :: saturation_fraction
+    logical, intent(in), optional :: polynomial
     real (r14) :: gsw_t_freezing_poly
     end function gsw_t_freezing_poly
     
