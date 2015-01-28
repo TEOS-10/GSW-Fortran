@@ -16,7 +16,7 @@ tmpfile3=__temp3.$$
 
 sed -n '
 	s/%/!/
-/^!/! {
+/^ *!/ { b the_end }
 	s/;//
 	s/(:)//g
 	s/\.\//\//g
@@ -38,6 +38,14 @@ sed -n '
 	s/gsw_enthalpy_ct_exact/gsw_enthalpy/
 	s/gsw_ct_from_enthalpy_exact/gsw_ct_from_enthalpy/
 	s/gsw_enthalpy_first_derivatives_ct_exact/gsw_enthalpy_first_derivatives/
+	s/size(\([a-z_0-9]*\))/size-\1/g
+	s/zeros(\([-a-z_0-9]*\))/0d0/g
+	s/ones(\([-a-z_0-9]*\))/1d0/g
+/^ *for /! {
+	s/\([^-a-z0-9_]\)\([0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2d0\3/g
+}
+/gsw_gibbs/ {
+	s/d0,/,/g
 }
 /^ *for / {
 	s/for /do /
