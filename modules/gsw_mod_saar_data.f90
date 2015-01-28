@@ -6,19 +6,16 @@ implicit none
 
 integer, parameter :: gsd_r14 = selected_real_kind(14,30)
 
-logical :: saar_loaded = .false.
-logical :: delta_loaded = .false.
+logical, save :: saar_loaded = .false.
+logical, save :: delta_loaded = .false.
 
 integer, dimension(4) :: deli = (/0,1,1,0/), delj = (/0,0,1,1/)
 
-integer, parameter :: nx = 91, ny = 45, nz = 45
+integer, save :: nx, ny, nz
 
-real (gsd_r14), save, dimension(nz) :: p_ref
-real (gsd_r14), save, dimension(ny) :: lats_ref
-real (gsd_r14), save, dimension(nx) :: longs_ref
-real (gsd_r14), save, dimension(ny,nx) :: ndepth_ref 
-real (gsd_r14), save, dimension(nz,ny,nx) :: saar_ref
-real (gsd_r14), save, dimension(nz,ny,nx) :: delta_sa_ref
+real (gsd_r14), save, dimension(:), allocatable :: p_ref, lats_ref, longs_ref
+real (gsd_r14), save, dimension(:,:), allocatable :: ndepth_ref 
+real (gsd_r14), save, dimension(:,:,:), allocatable :: saar_ref, delta_sa_ref
 
 integer, parameter :: npan = 6
 real (gsd_r14), dimension(npan) :: longs_pan, lats_pan

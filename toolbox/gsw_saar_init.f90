@@ -7,42 +7,41 @@ subroutine gsw_saar_init (load_delta)
 ! load_delta  :  optionally loads delta_sa_ref data
 !--------------------------------------------------------------------------
 
+use gsw_mod_netcdf
+
 use gsw_mod_saar_data
 
 implicit none
 
 logical, intent(in) :: load_delta
 
-integer :: i, j, k, iostat
+call ncdf_open('gsw_data_v3_0.nc')
 
-open(10,file='gsw_data_v3_0.dat',status='old',iostat=iostat)
+nx = ncdf_get_dim("nx")
+ny = ncdf_get_dim("ny")
+nz = ncdf_get_dim("nz")
 
-if (iostat .eq. 0) then
+allocate(p_ref(nz))
+allocate(lats_ref(ny))
+allocate(longs_ref(nx))
+allocate(ndepth_ref(ny,nx))
+allocate(saar_ref(nz,ny,nx))
 
-   read(10,*) (longs_ref(i), i=1,nx)
-   read(10,*) (lats_ref(i), i=1,ny)
-   read(10,*) (p_ref(i), i=1,nz)
-   read(10,*) ((ndepth_ref(j,i), j=1,ny), i=1,nx)
-   read(10,*) (((saar_ref(k,j,i), k=1,nz), j=1,ny), i=1,nx)
-   if (load_delta) then
-      read(10,*) (((delta_sa_ref(k,j,i), k=1,nz), j=1,ny), i=1,nx)
-      delta_loaded = .true.
-   endif
-   saar_loaded = .true.
-   close(10)
+call ncdf_get_var("p_ref", var1=p_ref)
+call ncdf_get_var("lats_ref", var1=lats_ref)
+call ncdf_get_var("longs_ref", var1=longs_ref)
+call ncdf_get_var("ndepth_ref", var2=ndepth_ref)
+call ncdf_get_var("SAAR_ref", var3=saar_ref)
+if (load_delta) then
+    allocate(delta_sa_ref(nz,ny,nx))
+    call ncdf_get_var("deltaSA_ref", var3=delta_sa_ref)
+    delta_loaded = .true.
+endif
+saar_loaded = .true.
 
-else
-
-   write(*,*) "*** gsw_data_v3_0.dat is missing !!! ***"
-   write(*,*) "Set the full path of gsw_data_v3_0.dat in gsw_saar_init"
-   stop
-
-end if
-
+call ncdf_close()
 return
+
 end subroutine
 
 !--------------------------------------------------------------------------
-
-
-
