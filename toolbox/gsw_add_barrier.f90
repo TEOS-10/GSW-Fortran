@@ -22,17 +22,18 @@ use gsw_mod_toolbox, only : gsw_util_indx
 
 use gsw_mod_saar_data
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: long, lat, long_grid, lat_grid, dlong_grid
-real (r14), intent(in) :: dlat_grid
-real (r14), intent(in), dimension(4) :: input_data
-real (r14), intent(out), dimension(4) :: output_data
+implicit none
+
+real (r8), intent(in) :: long, lat, long_grid, lat_grid, dlong_grid
+real (r8), intent(in) :: dlat_grid
+real (r8), intent(in), dimension(4) :: input_data
+real (r8), intent(out), dimension(4) :: output_data
 
 integer, dimension(4) :: above_line
 integer :: k, nmean, above_line0, kk
-real (r14) :: r, lats_line, data_mean
+real (r8) :: r, lats_line, data_mean
 
 call gsw_util_indx(longs_pan,npan,long,k)                !   the long/lat point
 r = (long-longs_pan(k))/(longs_pan(k+1)-longs_pan(k))
@@ -77,23 +78,23 @@ else
 end if
 
 nmean = 0 
-data_mean = 0.d0
+data_mean = 0.0_r8
 
 do kk = 1,4
-   if ((abs(input_data(kk)).le.100d0).and.above_line0.eq.above_line(kk)) then
+   if ((abs(input_data(kk)).le.100_r8).and.above_line0.eq.above_line(kk)) then
       nmean = nmean + 1
       data_mean = data_mean + input_data(kk)
    end if
 end do
 
 if (nmean .eq. 0)then
-   data_mean = 0d0    !errorreturn
+   data_mean = 0.0_r8    !errorreturn
 else
    data_mean = data_mean/nmean
 endif
 
 do kk = 1,4
-   if ((abs(input_data(kk)).ge.1d10).or.above_line0.ne.above_line(kk)) then
+   if ((abs(input_data(kk)).ge.1e10_r8).or.above_line0.ne.above_line(kk)) then
       output_data(kk) = data_mean
    else
       output_data(kk) = input_data(kk)
@@ -104,5 +105,3 @@ return
 end subroutine
 
 !--------------------------------------------------------------------------
-
-

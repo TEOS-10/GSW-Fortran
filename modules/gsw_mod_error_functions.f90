@@ -2,14 +2,14 @@
 module gsw_mod_error_functions
 !==========================================================================
 
-implicit none
+use gsw_mod_kinds
 
-integer, parameter :: gef_r14 = selected_real_kind(14,30)
+implicit none
 
 logical, public :: gsw_error_check = .true.
 logical, public :: gsw_abort_on_error = .true.
 
-real (gef_r14), parameter, public :: gsw_error_limit = 1d10
+real (r8), parameter, public :: gsw_error_limit = 1e10_r8
 
 integer, parameter, private :: nfuncs = 27
 integer, parameter, private :: maxlen = 40
@@ -65,14 +65,12 @@ contains
 
     implicit none
 
-    integer, parameter :: r14 = selected_real_kind(14,30)
-
     integer, intent(in) :: err_num
     character (*), intent(in) :: func_name
-    real (r14), intent(in), optional :: error_code
+    real (r8), intent(in), optional :: error_code
 
     integer :: ival, k
-    real (r14) :: gsw_error_code, base_code, mult
+    real (r8) :: gsw_error_code, base_code, mult
 
     interface
         elemental function gsw_error_fnum (func_name)
@@ -82,12 +80,12 @@ contains
     end interface
 
     if (present(error_code)) then
-        k = int(error_code/1d14) - 90
-	base_code = error_code + 1d14
-	mult = 1d1**(11-k*3)
+        k = int(error_code/1.0e14_r8) - 90
+	base_code = error_code + 1.0e14_r8
+	mult = 10.0_r8**(11-k*3)
     else
-        base_code = 9.1d15
-	mult = 1d11
+        base_code = 9.1e15_r8
+	mult = 1.0e11_r8
     end if
 
     ival = err_num*100 + gsw_error_fnum(func_name)
@@ -125,20 +123,19 @@ contains
     subroutine gsw_error_handler (error_code)
 
     implicit none
-    integer, parameter :: r14 = selected_real_kind(14,30)
 
-    real (r14), intent(in) :: error_code
+    real (r8), intent(in) :: error_code
 
     integer (selected_int_kind(14)) :: base_code
     integer :: func_num, ival, i, k
-    real (r14) :: gsw_error_code, mult
+    real (r8) :: gsw_error_code, mult
 
     character (len=maxlen) :: func_name
 
     print '(/"Trace for error code: ", es20.13/)', error_code
 
-    base_code = error_code - 9d15
-    k = int(base_code/1d14)
+    base_code = error_code - 9.0e15_r8
+    k = int(base_code/1.0e14_r8)
     base_code = base_code/(10**(14-k*3))
 
     do i = 1, k

@@ -15,12 +15,13 @@ elemental function gsw_specvol_anom (sa, ct, p)
 
 use gsw_mod_toolbox, only : gsw_specvol, gsw_specvol_sso_0_p
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p  
+real (r8), intent(in) :: sa, ct, p  
 
-real (r14) :: gsw_specvol_anom
+real (r8) :: gsw_specvol_anom
 
 gsw_specvol_anom = gsw_specvol(sa,ct,p) - gsw_specvol_sso_0_p(p)
 

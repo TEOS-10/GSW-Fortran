@@ -20,42 +20,43 @@ use gsw_mod_toolbox, only : gsw_rho_alpha_beta, gsw_specvol
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: rho, ct, p
+real (r8), intent(in) :: rho, ct, p
 
-real (r14) :: gsw_sa_from_rho
+real (r8) :: gsw_sa_from_rho
 
 integer no_iter
 
-real (r14) :: sa, v_lab, v_0, v_50, v_sa, sa_old, delta_v, sa_mean
-real (r14) :: beta_mean, rho_mean
+real (r8) :: sa, v_lab, v_0, v_50, v_sa, sa_old, delta_v, sa_mean
+real (r8) :: beta_mean, rho_mean
 
 character (*), parameter :: func_name = "gsw_sa_from_rho"
 
-v_lab = 1d0/rho
-v_0 = gsw_specvol(0d0,ct,p)
-v_50 = gsw_specvol(50d0,ct,p)
+v_lab = 1.0_r8/rho
+v_0 = gsw_specvol(0.0_r8,ct,p)
+v_50 = gsw_specvol(50.0_r8,ct,p)
 
-sa = 50d0*(v_lab - v_0)/(v_50 - v_0)
+sa = 50.0_r8*(v_lab - v_0)/(v_50 - v_0)
 
-if (sa.lt.0d0.or.sa.gt.50d0) then
+if (sa.lt.0_r8.or.sa.gt.50_r8) then
     gsw_sa_from_rho = gsw_error_code(1,func_name)
     return
 end if
 
-v_sa = (v_50 - v_0)/50d0
+v_sa = (v_50 - v_0)/50.0_r8
 
 do no_iter = 1, 2 
     sa_old = sa
     delta_v = gsw_specvol(sa_old,ct,p) - v_lab
     sa = sa_old - delta_v/v_sa 
-    sa_mean = 0.5d0*(sa + sa_old)
+    sa_mean = 0.5_r8*(sa + sa_old)
     call gsw_rho_alpha_beta(sa_mean,ct,p,rho=rho_mean,beta=beta_mean)
     v_sa = -beta_mean/rho_mean
     sa = sa_old - delta_v/v_sa
-    if (sa.lt.0d0.or.sa.gt.50d0) then
+    if (sa.lt.0_r8.or.sa.gt.50_r8) then
         gsw_sa_from_rho = gsw_error_code(no_iter+1,func_name)
         return
     end if

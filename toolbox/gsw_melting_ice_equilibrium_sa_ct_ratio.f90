@@ -32,14 +32,15 @@ elemental function gsw_melting_ice_equilibrium_sa_ct_ratio (sa, p, &
 use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
 use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(in) :: sa, p, saturation_fraction
 
-real (r14) :: gsw_melting_ice_equilibrium_sa_ct_ratio
+real (r8) :: gsw_melting_ice_equilibrium_sa_ct_ratio
 
-real (r14) :: ctf, denominator, h, h_ih, t_seaice, h_hat_sa, h_hat_ct
+real (r8) :: ctf, denominator, h, h_ih, t_seaice, h_hat_sa, h_hat_ct
 
 ctf = gsw_ct_freezing(sa,p,saturation_fraction)
 t_seaice = gsw_t_freezing(sa,p,saturation_fraction)

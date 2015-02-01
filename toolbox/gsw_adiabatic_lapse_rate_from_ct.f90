@@ -13,17 +13,18 @@ elemental function gsw_adiabatic_lapse_rate_from_ct (sa, ct, p)
 
 use gsw_mod_toolbox, only : gsw_gibbs, gsw_pt_from_ct, gsw_pt_from_t
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p 
+real (r8), intent(in) :: sa, ct, p 
 
-real (r14) :: gsw_adiabatic_lapse_rate_from_ct
+real (r8) :: gsw_adiabatic_lapse_rate_from_ct
 
-real (r14) :: pt0, t
+real (r8) :: pt0, t
 
 integer, parameter :: n0=0, n1=1, n2=2
-real (r14), parameter :: pr0 = 0d0
+real (r8), parameter :: pr0 = 0.0_r8
 
 pt0 = gsw_pt_from_ct(sa,ct)
 t = gsw_pt_from_t(sa,pt0,pr0,p)

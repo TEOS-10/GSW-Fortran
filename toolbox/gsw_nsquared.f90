@@ -35,15 +35,16 @@ use gsw_mod_teos10_constants, only : db2pa
 
 use gsw_mod_error_functions, only : gsw_error_code
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa(:), ct(:), p(:), lat(:)
-real (r14), intent(out) :: n2(:), p_mid(:)
+implicit none
+
+real (r8), intent(in) :: sa(:), ct(:), p(:), lat(:)
+real (r8), intent(out) :: n2(:), p_mid(:)
 
 integer :: nz, k
-real (r14), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, dp, rho_mid
-real (r14), dimension(:), allocatable :: alpha_mid, beta_mid, grav_local, grav
+real (r8), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, dp, rho_mid
+real (r8), dimension(:), allocatable :: alpha_mid, beta_mid, grav_local, grav
 
 character (*), parameter :: func_name = "gsw_nsquared"
 
@@ -60,13 +61,13 @@ allocate (rho_mid(nz-1), alpha_mid(nz-1), beta_mid(nz-1), grav_local(nz-1))
 grav = gsw_grav(lat(1:nz),p(1:nz))
 
 forall (k = 1: nz-1)
-    grav_local(k) = 0.5*(grav(k) + grav(k+1))
+    grav_local(k) = 0.5_r8*(grav(k) + grav(k+1))
     dsa(k) = (sa(k+1) - sa(k))
-    sa_mid(k) = 0.5*(sa(k) + sa(k+1))
+    sa_mid(k) = 0.5_r8*(sa(k) + sa(k+1))
     dct(k) = (ct(k+1) - ct(k))
-    ct_mid(k) = 0.5*(ct(k) + ct(k+1))
+    ct_mid(k) = 0.5_r8*(ct(k) + ct(k+1))
     dp(k) = (p(k+1) - p(k))
-    p_mid(k) = 0.5*(p(k) + p(k+1))
+    p_mid(k) = 0.5_r8*(p(k) + p(k+1))
 end forall
 
 rho_mid = gsw_rho(sa_mid,ct_mid,p_mid(1:nz))

@@ -19,23 +19,24 @@ elemental function gsw_ct_from_enthalpy (sa, h, p)
 use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, h, p
+real (r8), intent(in) :: sa, h, p
 
-real (r14) :: gsw_ct_from_enthalpy
+real (r8) :: gsw_ct_from_enthalpy
 
-real (r14) :: ct, ct_freezing, ct_mean, ct_old, f, h_freezing
-real (r14) :: h_ct, h_40
+real (r8) :: ct, ct_freezing, ct_mean, ct_old, f, h_freezing
+real (r8) :: h_ct, h_40
 
-ct_freezing = gsw_ct_freezing(sa,p,0d0)
+ct_freezing = gsw_ct_freezing(sa,p,0.0_r8)
 h_freezing = gsw_enthalpy(sa,ct_freezing,p)
 
-h_40 = gsw_enthalpy(sa,40d0,p)
+h_40 = gsw_enthalpy(sa,40.0_r8,p)
 
 ! first guess of ct
-ct = ct_freezing + (40d0 - ct_freezing)*(h - h_freezing)/(h_40 - h_freezing)
+ct = ct_freezing + (40.0_r8 - ct_freezing)*(h - h_freezing)/(h_40 - h_freezing)
 call gsw_enthalpy_first_derivatives(sa,ct,p,h_ct=h_ct)
 
 !--------------------------------------------------------------------------
@@ -45,7 +46,7 @@ call gsw_enthalpy_first_derivatives(sa,ct,p,h_ct=h_ct)
 ct_old = ct
 f = gsw_enthalpy(sa,ct_old,p) - h
 ct = ct_old - f/h_ct
-ct_mean = 0.5d0*(ct + ct_old)
+ct_mean = 0.5_r8*(ct + ct_old)
 call gsw_enthalpy_first_derivatives(sa,ct_mean,p,h_ct=h_ct)
 ct = ct_old - f/h_ct
 

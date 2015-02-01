@@ -14,14 +14,15 @@ elemental function gsw_t_from_pt0_ice (pt0_ice, p)
 
 use gsw_mod_toolbox, only : gsw_pt_from_t_ice
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: pt0_ice, p
+real (r8), intent(in) :: pt0_ice, p
 
-real (r14) :: gsw_t_from_pt0_ice
+real (r8) :: gsw_t_from_pt0_ice
 
-real (r14), parameter :: p0 = 0d0
+real (r8), parameter :: p0 = 0.0_r8
 
 gsw_t_from_pt0_ice = gsw_pt_from_t_ice(pt0_ice,p0,p)
 

@@ -15,21 +15,22 @@ use gsw_mod_toolbox, only : gsw_z_from_p
 
 use gsw_mod_teos10_constants, only : deg2rad, gamma
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: lat, p  
+real (r8), intent(in) :: lat, p  
 
-real (r14) :: gsw_grav
+real (r8) :: gsw_grav
 
-real (r14) :: sin2, gs, z
+real (r8) :: sin2, gs, z
 
 sin2 = sin(lat*deg2rad)**2
-gs = 9.780327d0*(1d0 + (5.2792d-3 + (2.32d-5*sin2))*sin2) 
+gs = 9.780327_r8*(1.0_r8 + (5.2792e-3_r8 + (2.32e-5_r8*sin2))*sin2) 
 
 z = gsw_z_from_p(p,lat)
 
-gsw_grav = gs*(1d0 - gamma*z)           ! z is the height corresponding to p. 
+gsw_grav = gs*(1.0_r8 - gamma*z)        ! z is the height corresponding to p.
                                         ! Note. In the ocean z is negative.
 return
 end function

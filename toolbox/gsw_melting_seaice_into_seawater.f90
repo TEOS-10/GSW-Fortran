@@ -54,14 +54,15 @@ use gsw_mod_toolbox, only : gsw_brinesa_t, gsw_ct_from_enthalpy
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, w_seaice
-real (r14), intent(in) :: sa_seaice, t_seaice
-real (r14), intent(out) :: sa_final, ct_final
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, w_seaice
+real (r8), intent(in) :: sa_seaice, t_seaice
+real (r8), intent(out) :: sa_final, ct_final
 
-real (r14) :: ctf, h, h_brine, h_final, h_ih, sa_brine, tf_sa_seaice
+real (r8) :: ctf, h, h_brine, h_final, h_ih, sa_brine, tf_sa_seaice
 
 character (*), parameter :: func_name = "gsw_melting_seaice_into_seawater"
 
@@ -73,7 +74,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1d-6
+tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1e-6_r8
 if (t_seaice .gt. tf_sa_seaice) then
     ! The 1e-6 C buffer in the allowable t_seaice is to ensure that there is
     ! some ice Ih in the sea ice. Without this buffer, that is if t_seaice

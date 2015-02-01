@@ -15,15 +15,16 @@ use gsw_mod_teos10_constants, only : gsw_t0, db2pa
 
 use gsw_mod_gibbs_ice_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: t, p
+real (r8), intent(in) :: t, p
 
-real (r14) :: gsw_enthalpy_ice
+real (r8) :: gsw_enthalpy_ice
 
-real (r14) :: tau, dzi, g0
-complex (r14) :: r2, sqtau_t1, sqtau_t2, g
+real (r8) :: tau, dzi, g0
+complex (r8) :: r2, sqtau_t1, sqtau_t2, g
 
 tau = (t + gsw_t0)*rec_tt
 
@@ -36,8 +37,8 @@ r2 = r20 + dzi*(r21 + r22*dzi)
 sqtau_t1 = (tau/t1)**2
 sqtau_t2 = (tau/t2)**2
 
-g = r1*t1*(log(1d0 - sqtau_t1) + sqtau_t1) &
-    + r2*t2*(log(1d0 - sqtau_t2) + sqtau_t2)
+g = r1*t1*(log(1.0_r8 - sqtau_t1) + sqtau_t1) &
+    + r2*t2*(log(1.0_r8 - sqtau_t2) + sqtau_t2)
 
 gsw_enthalpy_ice = g0 + tt*real(g) 
 

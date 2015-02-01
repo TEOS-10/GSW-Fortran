@@ -39,16 +39,17 @@ use gsw_mod_toolbox, only : gsw_alpha, gsw_beta
 
 use gsw_mod_error_functions, only : gsw_error_code
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa(:), ct(:), p(:), p_ref
-real (r14), intent(out) :: ipv_vs_fnsquared_ratio(:), p_mid(:)
+implicit none
+
+real (r8), intent(in) :: sa(:), ct(:), p(:), p_ref
+real (r8), intent(out) :: ipv_vs_fnsquared_ratio(:), p_mid(:)
 
 integer :: nz, i
-real (r14), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, vp_ref
-real (r14), dimension(:), allocatable :: alpha_mid, beta_mid, alpha_pref
-real (r14), dimension(:), allocatable :: beta_pref, numerator, denominator
+real (r8), dimension(:), allocatable :: dsa, sa_mid, dct, ct_mid, vp_ref
+real (r8), dimension(:), allocatable :: alpha_mid, beta_mid, alpha_pref
+real (r8), dimension(:), allocatable :: beta_pref, numerator, denominator
 
 character (*), parameter :: func_name = "gsw_ipv_vs_fnsquared_ratio"
 
@@ -66,9 +67,9 @@ allocate (beta_pref(nz-1), numerator(nz-1), denominator(nz-1))
 forall (i = 1: nz-1)
     dsa(i) = sa(i) - sa(i+1)
     dct(i) = ct(i) - ct(i+1)
-    sa_mid(i) = 0.5d0*(sa(i) + sa(i+1))
-    ct_mid(i) = 0.5d0*(ct(i) + ct(i+1))
-    p_mid(i) = 0.5d0*(p(i) + p(i+1))
+    sa_mid(i) = 0.5_r8*(sa(i) + sa(i+1))
+    ct_mid(i) = 0.5_r8*(ct(i) + ct(i+1))
+    p_mid(i) = 0.5_r8*(p(i) + p(i+1))
 end forall
 
 vp_ref = p_ref
@@ -80,7 +81,7 @@ beta_pref = gsw_beta(sa_mid,ct_mid,vp_ref)
 numerator = dct*alpha_pref - dsa*beta_pref
 denominator = dct*alpha_mid - dsa*beta_mid
 
-where (denominator /= 0d0)
+where (denominator /= 0.0_r8)
     ipv_vs_fnsquared_ratio = numerator/denominator
 elsewhere
     ipv_vs_fnsquared_ratio = gsw_error_code(2,func_name)

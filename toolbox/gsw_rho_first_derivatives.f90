@@ -25,15 +25,16 @@ use gsw_mod_teos10_constants, only : pa2db
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out), optional :: drho_dsa, drho_dct, drho_dp
+real (r8), intent(in) :: sa, ct, p
+real (r8), intent(out), optional :: drho_dsa, drho_dct, drho_dp
 
-real (r14) :: sqrtsa, v_hat_denominator, v_hat_numerator
-real (r14) :: dvhatden_dct, dvhatnum_dct, dvhatden_dsa, dvhatnum_dsa
-real (r14) :: dvhatden_dp, dvhatnum_dp, rho, rec_num
+real (r8) :: sqrtsa, v_hat_denominator, v_hat_numerator
+real (r8) :: dvhatden_dct, dvhatnum_dct, dvhatden_dsa, dvhatnum_dsa
+real (r8) :: dvhatden_dp, dvhatnum_dp, rho, rec_num
 
 sqrtsa = sqrt(sa)
 
@@ -51,7 +52,7 @@ v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
              + p*(v43 + ct*(v44 + v45*ct + v46*sa) &
              + p*(v47 + v48*ct)))
        
-rec_num = 1d0/v_hat_numerator
+rec_num = 1.0_r8/v_hat_numerator
        
 rho = rec_num*v_hat_denominator
 

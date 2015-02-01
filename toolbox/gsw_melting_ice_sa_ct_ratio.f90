@@ -30,14 +30,15 @@ use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
 
-real (r14) :: gsw_melting_ice_sa_ct_ratio
+real (r8) :: gsw_melting_ice_sa_ct_ratio
 
-real (r14) :: ctf, denominator, h, h_ih, tf, h_hat_sa, h_hat_ct
+real (r8) :: ctf, denominator, h, h_ih, tf, h_hat_sa, h_hat_ct
 
 character (*), parameter :: func_name = "gsw_melting_ice_sa_ct_ratio"
 
@@ -48,7 +49,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf = gsw_t_freezing(0d0,p,saturation_fraction)
+tf = gsw_t_freezing(0.0_r8,p,saturation_fraction)
 if (t_ih .gt. tf) then
     ! t_ih exceeds the freezing temperature at sa = 0
     gsw_melting_ice_sa_ct_ratio = gsw_error_code(2,func_name)

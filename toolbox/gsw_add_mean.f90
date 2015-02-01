@@ -9,34 +9,35 @@ pure subroutine gsw_add_mean (data_in, data_out)
 ! data_out : non-nan mean of the 4 adjacent neighbours     [unitless]
 !--------------------------------------------------------------------------
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in), dimension(4) :: data_in
-real (r14), intent(out), dimension(4) :: data_out
+implicit none
+
+real (r8), intent(in), dimension(4) :: data_in
+real (r8), intent(out), dimension(4) :: data_out
 
 integer :: k, nmean
 
-real (r14) :: data_mean
+real (r8) :: data_mean
 
 nmean = 0
-data_mean = 0.d0
+data_mean = 0.0_r8
 
 do k = 1,4
-   if (abs(data_in(k)).le.100d0) then
+   if (abs(data_in(k)).le.100.0_r8) then
       nmean = nmean + 1
       data_mean = data_mean + data_in(k)
    end if
 end do
 
 if(nmean.eq.0)then
-   data_mean = 0d0    !error return
+   data_mean = 0.0_r8    !error return
 else
    data_mean = data_mean/nmean
 endif
 
 do k = 1,4
-   if(abs(data_in(k)).ge.100d0) then
+   if(abs(data_in(k)).ge.100.0_r8) then
       data_out(k) = data_mean
    else
       data_out(k) = data_in(k)

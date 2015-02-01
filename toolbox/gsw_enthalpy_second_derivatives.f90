@@ -24,20 +24,21 @@ use gsw_mod_toolbox, only : gsw_dynamic_enthalpy
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
 use gsw_mod_toolbox, only : gsw_enthalpy_second_derivatives_ct_exact
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
+real (r8), intent(in) :: sa, ct, p
+real (r8), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
 
-real (r14) :: ct_l, ct_u, hct, hct_l, hct_u, hsa_l
-real (r14) :: h_sa_sa_48, h_sa_sa_exact, hsa_u, sa_l, sa_taper, sa_u
+real (r8) :: ct_l, ct_u, hct, hct_l, hct_u, hsa_l
+real (r8) :: h_sa_sa_48, h_sa_sa_exact, hsa_u, sa_l, sa_taper, sa_u
 
-real (r14), parameter :: dsa = 5d-2, dct = 5d-3
+real (r8), parameter :: dsa = 5e-2_r8, dct = 5e-3_r8
 
 if (present(h_sa_sa)) then
 
-   sa_l = max(sa - dsa, 0d0)
+   sa_l = max(sa - dsa, 0.0_r8)
    sa_u = sa + dsa  
 
    call gsw_enthalpy_first_derivatives(sa_l,ct,p,h_sa=hsa_l)
@@ -45,19 +46,19 @@ if (present(h_sa_sa)) then
 
    h_sa_sa = (hsa_u - hsa_l)/(sa_u - sa_l)
 
-   if (sa .lt. 1d0) then
+   if (sa .lt. 1.0_r8) then
 
       call gsw_enthalpy_second_derivatives_ct_exact(sa,ct,p, &
                                                     h_sa_sa=h_sa_sa_exact)
-      if (sa .le. 0.5d0) then
+      if (sa .le. 0.5_r8) then
 
          h_sa_sa = h_sa_sa_exact
 
       else
 
          h_sa_sa_48 = h_sa_sa
-         sa_taper = 2d0 - 2d0*sa
-         h_sa_sa = sa_taper*h_sa_sa_exact + (1d0-sa_taper)*h_sa_sa_48
+         sa_taper = 2.0_r8 - 2.0_r8*sa
+         h_sa_sa = sa_taper*h_sa_sa_exact + (1.0_r8-sa_taper)*h_sa_sa_48
 
       end if
    
@@ -83,7 +84,7 @@ if (present(h_ct_ct)) then
    hct = gsw_dynamic_enthalpy(sa,ct,p)
    hct_u = gsw_dynamic_enthalpy(sa,ct_u,p)
 
-   h_ct_ct = 4d0*(hct_u - 2d0*hct + hct_l)/((ct_u - ct_l)**2)
+   h_ct_ct = 4.0_r8*(hct_u - 2.0_r8*hct + hct_l)/((ct_u - ct_l)**2)
 
 end if
 

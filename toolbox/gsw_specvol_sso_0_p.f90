@@ -17,12 +17,13 @@ use gsw_mod_rho_coefficients
 
 use gsw_mod_teos10_constants, only : gsw_sso, gsw_sqrtsso
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: p 
+real (r8), intent(in) :: p 
 
-real (r14) :: gsw_specvol_sso_0_p
+real (r8) :: gsw_specvol_sso_0_p
 
 gsw_specvol_sso_0_p = (v21 + gsw_sso*(v26 + v36*gsw_sso + v31*gsw_sqrtsso)  &
                   + p*(v37 + v41*gsw_sso + p*(v43 + v47*p )))/ &

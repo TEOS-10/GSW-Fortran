@@ -15,12 +15,13 @@ elemental function gsw_alpha_wrt_t_ice (t, p)
 
 use gsw_mod_toolbox, only : gsw_gibbs_ice
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: t, p
+real (r8), intent(in) :: t, p
 
-real (r14) :: gsw_alpha_wrt_t_ice
+real (r8) :: gsw_alpha_wrt_t_ice
 
 gsw_alpha_wrt_t_ice = gsw_gibbs_ice(1,1,t,p)/gsw_gibbs_ice(0,1,t,p)
 

@@ -12,21 +12,22 @@ elemental function gsw_pt_from_pot_enthalpy_ice_poly (pot_enthalpy_ice)
 !  pt0_ice  =  potential temperature of ice (ITS-90)              [ deg C ]
 !--------------------------------------------------------------------------
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: pot_enthalpy_ice
+real (r8), intent(in) :: pot_enthalpy_ice
 
-real (r14) :: gsw_pt_from_pot_enthalpy_ice_poly
+real (r8) :: gsw_pt_from_pot_enthalpy_ice_poly
 
-real (r14), parameter :: q0 = 2.533588268773218d2
-real (r14), parameter :: q1 = 2.594351081876611d-3
-real (r14), parameter :: q2 = 1.765077810213815d-8
-real (r14), parameter :: q3 = 7.768070564290540d-14
-real (r14), parameter :: q4 = 2.034842254277530d-19
-real (r14), parameter :: q5 = 3.220014531712841d-25
-real (r14), parameter :: q6 = 2.845172809636068d-31
-real (r14), parameter :: q7 = 1.094005878892950d-37
+real (r8), parameter :: q0 = 2.533588268773218e2_r8
+real (r8), parameter :: q1 = 2.594351081876611e-3_r8
+real (r8), parameter :: q2 = 1.765077810213815e-8_r8
+real (r8), parameter :: q3 = 7.768070564290540e-14_r8
+real (r8), parameter :: q4 = 2.034842254277530e-19_r8
+real (r8), parameter :: q5 = 3.220014531712841e-25_r8
+real (r8), parameter :: q6 = 2.845172809636068e-31_r8
+real (r8), parameter :: q7 = 1.094005878892950e-37_r8
     
 ! The error of this fit ranges between -5e-5 and 2e-4 deg C over the potential 
 ! temperature range of -100 to 2 deg C, or the potential enthalpy range of 

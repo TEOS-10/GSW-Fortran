@@ -122,7 +122,6 @@ contains
     if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_att')
 
     return
-
     end subroutine ncdf_get_var_att
 
     subroutine ncdf_handle_err (status, fname, nf90_name)
@@ -135,8 +134,8 @@ contains
 
     print*, '**Error return from ', nf90_name, ' in ', fname, ' ...'
     print '(3x,a," (status=",i0,")")', trim(nf90_strerror(status)), status
-    stop
 
+    stop
     end subroutine ncdf_handle_err
 
 end module gsw_mod_netcdf

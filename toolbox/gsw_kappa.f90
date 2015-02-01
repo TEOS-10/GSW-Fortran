@@ -15,15 +15,16 @@ elemental function gsw_kappa (sa, ct, p)
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p  
+real (r8), intent(in) :: sa, ct, p  
 
-real (r14) :: gsw_kappa
+real (r8) :: gsw_kappa
 
-real (r14) :: v_hat_denominator, v_hat_numerator
-real (r14) :: sqrtsa, dvden_dp, dvnum_dp
+real (r8) :: v_hat_denominator, v_hat_numerator
+real (r8) :: sqrtsa, dvden_dp, dvnum_dp
 
 sqrtsa = sqrt(sa)
 
@@ -50,7 +51,7 @@ dvnum_dp = c10 + ct*(c11 + ct*(c12 + c13*ct)) &
     + p*(c16 + ct*(c17 + c18*ct + c19*sa) &
     + p*(c20 + c21*ct))
 
-gsw_kappa = 1d-4*(dvden_dp/v_hat_denominator  -  dvnum_dp/v_hat_numerator)
+gsw_kappa = 1e-4_r8*(dvden_dp/v_hat_denominator  -  dvnum_dp/v_hat_numerator)
 
 return
 end function

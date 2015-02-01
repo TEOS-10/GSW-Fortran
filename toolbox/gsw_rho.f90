@@ -15,14 +15,15 @@ elemental function gsw_rho (sa, ct, p)
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p 
+real (r8), intent(in) :: sa, ct, p 
 
-real (r14) :: gsw_rho
+real (r8) :: gsw_rho
 
-real (r14) :: sqrtsa, v_hat_denominator, v_hat_numerator
+real (r8) :: sqrtsa, v_hat_denominator, v_hat_numerator
 
 sqrtsa = sqrt(sa)
 

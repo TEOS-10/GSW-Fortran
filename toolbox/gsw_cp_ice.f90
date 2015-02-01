@@ -15,12 +15,13 @@ use gsw_mod_toolbox, only : gsw_gibbs_ice
 
 use gsw_mod_teos10_constants, only : gsw_t0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: t, p
+real (r8), intent(in) :: t, p
 
-real (r14) :: gsw_cp_ice
+real (r8) :: gsw_cp_ice
 
 gsw_cp_ice = -(t + gsw_t0)*gsw_gibbs_ice(2,0,t,p)
 

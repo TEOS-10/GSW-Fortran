@@ -31,23 +31,24 @@ use gsw_mod_toolbox, only : gsw_specvol_t_exact
 
 use gsw_mod_teos10_constants, only : gsw_sso
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
-real (r14), intent(out), optional :: tfreezing_sa, tfreezing_p
+real (r8), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(out), optional :: tfreezing_sa, tfreezing_p
 
-real (r14) :: rec_denom, tf
+real (r8) :: rec_denom, tf
 
-real (r14), parameter :: g_per_kg = 1000d0
+real (r8), parameter :: g_per_kg = 1000.0_r8
 
 tf = gsw_t_freezing_exact(sa,p,saturation_fraction) 
-rec_denom = 1d0/(g_per_kg*gsw_t_deriv_chem_potential_water_t_exact(sa,tf,p) &
+rec_denom = 1.0_r8/(g_per_kg*gsw_t_deriv_chem_potential_water_t_exact(sa,tf,p) &
                   + gsw_entropy_ice(tf,p))
 
 if (present(tfreezing_sa)) tfreezing_sa = &
                gsw_dilution_coefficient_t_exact(sa,tf,p)*rec_denom &
-               + saturation_fraction*(1d-3)/(2d0*gsw_sso)
+               + saturation_fraction*(1e-3_r8)/(2.0_r8*gsw_sso)
 
 if (present(tfreezing_p)) tfreezing_p = &
                -(gsw_specvol_t_exact(sa,tf,p) - sa*gsw_gibbs(1,0,1,sa,tf,p) &

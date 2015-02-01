@@ -24,14 +24,15 @@ elemental function gsw_ct_freezing_exact (sa, p, saturation_fraction)
 use gsw_mod_toolbox, only : gsw_t_freezing_exact
 use gsw_mod_toolbox, only : gsw_ct_from_t
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(in) :: sa, p, saturation_fraction
 
-real (r14) :: gsw_ct_freezing_exact
+real (r8) :: gsw_ct_freezing_exact
 
-real (r14) :: t_freezing
+real (r8) :: t_freezing
 
 t_freezing = gsw_t_freezing_exact(sa,p,saturation_fraction)
 gsw_ct_freezing_exact = gsw_ct_from_t(sa,t_freezing,p)

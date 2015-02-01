@@ -25,8 +25,6 @@ sed -n '
 	s/\.+/+/g
 	s/\.-/-/g
 	s/\.'"'"'//g
-	s/\([0-9][0-9]*\)e/\1d/g
-	s/\([0-9]*\.[0-9][0-9]*\)\([ \n\r+*/)-]\)/\1d0\2/g
 	s/ > / .gt. /g
 	s/ < / .lt. /g
 	s/ == / .eq. /g
@@ -39,13 +37,19 @@ sed -n '
 	s/gsw_ct_from_enthalpy_exact/gsw_ct_from_enthalpy/
 	s/gsw_enthalpy_first_derivatives_ct_exact/gsw_enthalpy_first_derivatives/
 	s/size(\([a-z_0-9]*\))/size-\1/g
-	s/zeros(\([-a-z_0-9]*\))/0d0/g
-	s/ones(\([-a-z_0-9]*\))/1d0/g
+	s/zeros(\([-a-z_0-9]*\))/0.0_r8/g
+	s/ones(\([-a-z_0-9]*\))/1.0_r8/g
 /^ *for /! {
-	s/\([^-a-z0-9_]\)\([0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2d0\3/g
+	s/\([^e]\)\(-[0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2.0_r8\3/g
+	s/\([0-9]*\.[0-9][0-9]*\)\([ \n\r+*/)-]\)/\1_r8\2/g
+	s/\([0-9][0-9]*\)e\([-+]*[0-9][0-9]*\)/\1e\2_r8/g
+	s/\([0-9]\.\)e\([-+]*[0-9][0-9]*\)/\10e\2_r8/g
+	s/\(\.[0-9][0-9]*\)e0_r8/\1_r8/g
+	s/e0_r8/\.0_r8/g
+	s/\([^-a-z0-9_]\)\([0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2.0_r8\3/g
 }
 /gsw_gibbs/ {
-	s/d0,/,/g
+	s/\.0_r8,/,/g
 }
 /^ *for / {
 	s/for /do /
@@ -153,8 +157,9 @@ END     { print list }
 
 cat << END >> $tmpfile1
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
 END
 
@@ -165,13 +170,13 @@ sed -n '
 /^function / {
 	h
 	s/, */, /g
-	s/.*(\(.*\))/real (r14), intent(in) :: \1/
+	s/.*(\(.*\))/real (r8), intent(in) :: \1/
 	p
 	g
 }
 /^function *\[/ {
 	s/, */, /g
-	s/function *\[\(.*\)\] *= *\(.*\)(\(.*\))/real (r14), intent(out) :: \1/
+	s/function *\[\(.*\)\] *= *\(.*\)(\(.*\))/real (r8), intent(out) :: \1/
 	p
 	b
 }
@@ -180,7 +185,7 @@ sed -n '
 	s/.*//
 	p
 	g
-	s/.*\(gsw_[a-z0-9_]*\).*/real (r14) :: \1/
+	s/.*\(gsw_[a-z0-9_]*\).*/real (r8) :: \1/
 	p
 }
 ' $1 >> $tmpfile1
@@ -195,7 +200,7 @@ NF > 0	&& $0 !~ /transposed/ {
 		list = "";
 	}
 	if (list == "")
-		list = "real (r14) :: " $0;
+		list = "real (r8) :: " $0;
 	else
 		list = list ", " $0;
 }

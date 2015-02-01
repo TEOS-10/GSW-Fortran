@@ -12,25 +12,26 @@ elemental function gsw_pt_from_pot_enthalpy_ice_poly_dh (pot_enthalpy_ice)
 !                  with respect to potential enthalpy             [ deg C ]
 !--------------------------------------------------------------------------
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: pot_enthalpy_ice
+real (r8), intent(in) :: pot_enthalpy_ice
 
-real (r14) :: gsw_pt_from_pot_enthalpy_ice_poly_dh
+real (r8) :: gsw_pt_from_pot_enthalpy_ice_poly_dh
 
-real (r14), parameter :: q1 = 2.594351081876611d-3
-real (r14), parameter :: r2 = 3.530155620427630d-8
-real (r14), parameter :: r3 = 2.330421169287162d-13
-real (r14), parameter :: r4 = 8.139369017110120d-19
-real (r14), parameter :: r5 = 1.610007265856420d-24
-real (r14), parameter :: r6 = 1.707103685781641d-30
-real (r14), parameter :: r7 = 7.658041152250651d-37
+real (r8), parameter :: q1 = 2.594351081876611e-3_r8
+real (r8), parameter :: p2 = 3.530155620427630e-8_r8
+real (r8), parameter :: p3 = 2.330421169287162e-13_r8
+real (r8), parameter :: p4 = 8.139369017110120e-19_r8
+real (r8), parameter :: p5 = 1.610007265856420e-24_r8
+real (r8), parameter :: p6 = 1.707103685781641e-30_r8
+real (r8), parameter :: p7 = 7.658041152250651e-37_r8
 
 gsw_pt_from_pot_enthalpy_ice_poly_dh = q1 &
-    + pot_enthalpy_ice*(r2 + pot_enthalpy_ice*(r3 &
-    + pot_enthalpy_ice*(r4 + pot_enthalpy_ice*(r5 + pot_enthalpy_ice*(r6 &
-    + pot_enthalpy_ice*r7)))))
+    + pot_enthalpy_ice*(p2 + pot_enthalpy_ice*(p3 &
+    + pot_enthalpy_ice*(p4 + pot_enthalpy_ice*(p5 + pot_enthalpy_ice*(p6 &
+    + pot_enthalpy_ice*p7)))))
 
 return
 end function

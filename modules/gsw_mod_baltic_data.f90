@@ -4,15 +4,18 @@ module gsw_mod_baltic_data
 !
 ! Coordinate data for the Baltic Sea
 
+use gsw_mod_kinds
+
 implicit none
 
-integer, parameter :: gbd_r14 = selected_real_kind(14,30)
+real (r8), dimension(2) :: xb_right, yb_right
+real (r8), dimension(3) :: xb_left, yb_left
 
-real (gbd_r14), dimension(2) :: xb_right, yb_right
-real (gbd_r14), dimension(3) :: xb_left, yb_left
+data xb_left  /12.6_r8,  7.0_r8, 26.0_r8/
+data yb_left  /50.0_r8, 59.0_r8, 69.0_r8/
 
-data xb_left/12.6d0, 7.d0, 26.d0/, yb_left/50.d0, 59.d0, 69.d0/
-data xb_right/45.d0, 26.d0/, yb_right/50.d0, 69.d0/
+data xb_right /45.0_r8, 26.0_r8/
+data yb_right /50.0_r8, 69.0_r8/
 
 end module
 

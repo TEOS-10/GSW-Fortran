@@ -15,10 +15,11 @@
 
 ==========================================================================
 
- gsw_data_v3_0.dat
- Contains the global data set of Absolute Salinity Anomaly Ratio Rδ, and the
- global data set of Absolute Salinity Anomaly atlas.
- The data set gsw_data_v3_0.dat must not be tampered with.
+ gsw_data_v3_0.nc
+ NetCDF file that contains the global data set of Absolute Salinity Anomaly
+ Ratio, the global data set of Absolute Salinity Anomaly atlas, and check
+ values and computation accuracy values for use in gsw_check_function.
+ The data set gsw_data_v3_0.nc must not be tampered with.
 
  gsw_check_function.f90
  Contains the check functions. We suggest that after downloading, unzipping
@@ -27,12 +28,13 @@
  been tested to compile and run with gfortran.
 
  cd modules
- gfortran -c *.f90
+ gfortran -c gsw_mod_kinds.f90
+ gfortran -I/usr/include -c *.f90
  cd ../toolbox
  gfortran -I../modules -c *.f90
  cd ../test
  gfortran -I../modules -c gsw_check_functions.f90
- gfortran -o gsw_check ../modules/*.o ../toolbox/*.o gsw_check_functions.o
+ gfortran -o gsw_check ../modules/*.o ../toolbox/*.o gsw_check_functions.o -lnetcdf -lnetcdff
  ./gsw_check
 
  Note that gfortran is the name of the GNU Fortran project, developing a

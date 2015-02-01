@@ -15,14 +15,15 @@ elemental function gsw_specvol (sa, ct, p)
 
 use gsw_mod_toolbox, only : gsw_rho
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p 
+real (r8), intent(in) :: sa, ct, p 
 
-real (r14) :: gsw_specvol
+real (r8) :: gsw_specvol
 
-gsw_specvol = 1d0/gsw_rho(sa,ct,p)
+gsw_specvol = 1.0_r8/gsw_rho(sa,ct,p)
 
 return
 end function

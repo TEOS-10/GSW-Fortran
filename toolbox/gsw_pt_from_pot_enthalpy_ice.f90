@@ -16,23 +16,24 @@ use gsw_mod_toolbox, only : gsw_pt_from_pot_enthalpy_ice_poly_dh
 use gsw_mod_toolbox, only : gsw_pt_from_pot_enthalpy_ice_poly
 use gsw_mod_toolbox, only : gsw_pt0_cold_ice_poly
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: pot_enthalpy_ice
+real (r8), intent(in) :: pot_enthalpy_ice
 
-real (r14) :: gsw_pt_from_pot_enthalpy_ice
+real (r8) :: gsw_pt_from_pot_enthalpy_ice
 
 integer :: iteration
-real (r14) :: df_dt, f, mod_pot_enthalpy_ice, pt0_cold_ice, recip_df_dt
-real (r14) :: pt0_cold_ice_old, pt0_ice, pt0_ice_old, ptm_cold_ice, ptm_ice
+real (r8) :: df_dt, f, mod_pot_enthalpy_ice, pt0_cold_ice, recip_df_dt
+real (r8) :: pt0_cold_ice_old, pt0_ice, pt0_ice_old, ptm_cold_ice, ptm_ice
 
-real (r14), parameter :: h00 = -6.320202333358860d5 !gsw_enthalpy_ice(-gsw_t0,0)
-real (r14), parameter :: p0 = 0d0
+real (r8), parameter :: h00 = -6.320202333358860e5_r8 !gsw_enthalpy_ice(-gsw_t0,0)
+real (r8), parameter :: p0 = 0.0_r8
 
 mod_pot_enthalpy_ice = max(pot_enthalpy_ice,h00)
    
-if (mod_pot_enthalpy_ice.ge.-5.1d5) then
+if (mod_pot_enthalpy_ice.ge.-5.1e5_r8) then
 
     ! For input potential enthalpies greater than -5.1e-5, the above part of
     ! the code gives the output potential temperature of ice accurate to 1e-13
@@ -48,8 +49,8 @@ if (mod_pot_enthalpy_ice.ge.-5.1d5) then
     pt0_ice_old = pt0_ice
     f = gsw_pot_enthalpy_from_pt_ice(pt0_ice_old) - mod_pot_enthalpy_ice
     pt0_ice = pt0_ice_old - f*recip_df_dt
-    ptm_ice = 0.5d0*(pt0_ice + pt0_ice_old)
-    recip_df_dt = 1d0/gsw_cp_ice(ptm_ice,p0)
+    ptm_ice = 0.5_r8*(pt0_ice + pt0_ice_old)
+    recip_df_dt = 1.0_r8/gsw_cp_ice(ptm_ice,p0)
     pt0_ice = pt0_ice_old - f*recip_df_dt
 
 else
@@ -59,7 +60,7 @@ else
     
     pt0_cold_ice = gsw_pt0_cold_ice_poly(mod_pot_enthalpy_ice) 
     
-    df_dt = gsw_cp_ice(pt0_cold_ice+0.02,p0)
+    df_dt = gsw_cp_ice(pt0_cold_ice+0.02_r8,p0)
     ! the heat capacity, cp, is
     ! evaluated at 0.02 c greater than usual in order to avoid stability
     ! issues and to ensure convergence near zero absolute temperature. 
@@ -68,8 +69,8 @@ else
         pt0_cold_ice_old = pt0_cold_ice
         f = gsw_pot_enthalpy_from_pt_ice(pt0_cold_ice_old)-mod_pot_enthalpy_ice
         pt0_cold_ice = pt0_cold_ice_old - f/df_dt
-        ptm_cold_ice = 0.5d0*(pt0_cold_ice + pt0_cold_ice_old)        
-        df_dt = gsw_cp_ice(ptm_cold_ice+0.02d0,p0)
+        ptm_cold_ice = 0.5_r8*(pt0_cold_ice + pt0_cold_ice_old)        
+        df_dt = gsw_cp_ice(ptm_cold_ice+0.02_r8,p0)
 	! note the extra 0.02 c here as well    
         pt0_cold_ice = pt0_cold_ice_old - f/df_dt
     end do

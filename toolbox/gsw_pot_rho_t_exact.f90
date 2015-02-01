@@ -14,14 +14,15 @@ elemental function gsw_pot_rho_t_exact (sa, t, p, p_ref)
 
 use gsw_mod_toolbox, only : gsw_pt_from_t, gsw_rho_t_exact
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, t, p, p_ref  
+real (r8), intent(in) :: sa, t, p, p_ref  
 
-real (r14) :: gsw_pot_rho_t_exact
+real (r8) :: gsw_pot_rho_t_exact
 
-real (r14) :: pt
+real (r8) :: pt
 
 pt = gsw_pt_from_t(sa,t,p,p_ref)
 

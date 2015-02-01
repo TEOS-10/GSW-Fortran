@@ -14,21 +14,22 @@ use gsw_mod_toolbox, only : gsw_enthalpy_sso_0_p
 
 use gsw_mod_teos10_constants, only : deg2rad, gamma
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: p, lat 
+real (r8), intent(in) :: p, lat 
 
-real (r14) :: gsw_z_from_p
+real (r8) :: gsw_z_from_p
 
-real (r14) :: sin2, b, c, a
+real (r8) :: sin2, b, c, a
 
 sin2 = sin(lat*deg2rad)**2
-b = 9.780327d0*(1d0 + (5.2792d-3 + (2.32d-5*sin2))*sin2) 
-a = -0.5d0*gamma*b 
+b = 9.780327_r8*(1.0_r8 + (5.2792e-3_r8 + (2.32e-5_r8*sin2))*sin2) 
+a = -0.5_r8*gamma*b 
 c = gsw_enthalpy_sso_0_p(p)
 
-gsw_z_from_p = -2d0*c/(b + sqrt(b*b - 4d0*a*c))
+gsw_z_from_p = -2.0_r8*c/(b + sqrt(b*b - 4.0_r8*a*c))
 
 return 
 end function

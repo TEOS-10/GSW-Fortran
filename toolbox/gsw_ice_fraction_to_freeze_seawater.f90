@@ -39,18 +39,19 @@ use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, t_ih
-real (r14), intent(out) :: sa_freeze, ct_freeze, w_ih
+implicit none
+
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+real (r8), intent(out) :: sa_freeze, ct_freeze, w_ih
 
 integer :: no_iter
-real (r14) :: ctf, ctf_mean, ctf_old, ctf_plus1, ctf_zero
-real (r14) :: dfunc_dsaf, func, func_plus1, func_zero, h, h_ih
-real (r14) :: saf, saf_mean, saf_old, tf, h_hat_sa, h_hat_ct, ctf_sa
+real (r8) :: ctf, ctf_mean, ctf_old, ctf_plus1, ctf_zero
+real (r8) :: dfunc_dsaf, func, func_plus1, func_zero, h, h_ih
+real (r8) :: saf, saf_mean, saf_old, tf, h_hat_sa, h_hat_ct, ctf_sa
 
-real (r14), parameter :: sa0 = 0d0
+real (r8), parameter :: sa0 = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_ice_fraction_to_freeze_seawater"
 
@@ -78,13 +79,13 @@ h_ih = gsw_enthalpy_ice(t_ih,p)
 ctf_zero = gsw_ct_freezing(sa0,p,saturation_fraction)
 func_zero = sa*(gsw_enthalpy(sa0,ctf_zero,p) - h_ih)
 
-ctf_plus1 = gsw_ct_freezing(sa+1d0,p,saturation_fraction)
-func_plus1 = sa*(gsw_enthalpy(sa+1d0,ctf_plus1,p) - h) - (h - h_ih)
+ctf_plus1 = gsw_ct_freezing(sa+1.0_r8,p,saturation_fraction)
+func_plus1 = sa*(gsw_enthalpy(sa+1.0_r8,ctf_plus1,p) - h) - (h - h_ih)
 
-saf = -(sa+1d0)*func_zero/(func_plus1 - func_zero) ! initial guess of sa_freeze
+saf = -(sa+1.0_r8)*func_zero/(func_plus1 - func_zero)      ! initial guess
 ctf = gsw_ct_freezing(saf,p,saturation_fraction)
 call gsw_enthalpy_first_derivatives(saf,ctf,p,h_hat_sa,h_hat_ct)
-call gsw_ct_freezing_first_derivatives(saf,p,1d0,ctfreezing_sa=ctf_sa)
+call gsw_ct_freezing_first_derivatives(saf,p,1.0_r8,ctfreezing_sa=ctf_sa)
 
 dfunc_dsaf = sa*(h_hat_sa + h_hat_ct*ctf_sa) - (h - h_ih)
 
@@ -93,7 +94,7 @@ do no_iter = 1, 2
     ctf_old = ctf
     func = sa*(gsw_enthalpy(saf_old,ctf_old,p) - h)  - (saf_old - sa)*(h - h_ih)
     saf = saf_old - func/dfunc_dsaf
-    saf_mean = 0.5d0*(saf + saf_old)
+    saf_mean = 0.5_r8*(saf + saf_old)
     ctf_mean = gsw_ct_freezing(saf_mean,p,saturation_fraction)
     call gsw_enthalpy_first_derivatives(saf_mean,ctf_mean,p,h_hat_sa,h_hat_ct)
     call gsw_ct_freezing_first_derivatives(saf_mean,p,saturation_fraction, &

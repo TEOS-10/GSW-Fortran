@@ -14,16 +14,17 @@ elemental function gsw_rho_t_exact (sa, t, p)
 
 use gsw_mod_toolbox, only : gsw_gibbs
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, t, p 
+real (r8), intent(in) :: sa, t, p 
 
-real (r14) :: gsw_rho_t_exact
+real (r8) :: gsw_rho_t_exact
 
 integer, parameter :: n0=0, n1=1
 
-gsw_rho_t_exact = 1d0/gsw_gibbs(n0,n0,n1,sa,t,p)
+gsw_rho_t_exact = 1.0_r8/gsw_gibbs(n0,n0,n1,sa,t,p)
 
 return
 end function

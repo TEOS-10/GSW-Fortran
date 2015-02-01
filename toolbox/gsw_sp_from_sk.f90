@@ -11,14 +11,15 @@ elemental function gsw_sp_from_sk (sk)
 
 use gsw_mod_teos10_constants, only : gsw_soncl
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sk       
+real (r8), intent(in) :: sk       
 
-real (r14) :: gsw_sp_from_sk
+real (r8) :: gsw_sp_from_sk
 
-gsw_sp_from_sk = (sk - 0.03d0)*(gsw_soncl/1.805d0) 
+gsw_sp_from_sk = (sk - 0.03_r8)*(gsw_soncl/1.805_r8) 
 
 return
 end function

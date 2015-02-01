@@ -25,15 +25,16 @@ use gsw_mod_rho_coefficients
 
 use gsw_mod_teos10_constants, only : db2pa
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p_shallow, p_deep
+real (r8), intent(in) :: sa, ct, p_shallow, p_deep
 
-real (r14) :: gsw_enthalpy_diff
+real (r8) :: gsw_enthalpy_diff
 
-real (r14) :: a, a0, a1, a2, a3, b, b0, b1, b1sq, b2, delta_p
-real (r14) :: m, n, part1, part2, part3, p_sum, sqrt_disc, sqrtsa
+real (r8) :: a, a0, a1, a2, a3, b, b0, b1, b1sq, b2, delta_p
+real (r8) :: m, n, part1, part2, part3, p_sum, sqrt_disc, sqrtsa
 
 sqrtsa = sqrt(sa)
 
@@ -51,30 +52,31 @@ b0 = v01 + ct*(v02 + ct*(v03 + v04*ct))  &
          + sa*(v05 + ct*(v06 + v07*ct) &
      + sqrtsa*(v08 + ct*(v09 + ct*(v10 + v11*ct))))
  
-b1 = 0.5d0*(v12 + ct*(v13 + v14*ct) + sa*(v15 + v16*ct))
+b1 = 0.5_r8*(v12 + ct*(v13 + v14*ct) + sa*(v15 + v16*ct))
 
 b2 = v17 + ct*(v18 + v19*ct) + v20*sa
 
 b1sq = b1*b1 
 sqrt_disc = sqrt(b1sq - b0*b2)
 
-n = a0 + (2*a3*b0*b1/b2 - a2*b0)/b2
+n = a0 + (2.0_r8*a3*b0*b1/b2 - a2*b0)/b2
 
-m = a1 + (4*a3*b1sq/b2 - a3*b0 - 2*a2*b1)/b2
+m = a1 + (4.0_r8*a3*b1sq/b2 - a3*b0 - 2.0_r8*a2*b1)/b2
 
 a = b1 - sqrt_disc
 b = b1 + sqrt_disc
 delta_p = p_deep - p_shallow
 p_sum = p_deep + p_shallow
-part1 = b0 + p_shallow*(2*b1 + b2*p_shallow)
+part1 = b0 + p_shallow*(2.0_r8*b1 + b2*p_shallow)
 
 part2 = (b + b2*p_deep)*(a + b2*p_shallow)
 
 part3 = (n*b2 - m*b1)/(b2*(b - a))
 
-gsw_enthalpy_diff = db2pa*(delta_p*(a2 - 2d0*a3*b1/b2 + 0.5d0*a3*p_sum)/b2 + &
-                  (m/(2d0*b2))*log(1d0 + delta_p*(2d0*b1 + b2*p_sum)/part1) + & 
-                  part3*log(1d0 + delta_p*b2*(b - a)/part2))
+gsw_enthalpy_diff = db2pa* &
+         (delta_p*(a2 - 2.0_r8*a3*b1/b2 + 0.5_r8*a3*p_sum)/b2 + &
+         (m/(2.0_r8*b2))*log(1.0_r8 + delta_p*(2.0_r8*b1 + b2*p_sum)/part1) + & 
+         part3*log(1.0_r8 + delta_p*b2*(b - a)/part2))
 
 return
 end function

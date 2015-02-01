@@ -27,18 +27,19 @@ use gsw_mod_toolbox, only : gsw_dynamic_enthalpy
 
 use gsw_mod_teos10_constants, only : gsw_cp0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out), optional :: h_sa, h_ct
+real (r8), intent(in) :: sa, ct, p
+real (r8), intent(out), optional :: h_sa, h_ct
 
-real (r14) :: ct_l, ct_u, dct, dsa, hct_l, hct_u, hsa_l, hsa_u, sa_l, sa_u
+real (r8) :: ct_l, ct_u, hct_l, hct_u, hsa_l, hsa_u, sa_l, sa_u
 
-real (r14), parameter :: dsa = 0.01d0, dct = 0.005d0
+real (r8), parameter :: dsa = 0.01_r8, dct = 0.005_r8
 
 if (present(h_sa)) then
-    sa_l = max(sa - dsa, 0.d0)
+    sa_l = max(sa - dsa, 0.0_r8)
     sa_u = sa + dsa
 
     hsa_l = gsw_dynamic_enthalpy(sa_l,ct,p)

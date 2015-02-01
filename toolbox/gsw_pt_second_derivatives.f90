@@ -32,19 +32,20 @@ elemental subroutine gsw_pt_second_derivatives (sa, ct, pt_sa_sa, &
 
 use gsw_mod_toolbox, only : gsw_pt_first_derivatives
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct
-real (r14), intent(out), optional :: pt_sa_sa, pt_sa_ct, pt_ct_ct
+real (r8), intent(in) :: sa, ct
+real (r8), intent(out), optional :: pt_sa_sa, pt_sa_ct, pt_ct_ct
 
-real (r14) :: ct_l, ct_u, pt_ct_l, pt_ct_u, pt_sa_l, pt_sa_u, sa_l, sa_u
+real (r8) :: ct_l, ct_u, pt_ct_l, pt_ct_u, pt_sa_l, pt_sa_u, sa_l, sa_u
 
-real (r14), parameter :: dct = 1d-2, dsa = 1d-3
+real (r8), parameter :: dct = 1e-2_r8, dsa = 1e-3_r8
 
 if (present(pt_sa_sa)) then
 
-    sa_l = max(sa - dsa, 0d0)
+    sa_l = max(sa - dsa, 0.0_r8)
     sa_u = sa + dsa
 
     call gsw_pt_first_derivatives(sa_l,ct,pt_sa=pt_sa_l)

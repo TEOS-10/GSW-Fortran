@@ -14,6 +14,8 @@ tmpfile="__temp.$$"
 echo "module "${toolbox_name} > $outfile
 cat << END >> $outfile
 
+use gsw_mod_kinds
+
 implicit none
 
 END
@@ -105,7 +107,7 @@ while [ -n "$1" ]; do
 	p
 	b
 }
-/selected_real/ { p }
+/mod_kinds/ { p }
 /implicit / { p }
 /intent(in)/ { p }
 /intent(out)/ { p }

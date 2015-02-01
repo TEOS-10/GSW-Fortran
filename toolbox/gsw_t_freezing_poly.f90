@@ -21,16 +21,17 @@ use gsw_mod_freezing_poly_coefficients
 
 use gsw_mod_toolbox, only : gsw_ct_freezing_poly, gsw_t_from_ct
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa, p
-real (r14), intent(in), optional :: saturation_fraction
+implicit none
+
+real (r8), intent(in) :: sa, p
+real (r8), intent(in), optional :: saturation_fraction
 logical, intent(in), optional :: polynomial
 
-real (r14) :: gsw_t_freezing_poly
+real (r8) :: gsw_t_freezing_poly
 
-real (r14) :: p_r, sa_r, x, ctf, sfrac
+real (r8) :: p_r, sa_r, x, ctf, sfrac
 logical :: direct_poly
 
 if (present(polynomial)) then
@@ -44,7 +45,7 @@ if (.not. direct_poly) then
    if (present(saturation_fraction)) then
       sfrac = saturation_fraction
    else
-      sfrac = 1d0
+      sfrac = 1.0_r8
    end if
 
    ctf = gsw_ct_freezing_poly(sa,p,sfrac)
@@ -53,9 +54,9 @@ if (.not. direct_poly) then
 else
 
    ! Alternative calculation ...
-   sa_r = sa*1d-2
+   sa_r = sa*1e-2_r8
    x = sqrt(sa_r)
-   p_r = p*1d-4
+   p_r = p*1e-4_r8
 
    gsw_t_freezing_poly = t0 &
        + sa_r*(t1 + x*(t2 + x*(t3 + x*(t4 + x*(t5 + t6*x))))) &
@@ -68,7 +69,7 @@ else
 
    ! Adjust for the effects of dissolved air
    gsw_t_freezing_poly = gsw_t_freezing_poly - &
-                         saturation_fraction*(1d-3)*(2.4d0 - sa/(2d0*gsw_sso))
+                  saturation_fraction*(1e-3_r8)*(2.4_r8 - sa/(2.0_r8*gsw_sso))
 end if
 
 return

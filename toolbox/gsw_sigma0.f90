@@ -17,14 +17,15 @@ elemental function gsw_sigma0 (sa, ct)
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct 
+real (r8), intent(in) :: sa, ct 
 
-real (r14) :: gsw_sigma0
+real (r8) :: gsw_sigma0
 
-real (r14) :: v_hat_denominator, v_hat_numerator, sqrtsa
+real (r8) :: v_hat_denominator, v_hat_numerator, sqrtsa
 
 sqrtsa = sqrt(sa)
 
@@ -36,7 +37,7 @@ v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
             + sa*(v26 + ct*(v27 + ct*(v28 + ct*(v29 + v30*ct))) + v36*sa &
         + sqrtsa*(v31 + ct*(v32 + ct*(v33 + ct*(v34 + v35*ct)))))
 
-gsw_sigma0 = v_hat_denominator/v_hat_numerator - 1d3
+gsw_sigma0 = v_hat_denominator/v_hat_numerator - 1e3_r8
 
 return
 end function

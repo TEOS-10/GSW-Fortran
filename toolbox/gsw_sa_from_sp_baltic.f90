@@ -18,14 +18,15 @@ use gsw_mod_baltic_data
 
 use gsw_mod_teos10_constants, only : gsw_sso
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sp, long, lat
+real (r8), intent(in) :: sp, long, lat
 
-real (r14) :: gsw_sa_from_sp_baltic
+real (r8) :: gsw_sa_from_sp_baltic
 
-real (r14) :: xx_left, xx_right
+real (r8) :: xx_left, xx_right
 
 if (xb_left(2).lt.long .and. long.lt.xb_right(1) .and. &
     yb_left(1).lt.lat  .and.  lat.lt.yb_left(3)) then
@@ -35,13 +36,13 @@ if (xb_left(2).lt.long .and. long.lt.xb_right(1) .and. &
     xx_right = gsw_util_xinterp1(yb_right, xb_right, 2, lat)
     
     if(xx_left.le.long .and. long.le.xx_right) then
-        gsw_sa_from_sp_baltic =((gsw_sso - 0.087d0)/35d0)*sp + 0.087d0
+        gsw_sa_from_sp_baltic =((gsw_sso - 0.087_r8)/35.0_r8)*sp + 0.087_r8
     else
-        gsw_sa_from_sp_baltic = 9d15
+        gsw_sa_from_sp_baltic = 9e15_r8
     end if
 
 else
-    gsw_sa_from_sp_baltic = 9d15
+    gsw_sa_from_sp_baltic = 9e15_r8
 end if
 
 return

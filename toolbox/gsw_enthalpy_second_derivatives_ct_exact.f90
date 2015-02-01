@@ -28,25 +28,26 @@ use gsw_mod_toolbox, only : gsw_gibbs, gsw_pt_from_ct, gsw_pt_from_t
 
 use gsw_mod_teos10_constants, only : gsw_cp0, gsw_t0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
+real (r8), intent(in) :: sa, ct, p
+real (r8), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
 
-real (r14) :: factor, gs_pt0, gst_pt0, gst_t, part, pt0, h_ct_ct_val
-real (r14) :: rec_abs_pt0, rec_gtt_pt0, rec_gtt_t, t, temp_ratio
+real (r8) :: factor, gs_pt0, gst_pt0, gst_t, part, pt0, h_ct_ct_val
+real (r8) :: rec_abs_pt0, rec_gtt_pt0, rec_gtt_t, t, temp_ratio
 
 integer, parameter :: n0=0, n1=1, n2=2
-real (r14), parameter :: pr0 = 0d0, sa_small = 1d-100
+real (r8), parameter :: pr0 = 0.0_r8, sa_small = 1e-100_r8
 
 pt0 = gsw_pt_from_ct(sa,ct)
-rec_abs_pt0 = 1d0/(gsw_t0 + pt0)
+rec_abs_pt0 = 1.0_r8/(gsw_t0 + pt0)
 t = gsw_pt_from_t(sa,pt0,pr0,p)
 temp_ratio = (gsw_t0 + t)*rec_abs_pt0
 
-rec_gtt_pt0 = 1d0/gsw_gibbs(n0,n2,n0,sa,pt0,pr0)
-rec_gtt_t = 1d0/gsw_gibbs(n0,n2,n0,sa,t,p)
+rec_gtt_pt0 = 1.0_r8/gsw_gibbs(n0,n2,n0,sa,pt0,pr0)
+rec_gtt_t = 1.0_r8/gsw_gibbs(n0,n2,n0,sa,t,p)
 gst_pt0 = gsw_gibbs(n1,n1,n0,sa,pt0,pr0)
 gst_t = gsw_gibbs(n1,n1,n0,sa,t,p)
 gs_pt0 = gsw_gibbs(n1,n0,n0,sa,pt0,pr0)
@@ -67,7 +68,7 @@ if (present(h_sa_sa)) then
         - temp_ratio*gsw_gibbs(n2,n0,n0,sa,pt0,pr0)  &
         + temp_ratio*gst_pt0*gst_pt0*rec_gtt_pt0  &
         - gst_t*gst_t*rec_gtt_t  &
-        - 2.0d0*gs_pt0*part + (factor*factor)*h_ct_ct_val
+        - 2.0_r8*gs_pt0*part + (factor*factor)*h_ct_ct_val
 
 end if
 if (.not. present(h_sa_ct)) return
@@ -77,8 +78,8 @@ if (.not. present(h_sa_ct)) return
 ! up in this limit.  That is, when sa < 1e-100 g/kg, we force the h_sa_ct 
 ! output to be the same as if sa = 1e-100 g/kg.  
 if (sa .lt. sa_small) then
-    rec_gtt_pt0 = 1d0/gsw_gibbs(n0,n2,n0,sa_small,pt0,pr0)
-    rec_gtt_t = 1d0/gsw_gibbs(n0,n2,n0,sa_small,t,p)
+    rec_gtt_pt0 = 1.0_r8/gsw_gibbs(n0,n2,n0,sa_small,pt0,pr0)
+    rec_gtt_t = 1.0_r8/gsw_gibbs(n0,n2,n0,sa_small,t,p)
     gst_pt0 = gsw_gibbs(n1,n1,n0,sa_small,pt0,pr0)
     gst_t = gsw_gibbs(n1,n1,n0,sa_small,t,p)
     gs_pt0 = gsw_gibbs(n1,n0,n0,sa_small,pt0,pr0)

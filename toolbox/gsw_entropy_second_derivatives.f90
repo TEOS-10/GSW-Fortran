@@ -31,16 +31,17 @@ use gsw_mod_teos10_constants, only : gsw_cp0, gsw_t0
 
 use gsw_mod_toolbox, only : gsw_gibbs, gsw_pt_from_ct
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct
-real (r14), intent(out), optional :: eta_sa_sa, eta_sa_ct, eta_ct_ct
+real (r8), intent(in) :: sa, ct
+real (r8), intent(out), optional :: eta_sa_sa, eta_sa_ct, eta_ct_ct
 
-real (r14) :: abs_pt, ct_pt, ct_sa, pt, ct_ct
+real (r8) :: abs_pt, ct_pt, ct_sa, pt, ct_ct
 
 integer, parameter :: n0=0, n1=1, n2=2
-real (r14), parameter :: pr0 = 0d0
+real (r8), parameter :: pr0 = 0.0_r8
 
 pt = gsw_pt_from_ct(sa,ct)
 abs_pt = gsw_t0 + pt

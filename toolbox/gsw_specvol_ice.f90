@@ -13,12 +13,13 @@ elemental function gsw_specvol_ice (t, p)
 
 use gsw_mod_toolbox, only : gsw_gibbs_ice
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: t, p
+real (r8), intent(in) :: t, p
 
-real (r14) :: gsw_specvol_ice
+real (r8) :: gsw_specvol_ice
 
 gsw_specvol_ice = gsw_gibbs_ice(0,1,t,p)
 

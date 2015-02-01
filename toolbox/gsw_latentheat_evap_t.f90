@@ -12,14 +12,15 @@ elemental function gsw_latentheat_evap_t (sa, t)
 
 use gsw_mod_toolbox, only : gsw_ct_from_pt, gsw_latentheat_evap_ct
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, t  
+real (r8), intent(in) :: sa, t  
 
-real (r14) :: gsw_latentheat_evap_t
+real (r8) :: gsw_latentheat_evap_t
 
-real (r14) :: ct
+real (r8) :: ct
 
 ct = gsw_ct_from_pt(sa,t)
 

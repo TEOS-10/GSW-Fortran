@@ -12,17 +12,18 @@ elemental function gsw_entropy_from_pt (sa, pt)
 
 use gsw_mod_toolbox, only : gsw_gibbs
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, pt
+real (r8), intent(in) :: sa, pt
 
-real (r14) :: gsw_entropy_from_pt
+real (r8) :: gsw_entropy_from_pt
 
 integer, parameter :: n0 = 0 
 integer, parameter :: n1 = 1
 
-real (r14), parameter :: pr0 = 0d0
+real (r8), parameter :: pr0 = 0.0_r8
 
 gsw_entropy_from_pt = -gsw_gibbs(n0,n1,n0,sa,pt,pr0)
 

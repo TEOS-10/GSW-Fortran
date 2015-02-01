@@ -16,14 +16,15 @@ use gsw_mod_toolbox, only : gsw_saar
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sstar, p, long, lat  
+real (r8), intent(in) :: sstar, p, long, lat  
 
-real (r14) :: gsw_sa_from_sstar
+real (r8) :: gsw_sa_from_sstar
 
-real (r14) :: saar
+real (r8) :: saar
 
 character (*), parameter :: func_name = "gsw_sa_from_sstar"
 
@@ -38,7 +39,7 @@ else
    ! In the Baltic Sea, Sstar = SA, and note that gsw_saar returns zero
    ! for SAAR in the Baltic.
 
-   gsw_sa_from_sstar = sstar*(1d0 + saar)/(1d0 - 0.35d0*saar)
+   gsw_sa_from_sstar = sstar*(1.0_r8 + saar)/(1.0_r8 - 0.35_r8*saar)
 
 end if
 

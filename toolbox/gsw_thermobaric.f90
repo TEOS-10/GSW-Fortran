@@ -19,19 +19,20 @@ use gsw_mod_rho_coefficients
 
 use gsw_mod_teos10_constants, only : rec_db2pa
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p  
+real (r8), intent(in) :: sa, ct, p  
 
-real (r14) :: gsw_thermobaric
+real (r8) :: gsw_thermobaric
 
-real (r14) :: sqrtsa, v_hat_denominator, v_hat_numerator
-real (r14) :: dvhatden_dct, dvhatnum_dct, dvhatden_dp, dvhatnum_dp
-real (r14) :: dvhatden_dsa, dvhatnum_dsa, dvhatden_dpdct, dvhatnum_dpdct
-real (r14) :: dvhatden_dpdsa, dvhatnum_dpdsa 
-real (r14) :: p1a, p1b, p1c, p1d, p1e, part1, factor2
-real (r14) :: p2a, p2b, p2c, p2d, p2e, part2  
+real (r8) :: sqrtsa, v_hat_denominator, v_hat_numerator
+real (r8) :: dvhatden_dct, dvhatnum_dct, dvhatden_dp, dvhatnum_dp
+real (r8) :: dvhatden_dsa, dvhatnum_dsa, dvhatden_dpdct, dvhatnum_dpdct
+real (r8) :: dvhatden_dpdsa, dvhatnum_dpdsa 
+real (r8) :: p1a, p1b, p1c, p1d, p1e, part1, factor2
+real (r8) :: p2a, p2b, p2c, p2d, p2e, part2  
 
 sqrtsa = sqrt(sa)
 
@@ -78,11 +79,11 @@ dvhatnum_dp = c10 + ct*(c11 + ct*(c12 + c13*ct)) &
          + p*(c16 + ct*(c17 + c18*ct + c19*sa) &
          + p*(c20 + c21*ct))
 
-dvhatden_dpdct = c02 + 2d0*c03*ct + c05*sa &
-            + p*(c07 + 2d0*c08*ct)
+dvhatden_dpdct = c02 + 2.0_r8*c03*ct + c05*sa &
+            + p*(c07 + 2.0_r8*c08*ct)
        
-dvhatnum_dpdct = c11 + ct*(2d0*c12 + 3d0*c13*ct) + c15*sa &
-            + p*(c17 + ct*2d0*c18 + c19*sa + c21*p)
+dvhatnum_dpdct = c11 + ct*(2.0_r8*c12 + 3.0_r8*c13*ct) + c15*sa &
+            + p*(c17 + ct*2.0_r8*c18 + c19*sa + c21*p)
 
 dvhatden_dpdsa = c04 + c05*ct + c09*p
 
@@ -94,7 +95,7 @@ p1c = (dvhatnum_dp*dvhatden_dct)/(v_hat_numerator*v_hat_denominator)
 p1d = (dvhatden_dp*dvhatden_dct)/(v_hat_denominator*v_hat_denominator)
 p1e = dvhatden_dpdct/v_hat_denominator
 
-part1 =  p1a - p1b - p1c + 2d0*p1d - p1e
+part1 =  p1a - p1b - p1c + 2.0_r8*p1d - p1e
 
 factor2 = (v_hat_denominator*dvhatnum_dct - v_hat_numerator*dvhatden_dct)/ &
            (v_hat_denominator*dvhatnum_dsa - v_hat_numerator*dvhatden_dsa)
@@ -105,7 +106,7 @@ p2c = (dvhatnum_dp*dvhatden_dsa)/(v_hat_numerator*v_hat_denominator)
 p2d = (dvhatden_dp*dvhatden_dsa)/(v_hat_denominator*v_hat_denominator)
 p2e = dvhatden_dpdsa/v_hat_denominator
 
-part2 =  p2a - p2b - p2c + 2d0*p2d - p2e
+part2 =  p2a - p2b - p2c + 2.0_r8*p2d - p2e
 
 gsw_thermobaric = (part1 - factor2*part2)*rec_db2pa
 

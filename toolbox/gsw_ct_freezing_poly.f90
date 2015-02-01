@@ -25,18 +25,19 @@ use gsw_mod_teos10_constants, only : gsw_sso
 
 use gsw_mod_freezing_poly_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(in) :: sa, p, saturation_fraction
 
-real (r14) :: gsw_ct_freezing_poly
+real (r8) :: gsw_ct_freezing_poly
 
-real (r14) :: p_r, sa_r, x
+real (r8) :: p_r, sa_r, x
 
-sa_r = sa*1d-2
+sa_r = sa*1e-2_r8
 x = sqrt(sa_r)
-p_r = p*1d-4
+p_r = p*1e-4_r8
 
 gsw_ct_freezing_poly = c0 &
     + sa_r*(c1 + x*(c2 + x*(c3 + x*(c4 + x*(c5 + c6*x))))) &
@@ -45,8 +46,8 @@ gsw_ct_freezing_poly = c0 &
     + x*(c11 + p_r*(c14 + c18*p_r) + sa_r*(c16 + c20*p_r + c22*sa_r)))
 
 ! Adjust for the effects of dissolved air 
-gsw_ct_freezing_poly = gsw_ct_freezing_poly - &
-	saturation_fraction*(1d-3)*(2.4d0 - a*sa)*(1d0 + b*(1d0 - sa/gsw_sso))
+gsw_ct_freezing_poly = gsw_ct_freezing_poly - saturation_fraction* &
+                 (1e-3_r8)*(2.4_r8 - a*sa)*(1.0_r8 + b*(1.0_r8 - sa/gsw_sso))
 
 return
 end function

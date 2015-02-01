@@ -12,12 +12,12 @@ pure subroutine gsw_util_indx (x, n, z, k)
 !               n-1 :- if z = x(n)
 !--------------------------------------------------------------------------
 
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
 integer, intent(in) :: n
 integer, intent(out) :: k
-real (r14), intent(in), dimension(n) :: x
-real (r14), intent(in) :: z
+real (r8), intent(in), dimension(n) :: x
+real (r8), intent(in) :: z
 
 integer :: ku, kl, km
 
@@ -25,7 +25,7 @@ if(z.gt.x(1).and.z.lt.x(n)) then
    kl=1
    ku=n
    do while (ku-kl.gt.1)
-      km=0.5d0*(ku+kl)
+      km=0.5_r8*(ku+kl)
       if(z.gt.x(km)) then
          kl=km
       else

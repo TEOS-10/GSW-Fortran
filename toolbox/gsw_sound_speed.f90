@@ -15,15 +15,16 @@ elemental function gsw_sound_speed (sa, ct, p)
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p 
+real (r8), intent(in) :: sa, ct, p 
 
-real (r14) :: gsw_sound_speed
+real (r8) :: gsw_sound_speed
 
-real (r14) :: v_hat_denominator, v_hat_numerator
-real (r14) :: sqrtsa, dvhatden_dp, dvhatnum_dp, dp_drho
+real (r8) :: v_hat_denominator, v_hat_numerator
+real (r8) :: sqrtsa, dvhatden_dp, dvhatnum_dp, dp_drho
 
 sqrtsa = sqrt(sa)
 
@@ -53,7 +54,7 @@ dvhatnum_dp = c10 + ct*(c11 + ct*(c12 + c13*ct)) &
 dp_drho = (v_hat_numerator*v_hat_numerator) &
           /(dvhatden_dp*v_hat_numerator - dvhatnum_dp*v_hat_denominator)
     
-gsw_sound_speed = 100d0*sqrt(dp_drho)
+gsw_sound_speed = 100.0_r8*sqrt(dp_drho)
 
 return
 end function

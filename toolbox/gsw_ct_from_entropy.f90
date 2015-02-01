@@ -12,14 +12,15 @@ elemental function gsw_ct_from_entropy (sa, entropy)
 
 use gsw_mod_toolbox, only : gsw_ct_from_pt, gsw_pt_from_entropy
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, entropy
+real (r8), intent(in) :: sa, entropy
 
-real (r14) :: gsw_ct_from_entropy
+real (r8) :: gsw_ct_from_entropy
 
-real (r14) :: pt
+real (r8) :: pt
 
 pt = gsw_pt_from_entropy(sa,entropy)
 gsw_ct_from_entropy = gsw_ct_from_pt(sa,pt)

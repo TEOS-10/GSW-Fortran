@@ -17,14 +17,15 @@ elemental function gsw_sigma1 (sa, ct)
 
 use gsw_mod_toolbox, only : gsw_rho
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct 
+real (r8), intent(in) :: sa, ct 
 
-real (r14) :: gsw_sigma1
+real (r8) :: gsw_sigma1
 
-gsw_sigma1 = gsw_rho(sa,ct,1d3) - 1d3
+gsw_sigma1 = gsw_rho(sa,ct,1e3_r8) - 1e3_r8
 
 return
 end function

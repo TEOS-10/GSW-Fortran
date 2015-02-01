@@ -30,13 +30,14 @@ use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_ct_from_enthalpy
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, w_ih, t_ih
-real (r14), intent(out) :: sa_final, ct_final
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, w_ih, t_ih
+real (r8), intent(out) :: sa_final, ct_final
 
-real (r14) :: ctf, h, h_final, h_ih, tf_ih
+real (r8) :: ctf, h, h_final, h_ih, tf_ih
 
 character (*), parameter :: func_name = "gsw_melting_ice_into_seawater"
 
@@ -48,7 +49,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf_ih = gsw_t_freezing(0d0,p,saturation_fraction)
+tf_ih = gsw_t_freezing(0.0_r8,p,saturation_fraction)
 if (t_ih .gt. tf_ih) then
     ! t_ih input exceeds the freezing temp
     sa_final = gsw_error_code(2,func_name)
@@ -61,7 +62,7 @@ h_ih = gsw_enthalpy_ice(t_ih,p)
 
 h_final = h - w_ih*(h - h_ih)
 
-sa_final = sa*(1d0 - w_ih)
+sa_final = sa*(1.0_r8 - w_ih)
 
 ctf = gsw_ct_freezing(sa_final,p,saturation_fraction)
 

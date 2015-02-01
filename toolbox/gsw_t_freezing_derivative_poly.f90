@@ -20,28 +20,29 @@ use gsw_mod_teos10_constants, only : gsw_sso
 
 use gsw_mod_freezing_poly_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(in) :: sa, p, saturation_fraction
 
-real (r14) :: gsw_t_freezing_derivative_poly
+real (r8) :: gsw_t_freezing_derivative_poly
 
-real (r14) :: x, sa_r, p_r
+real (r8) :: x, sa_r, p_r
 
-sa_r = sa*1d-2
+sa_r = sa*1e-2_r8
 x = sqrt(sa_r)
-p_r = p*1d-4
+p_r = p*1e-4_r8
 
-gsw_t_freezing_derivative_poly = 2d0*t1 &
-     + x*(3d0*t2 + x*(4d0*t3 + x*(5d0*t4 + x*(6d0*t5 + 7d0*t6*x)))) &
-     + p_r*(2d0*t10 + p_r*(2d0*t12 + p_r*(2d0*t15 + 4d0*t21*sa_r)) &
-     + sa_r*(4d0*t13 + 4d0*t17*p_r + 6d0*t19*sa_r) &
-     + x*(3d0*t11 + 3d0*p_r*(t14 + t18*p_r) &
-     + sa_r*(5d0*t16 + 5d0*t20*p_r + 7d0*t22*sa_r)))
+gsw_t_freezing_derivative_poly = 2.0_r8*t1 + x* &
+     (3.0_r8*t2 + x*(4.0_r8*t3 + x*(5.0_r8*t4 + x*(6.0_r8*t5 + 7.0_r8*t6*x)))) &
+     + p_r*(2.0_r8*t10 + p_r*(2.0_r8*t12 + p_r*(2.0_r8*t15 + 4.0_r8*t21*sa_r)) &
+     + sa_r*(4.0_r8*t13 + 4.0_r8*t17*p_r + 6.0_r8*t19*sa_r) &
+     + x*(3.0_r8*t11 + 3.0_r8*p_r*(t14 + t18*p_r) &
+     + sa_r*(5.0_r8*t16 + 5.0_r8*t20*p_r + 7.0_r8*t22*sa_r)))
 
-gsw_t_freezing_derivative_poly = 0.5d0*1d-2*gsw_t_freezing_derivative_poly &
-                                 + saturation_fraction*(1d-3)/(2d0*gsw_sso)
+gsw_t_freezing_derivative_poly = 0.5e-2_r8*gsw_t_freezing_derivative_poly + &
+                                 saturation_fraction*(1e-3_r8)/(2.0_r8*gsw_sso)
 
 return
 end function

@@ -10,45 +10,46 @@ use gsw_mod_teos10_constants, only : gsw_sso
 
 use gsw_mod_toolbox, only : gsw_ct_from_t
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: p, saturation_fraction
-real (r14), intent(in), optional :: ct, t
+real (r8), intent(in) :: p, saturation_fraction
+real (r8), intent(in), optional :: ct, t
 
-real (r14) :: gsw_brinesa_estimate
+real (r8) :: gsw_brinesa_estimate
 
-real (r14) :: ctx, ctsat, sa
+real (r8) :: ctx, ctsat, sa
 
 ! note that aa = 0.502500117621d0/35.16504
-real (r14), parameter :: aa = 0.014289763856964d0
-real (r14), parameter :: bb = 0.057000649899720d0
+real (r8), parameter :: aa = 0.014289763856964_r8
+real (r8), parameter :: bb = 0.057000649899720_r8
 
-real (r14), parameter :: p0  =  2.570124672768757d-1
-real (r14), parameter :: p1  = -1.917742353032266d1
-real (r14), parameter :: p2  = -1.413382858617969d-2
-real (r14), parameter :: p3  = -5.427484830917552d-1
-real (r14), parameter :: p4  = -4.126621135193472d-4
-real (r14), parameter :: p5  = -4.176407833276121d-7
-real (r14), parameter :: p6  =  4.688217641883641d-5
-real (r14), parameter :: p7  = -3.039808885885726d-8
-real (r14), parameter :: p8  = -4.990118091261456d-11
-real (r14), parameter :: p9  = -9.733920711119464d-9
-real (r14), parameter :: p10 = -7.723324202726337d-12
-real (r14), parameter :: p11 =  7.121854166249257d-16
-real (r14), parameter :: p12 =  1.256474634100811d-12
-real (r14), parameter :: p13 =  2.105103897918125d-15
-real (r14), parameter :: p14 =  8.663811778227171d-19
+real (r8), parameter :: p0  =  2.570124672768757e-1_r8
+real (r8), parameter :: p1  = -1.917742353032266e1_r8
+real (r8), parameter :: p2  = -1.413382858617969e-2_r8
+real (r8), parameter :: p3  = -5.427484830917552e-1_r8
+real (r8), parameter :: p4  = -4.126621135193472e-4_r8
+real (r8), parameter :: p5  = -4.176407833276121e-7_r8
+real (r8), parameter :: p6  =  4.688217641883641e-5_r8
+real (r8), parameter :: p7  = -3.039808885885726e-8_r8
+real (r8), parameter :: p8  = -4.990118091261456e-11_r8
+real (r8), parameter :: p9  = -9.733920711119464e-9_r8
+real (r8), parameter :: p10 = -7.723324202726337e-12_r8
+real (r8), parameter :: p11 =  7.121854166249257e-16_r8
+real (r8), parameter :: p12 =  1.256474634100811e-12_r8
+real (r8), parameter :: p13 =  2.105103897918125e-15_r8
+real (r8), parameter :: p14 =  8.663811778227171e-19_r8
 
 ! a rough estimate to get the saturated ct
 if (present(ct)) then
-    sa = max(-(ct + 9d-4*p)/0.06d0, 0d0)
+    sa = max(-(ct + 9e-4_r8*p)/0.06_r8, 0.0_r8)
     ctx = ct
 else if (present(t)) then
-    sa = max(-(t + 9d-4*p)/0.06d0, 0d0)
+    sa = max(-(t + 9e-4_r8*p)/0.06_r8, 0.0_r8)
     ctx = gsw_ct_from_t(sa,t,p)
 else
-    gsw_brinesa_estimate = 0d0
+    gsw_brinesa_estimate = 0.0_r8
     return
 end if
 
@@ -56,8 +57,8 @@ end if
 ! dissolved air, recognizing that it actually has the air fraction
 ! saturation_fraction; see McDougall, Barker and Feistel, 2014).  
 
-ctsat = ctx - &
-        (1d0-saturation_fraction)*(1d-3)*(2.4d0-aa*sa)*(1d0+bb*(1d0-sa/gsw_sso))
+ctsat = ctx - (1.0_r8-saturation_fraction)* &
+        (1e-3_r8)*(2.4_r8-aa*sa)*(1.0_r8+bb*(1.0_r8-sa/gsw_sso))
 
 gsw_brinesa_estimate = p0 &
         + p*(p2 + p4*ctsat + p*(p5 + ctsat*(p7 + p9*ctsat) &

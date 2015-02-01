@@ -9,18 +9,19 @@ elemental function gsw_sa_p_inrange (sa, p)
 !         ( i.e. absolute pressure - 10.1325 dbar ) 
 !---------------------------------------------------------------------------
 
+use gsw_mod_kinds
+
 implicit none
 
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p
+real (r8), intent(in) :: sa, p
 
 logical :: gsw_sa_p_inrange
 
 gsw_sa_p_inrange = .true.
 
-if (p.gt.10000 .or. sa.gt.120 .or. &
-    p + sa*71.428571428571402d0.gt.13571.42857142857d0) &
+if (p.gt.10000.0_r8 .or. sa.gt.120.0_r8 .or. &
+    p + sa*71.428571428571402_r8.gt.13571.42857142857_r8) &
     gsw_sa_p_inrange = .false.
 
 return

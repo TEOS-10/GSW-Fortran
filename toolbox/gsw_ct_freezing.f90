@@ -23,13 +23,14 @@ elemental function gsw_ct_freezing (sa, p, saturation_fraction, exact)
 
 use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_ct_freezing_poly
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa, p, saturation_fraction
+implicit none
+
+real (r8), intent(in) :: sa, p, saturation_fraction
 logical, intent(in), optional :: exact
 
-real (r14) :: gsw_ct_freezing
+real (r8) :: gsw_ct_freezing
 
 logical :: do_exact
 

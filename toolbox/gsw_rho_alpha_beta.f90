@@ -31,15 +31,16 @@ elemental subroutine gsw_rho_alpha_beta (sa, ct, p, rho, alpha, beta)
 
 use gsw_mod_rho_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
-real (r14), intent(out), optional :: rho, alpha, beta
+real (r8), intent(in) :: sa, ct, p
+real (r8), intent(out), optional :: rho, alpha, beta
 
-real (r14) :: dvhatden_dct, dvhatden_dsa, dvhatnum_dct, dvhatnum_dsa
-real (r14) :: v_hat_denominator, v_hat_numerator
-real (r14) :: rec_num, spec_vol, sqrtsa
+real (r8) :: dvhatden_dct, dvhatden_dsa, dvhatnum_dct, dvhatnum_dsa
+real (r8) :: v_hat_denominator, v_hat_numerator
+real (r8) :: rec_num, spec_vol, sqrtsa
 
 sqrtsa = sqrt(sa)
 
@@ -57,7 +58,7 @@ v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
              + p*(v43 + ct*(v44 + v45*ct + v46*sa) &
              + p*(v47 + v48*ct)))
 
-rec_num = 1d0/v_hat_numerator
+rec_num = 1.0_r8/v_hat_numerator
 
 if (present(rho)) rho = rec_num*v_hat_denominator
 

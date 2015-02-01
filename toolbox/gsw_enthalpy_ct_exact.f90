@@ -20,14 +20,15 @@ elemental function gsw_enthalpy_ct_exact (sa, ct, p)
 
 use gsw_mod_toolbox, only : gsw_enthalpy_t_exact, gsw_t_from_ct
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p
+real (r8), intent(in) :: sa, ct, p
 
-real (r14) :: gsw_enthalpy_ct_exact
+real (r8) :: gsw_enthalpy_ct_exact
 
-real (r14) :: t
+real (r8) :: t
 
 t = gsw_t_from_ct(sa,ct,p) 
 gsw_enthalpy_ct_exact = gsw_enthalpy_t_exact(sa,t,p)

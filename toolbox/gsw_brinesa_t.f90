@@ -28,16 +28,17 @@ use gsw_mod_toolbox, only : gsw_brinesa_estimate
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: t, p, saturation_fraction
+real (r8), intent(in) :: t, p, saturation_fraction
 
-real (r14) :: gsw_brinesa_t
+real (r8) :: gsw_brinesa_t
 
 integer :: i_iter
-real (r14) :: f, sa, sa_cut_off, sa_mean, sa_old
-real (r14) :: t_freezing_zero_sa, tfreezing_sa
+real (r8) :: f, sa, sa_cut_off, sa_mean, sa_old
+real (r8) :: t_freezing_zero_sa, tfreezing_sa
 
 integer, parameter :: number_of_iterations = 2
 
@@ -45,7 +46,7 @@ character (*), parameter :: func_name = "gsw_brinesa_t"
 
 ! Find t > t_freezing_zero_SA.  If this is the case, the input values
 ! represent seawater that is not frozen (at any positive SA). 
-t_freezing_zero_sa = gsw_t_freezing_exact(0d0,p,saturation_fraction)
+t_freezing_zero_sa = gsw_t_freezing_exact(0.0_r8,p,saturation_fraction)
 if (t .gt. t_freezing_zero_sa) then
     gsw_brinesa_t = gsw_error_code(1,func_name)
     return
@@ -56,7 +57,7 @@ sa = gsw_brinesa_estimate(p,saturation_fraction,t=t)
 
 ! Find -SA_cut_off < SA < SA_cut_off, replace the above estimate of SA  
 ! with one based on (t_freezing_zero_SA - t).
-sa_cut_off = 2.5d0   ! this is the band of sa within +- 2.5d0 g/kg of sa = 0, 
+sa_cut_off = 2.5_r8   ! this is the band of sa within +- 2.5 g/kg of sa = 0, 
                      ! which we treat differently in calculating the initial
                      ! values of both SA and dCT_dSA. 
 if (sa .lt. -sa_cut_off) then
@@ -68,7 +69,7 @@ end if
 ! Form the first estimate of tfreezing_SA, the derivative of CT_freezing  
 ! with respect to SA at fixed p.    
 !--------------------------------------------------------------------------
-sa = max(sa,0d0)
+sa = max(sa,0.0_r8)
 call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction, &
                                       tfreezing_sa=tfreezing_sa)
 if (abs(sa) .lt. sa_cut_off) sa = (t - t_freezing_zero_sa)/tfreezing_sa
@@ -81,7 +82,7 @@ do i_iter = 1, number_of_iterations
     sa_old = sa
     f = gsw_t_freezing_exact(sa_old,p,saturation_fraction) - t
     sa = sa_old - f/tfreezing_sa
-    sa_mean = 0.5d0*(sa + sa_old)
+    sa_mean = 0.5_r8*(sa + sa_old)
     call gsw_t_freezing_first_derivatives(sa_mean,p,saturation_fraction, &
                                           tfreezing_sa=tfreezing_sa)
     sa = sa_old - f/tfreezing_sa   

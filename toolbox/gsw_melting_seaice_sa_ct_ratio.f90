@@ -49,20 +49,21 @@ use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
-real (r14), intent(in) :: t_seaice
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
+real (r8), intent(in) :: t_seaice
 
-real (r14) :: gsw_melting_seaice_sa_ct_ratio
+real (r8) :: gsw_melting_seaice_sa_ct_ratio
 
-real (r14) :: ctf, delsa, denominator, h, h_brine, h_ih, sa_brine
-real (r14) :: tf_sa_seaice, h_hat_sa, h_hat_ct
+real (r8) :: ctf, delsa, denominator, h, h_brine, h_ih, sa_brine
+real (r8) :: tf_sa_seaice, h_hat_sa, h_hat_ct
 
 character (*), parameter :: func_name = "gsw_melting_seaice_sa_ct_ratio"
 
-if (sa_seaice .lt. 0d0 .or. sa_seaice .gt. 15d0) then
+if (sa_seaice .lt. 0.0_r8 .or. sa_seaice .gt. 15.0_r8) then
     gsw_melting_seaice_sa_ct_ratio = gsw_error_code(1,func_name)
     return
 end if
@@ -74,7 +75,7 @@ if (ct .lt. ctf) then    ! the seawater ct input is below the freezing temp
 end if
 
 !--------------------------------------------------------------------------
-tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1d-6
+tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1e-6_r8
 if (t_seaice .gt. tf_sa_seaice) then   ! t_seaice exceeds the freezing sa
     gsw_melting_seaice_sa_ct_ratio = gsw_error_code(3,func_name)
     return

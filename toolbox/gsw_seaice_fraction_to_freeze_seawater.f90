@@ -45,20 +45,21 @@ use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
-real (r14), intent(in) :: t_seaice
-real (r14), intent(out) :: sa_freeze, ct_freeze, w_seaice
+implicit none
+
+real (r8), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
+real (r8), intent(in) :: t_seaice
+real (r8), intent(out) :: sa_freeze, ct_freeze, w_seaice
 
 integer :: number_of_iterations
-real (r14) :: ctf, ctf_mean, ctf_old, ctf_plus1, ctf_zero
-real (r14) :: dfunc_dsaf, func, func_plus1, func_zero, h, h_brine
-real (r14) :: h_ih, sa_brine, saf, saf_mean, saf_old
-real (r14) :: salt_ratio, tf_sa_seaice, h_hat_sa, h_hat_ct, ctf_sa
+real (r8) :: ctf, ctf_mean, ctf_old, ctf_plus1, ctf_zero
+real (r8) :: dfunc_dsaf, func, func_plus1, func_zero, h, h_brine
+real (r8) :: h_ih, sa_brine, saf, saf_mean, saf_old
+real (r8) :: salt_ratio, tf_sa_seaice, h_hat_sa, h_hat_ct, ctf_sa
 
-real (r14), parameter :: sa0 = 0.d0
+real (r8), parameter :: sa0 = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_seaice_fraction_to_freeze_seawater"
 
@@ -71,7 +72,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1d-6
+tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1e-6_r8
 if (t_seaice .gt. tf_sa_seaice) then
     ! The 1e-6 C buffer in the allowable t_seaice is to ensure that there is
     ! some ice Ih in the sea ice.   Without this buffer, that is if t_seaice
@@ -96,15 +97,15 @@ salt_ratio = sa_seaice/sa_brine
 h = gsw_enthalpy(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_seaice,p)
 
-ctf_plus1 = gsw_ct_freezing(sa+1d0,p,saturation_fraction)
-func_plus1 = (sa - sa_seaice)*(gsw_enthalpy(sa+1d0,ctf_plus1,p) - h) &
+ctf_plus1 = gsw_ct_freezing(sa+1.0_r8,p,saturation_fraction)
+func_plus1 = (sa - sa_seaice)*(gsw_enthalpy(sa+1.0_r8,ctf_plus1,p) - h) &
                - (h - h_ih) + salt_ratio*(h_brine - h_ih)
 
 ctf_zero = gsw_ct_freezing(sa0,p,saturation_fraction)
 func_zero = (sa - sa_seaice)*(gsw_enthalpy(sa0,ctf_zero,p) - h) &
              + sa*((h - h_ih) - salt_ratio*(h_brine - h_ih))
 
-saf = -(sa+1d0)*func_zero/(func_plus1 - func_zero) ! initial guess of saf
+saf = -(sa+1.0_r8)*func_zero/(func_plus1 - func_zero) ! initial guess of saf
 ctf = gsw_ct_freezing(saf,p,saturation_fraction)
 call gsw_enthalpy_first_derivatives(saf,ctf,p,h_hat_sa,h_hat_ct)
 call gsw_ct_freezing_first_derivatives(saf,p,saturation_fraction, &
@@ -119,7 +120,7 @@ do number_of_iterations = 1, 4
     func = (sa - sa_seaice)*(gsw_enthalpy(saf_old,ctf_old,p) - h) &
          - (saf_old - sa)*((h - h_ih) - salt_ratio*(h_brine - h_ih))
     saf = saf_old - func/dfunc_dsaf
-    saf_mean = 0.5d0*(saf + saf_old)
+    saf_mean = 0.5_r8*(saf + saf_old)
     ctf_mean = gsw_ct_freezing(saf_mean,p,saturation_fraction)
     call gsw_enthalpy_first_derivatives(saf_mean,ctf_mean,p,h_hat_sa,h_hat_ct)
     call gsw_ct_freezing_first_derivatives(saf_mean,p,saturation_fraction, &

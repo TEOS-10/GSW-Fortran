@@ -13,27 +13,28 @@ elemental function gsw_pt0_cold_ice_poly (pot_enthalpy_ice)
 
 use gsw_mod_teos10_constants, only : gsw_t0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: pot_enthalpy_ice
+real (r8), intent(in) :: pot_enthalpy_ice
 
-real (r14) :: gsw_pt0_cold_ice_poly
+real (r8) :: gsw_pt0_cold_ice_poly
 
-real (r14) :: log_abs_theta0, log_h_diff
+real (r8) :: log_abs_theta0, log_h_diff
 
 ! h00 = gsw_enthalpy_ice(-gsw_t0,0)
-real (r14), parameter :: h00 = -6.320202333358860d5
+real (r8), parameter :: h00 = -6.320202333358860e5_r8
 
-real (r14), parameter :: s0 =  1.493103204647916d0
-real (r14), parameter :: s1 =  2.372788609320607d-1
-real (r14), parameter :: s2 = -2.014996002119374d-3
-real (r14), parameter :: s3 =  2.640600197732682d-6
-real (r14), parameter :: s4 =  3.134706016844293d-5
-real (r14), parameter :: s5 =  2.733592344937913d-6
-real (r14), parameter :: s6 =  4.726828010223258d-8
-real (r14), parameter :: s7 = -2.735193883189589d-9
-real (r14), parameter :: s8 = -8.547714991377670d-11
+real (r8), parameter :: s0 =  1.493103204647916_r8
+real (r8), parameter :: s1 =  2.372788609320607e-1_r8
+real (r8), parameter :: s2 = -2.014996002119374e-3_r8
+real (r8), parameter :: s3 =  2.640600197732682e-6_r8
+real (r8), parameter :: s4 =  3.134706016844293e-5_r8
+real (r8), parameter :: s5 =  2.733592344937913e-6_r8
+real (r8), parameter :: s6 =  4.726828010223258e-8_r8
+real (r8), parameter :: s7 = -2.735193883189589e-9_r8
+real (r8), parameter :: s8 = -8.547714991377670e-11_r8
 
 log_h_diff = log(pot_enthalpy_ice - h00)
 

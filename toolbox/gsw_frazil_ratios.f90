@@ -36,16 +36,17 @@ use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
 use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 use gsw_mod_toolbox, only : gsw_t_freezing_first_derivatives
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, w_ih
-real (r14), intent(out) :: dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil
+real (r8), intent(in) :: sa, p, w_ih
+real (r8), intent(out) :: dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil
 
-real (r14) :: bracket1, bracket2, cp_ih, gamma_ih, h, h_ih, part, rec_bracket3
-real (r14) :: tf, wcp, h_hat_sa, h_hat_ct, tf_sa, tf_p, ctf, ctf_sa, ctf_p
+real (r8) :: bracket1, bracket2, cp_ih, gamma_ih, h, h_ih, part, rec_bracket3
+real (r8) :: tf, wcp, h_hat_sa, h_hat_ct, tf_sa, tf_p, ctf, ctf_sa, ctf_p
 
-real (r14), parameter :: saturation_fraction = 0d0
+real (r8), parameter :: saturation_fraction = 0.0_r8
 
 ctf = gsw_ct_freezing(sa,p,saturation_fraction)
 tf = gsw_t_freezing(sa,p,saturation_fraction)
@@ -54,15 +55,15 @@ h_ih = gsw_enthalpy_ice(tf,p)
 cp_ih = gsw_cp_ice(tf,p)
 gamma_ih = gsw_adiabatic_lapse_rate_ice(tf,p)
 call gsw_enthalpy_first_derivatives(sa,ctf,p,h_hat_sa,h_hat_ct)
-call gsw_t_freezing_first_derivatives(sa,p,1d0,tf_sa,tf_p)
-call gsw_ct_freezing_first_derivatives(sa,p,1d0,ctf_sa,ctf_p)
+call gsw_t_freezing_first_derivatives(sa,p,1.0_r8,tf_sa,tf_p)
+call gsw_ct_freezing_first_derivatives(sa,p,1.0_r8,ctf_sa,ctf_p)
 
-wcp = cp_ih*w_ih/(1d0 - w_ih)
+wcp = cp_ih*w_ih/(1.0_r8 - w_ih)
 part = (tf_p - gamma_ih)/ctf_p
 
 bracket1 = h_hat_ct + wcp*part
 bracket2 = h - h_ih - sa*(h_hat_sa + wcp*(tf_sa - part*ctf_sa))
-rec_bracket3 = 1d0/(h - h_ih - sa*(h_hat_sa + h_hat_ct*ctf_sa + wcp*tf_sa))
+rec_bracket3 = 1.0_r8/(h - h_ih - sa*(h_hat_sa + h_hat_ct*ctf_sa + wcp*tf_sa))
 
 dsa_dct_frazil = sa*(bracket1/bracket2)
 dsa_dp_frazil = sa*ctf_p*bracket1*rec_bracket3

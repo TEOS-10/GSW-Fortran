@@ -20,27 +20,28 @@ elemental function gsw_ct_maxdensity (sa, p)
 
 use gsw_mod_toolbox, only : gsw_alpha
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p
+real (r8), intent(in) :: sa, p
 
-real (r14) :: gsw_ct_maxdensity
+real (r8) :: gsw_ct_maxdensity
 
 integer :: number_of_iterations
-real (r14) :: alpha, ct, ct_mean, ct_old, dalpha_dct
+real (r8) :: alpha, ct, ct_mean, ct_old, dalpha_dct
 
-real (r14), parameter :: dct = 0.001d0
+real (r8), parameter :: dct = 0.001_r8
 
-ct = 3.978d0 - 0.22072d0*sa         ! the initial guess of ct.
+ct = 3.978_r8 - 0.22072_r8*sa         ! the initial guess of ct.
 
-dalpha_dct = 1.1d-5                 ! the initial guess for dalpha_dct.
+dalpha_dct = 1.1e-5_r8                ! the initial guess for dalpha_dct.
 
 do number_of_iterations = 1, 3
     ct_old = ct
     alpha = gsw_alpha(sa,ct_old,p)
     ct = ct_old - alpha/dalpha_dct
-    ct_mean = 0.5d0*(ct + ct_old)
+    ct_mean = 0.5_r8*(ct + ct_old)
     dalpha_dct = (gsw_alpha(sa,ct_mean+dct,p) &
                   - gsw_alpha(sa,ct_mean-dct,p))/(dct + dct)
     ct = ct_old - alpha/dalpha_dct

@@ -27,20 +27,21 @@ use gsw_mod_teos10_constants, only : gsw_c3515
 
 use gsw_mod_sp_coefficients
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: c, t, p       
+real (r8), intent(in) :: c, t, p       
 
-real (r14) :: gsw_sp_from_c
+real (r8) :: gsw_sp_from_c
 
-real (r14) :: sp, t68, ft68, r, rt_lc, rp, rt, rtx
-real (r14) :: hill_ratio, x, sqrty, part1, part2, sp_hill_raw
+real (r8) :: sp, t68, ft68, r, rt_lc, rp, rt, rtx
+real (r8) :: hill_ratio, x, sqrty, part1, part2, sp_hill_raw
 
 character (*), parameter :: func_name = "gsw_sp_from_c"
 
-t68 = t*1.00024d0
-ft68 = (t68 - 15d0)/(1d0 + k*(t68 - 15d0))
+t68 = t*1.00024_r8
+ft68 = (t68 - 15.0_r8)/(1.0_r8 + k*(t68 - 15.0_r8))
 
 ! The dimensionless conductivity ratio, R, is the conductivity input, C,
 ! divided by the present estimate of C(SP=35, t_68=15, p=0) which is 
@@ -50,10 +51,10 @@ r = c/gsw_c3515
 
 ! rt_lc corresponds to rt as defined in the UNESCO 44 (1983) routines.  
 rt_lc = c0 + (c1 + (c2 + (c3 + c4*t68)*t68)*t68)*t68
-rp = 1d0 + (p*(e1 + e2*p + e3*p*p))/(1d0 + d1*t68 + d2*t68*t68 + (d3 + d4*t68)*r)
+rp = 1.0_r8 + (p*(e1 + e2*p + e3*p*p))/(1.0_r8 + d1*t68 + d2*t68*t68 + (d3 + d4*t68)*r)
 rt = r/(rp*rt_lc)  
 
-if (rt .lt. 0d0) then
+if (rt .lt. 0.0_r8) then
     gsw_sp_from_c = gsw_error_code(1,func_name)
     return
 endif
@@ -67,17 +68,17 @@ sp = a0 + (a1 + (a2 + (a3 + (a4 + a5*rtx)*rtx)*rtx)*rtx)*rtx + &
 ! Hill et al. (1986) algorithm.  This algorithm is adjusted so that it is
 ! exactly equal to the PSS-78 algorithm at SP = 2.
 
-if (sp .lt. 2d0) then
+if (sp .lt. 2.0_r8) then
     hill_ratio = gsw_hill_ratio_at_sp2(t)
-    x = 400d0*rt
-    sqrty = 10d0*rtx
-    part1 = 1d0 + x*(1.5d0 + x)
-    part2 = 1d0 + sqrty*(1d0 + sqrty*(1d0 + sqrty))
+    x = 400.0_r8*rt
+    sqrty = 10.0_r8*rtx
+    part1 = 1.0_r8 + x*(1.5_r8 + x)
+    part2 = 1.0_r8 + sqrty*(1.0_r8 + sqrty*(1.0_r8 + sqrty))
     sp_hill_raw = sp - a0/part1 - b0*ft68/part2
     sp = hill_ratio*sp_hill_raw
 endif
 
-if (sp .lt. 0d0) then
+if (sp .lt. 0.0_r8) then
     gsw_sp_from_c = gsw_error_code(2,func_name)
 else
     gsw_sp_from_c = sp

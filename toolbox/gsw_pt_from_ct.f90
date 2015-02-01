@@ -16,27 +16,28 @@ use gsw_mod_toolbox, only : gsw_ct_from_pt, gsw_gibbs_pt0_pt0
 
 use gsw_mod_teos10_constants, only : gsw_cp0, gsw_ups, gsw_t0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, ct 
+real (r8), intent(in) :: sa, ct 
 
-real (r14) :: gsw_pt_from_ct
+real (r8) :: gsw_pt_from_ct
 
-real (r14) :: a5ct, b3ct, ct_factor, pt_num, pt_den, ct_diff
-real (r14) :: ct0, pt, pt_old, ptm, dct, dct_dpt, s1
+real (r8) :: a5ct, b3ct, ct_factor, pt_num, pt_den, ct_diff
+real (r8) :: ct0, pt, pt_old, ptm, dct, dct_dpt, s1
 
-real (r14), parameter :: a0 = -1.446013646344788d-2
-real (r14), parameter :: a1 = -3.305308995852924d-3
-real (r14), parameter :: a2 =  1.062415929128982d-4
-real (r14), parameter :: a3 =  9.477566673794488d-1
-real (r14), parameter :: a4 =  2.166591947736613d-3
-real (r14), parameter :: a5 =  3.828842955039902d-3
+real (r8), parameter :: a0 = -1.446013646344788e-2_r8
+real (r8), parameter :: a1 = -3.305308995852924e-3_r8
+real (r8), parameter :: a2 =  1.062415929128982e-4_r8
+real (r8), parameter :: a3 =  9.477566673794488e-1_r8
+real (r8), parameter :: a4 =  2.166591947736613e-3_r8
+real (r8), parameter :: a5 =  3.828842955039902e-3_r8
 
-real (r14), parameter :: b0 =  1.000000000000000d0
-real (r14), parameter :: b1 =  6.506097115635800d-4
-real (r14), parameter :: b2 =  3.830289486850898d-3
-real (r14), parameter :: b3 =  1.247811760368034d-6
+real (r8), parameter :: b0 =  1.0_r8
+real (r8), parameter :: b1 =  6.506097115635800e-4_r8
+real (r8), parameter :: b2 =  3.830289486850898e-3_r8
+real (r8), parameter :: b3 =  1.247811760368034e-6_r8
 
 s1 = sa/gsw_ups
 
@@ -56,7 +57,7 @@ dct_dpt = (pt_den)/(ct_factor + a5ct - (b2 + b3ct + b3ct)*pt)
 ct_diff = gsw_ct_from_pt(sa,pt) - ct
 pt_old = pt
 pt = pt_old - (ct_diff)/dct_dpt
-ptm = 0.5d0*(pt + pt_old)
+ptm = 0.5_r8*(pt + pt_old)
 
 dct_dpt = -(ptm + gsw_t0)*gsw_gibbs_pt0_pt0(sa,ptm)/gsw_cp0
 

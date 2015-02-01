@@ -16,14 +16,15 @@ use gsw_mod_toolbox, only : gsw_saar
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, long, lat 
+real (r8), intent(in) :: sa, p, long, lat 
 
-real (r14) :: gsw_sstar_from_sa
+real (r8) :: gsw_sstar_from_sa
 
-real (r14) :: saar
+real (r8) :: saar
 
 character (*), parameter :: func_name = "gsw_sstar_from_sa"
 
@@ -35,7 +36,7 @@ saar = gsw_saar(p,long,lat)
 if (saar.gt.gsw_error_limit) then
    gsw_sstar_from_sa = gsw_error_code(1,func_name,saar)
 else
-   gsw_sstar_from_sa = sa*(1d0 - 0.35d0*saar)/(1d0 + saar)
+   gsw_sstar_from_sa = sa*(1.0_r8 - 0.35_r8*saar)/(1.0_r8 + saar)
 end if
 
 return

@@ -1,35 +1,34 @@
 program gsw_check_functions
 
+use gsw_mod_kinds
 use gsw_mod_netcdf
-
 use gsw_mod_toolbox
 
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
 integer :: gsw_error_flag = 0
 
 integer :: cast_m, cast_n, cast_mpres_m, cast_mpres_n, cast_ice_m
 integer :: cast_ice_n, i
 
-real (r14) :: saturation_fraction, pref
+real (r8) :: saturation_fraction, pref
 
-real (r14), dimension(:,:), allocatable :: ct, rt, sa, sk, sp, t, p
-real (r14), dimension(:,:), allocatable :: p_shallow, p_deep, lat, long
+real (r8), dimension(:,:), allocatable :: ct, rt, sa, sk, sp, t, p
+real (r8), dimension(:,:), allocatable :: p_shallow, p_deep, lat, long
 
-real (r14), dimension(:,:), allocatable :: ct_arctic, sa_arctic, t_arctic
-real (r14), dimension(:,:), allocatable :: p_arctic, t_ice, w_ice
-real (r14), dimension(:,:), allocatable :: sa_seaice, t_seaice, w_seaice
-real (r14), dimension(:,:), allocatable :: lat_ice, long_ice
+real (r8), dimension(:,:), allocatable :: ct_arctic, sa_arctic, t_arctic
+real (r8), dimension(:,:), allocatable :: p_arctic, t_ice, w_ice
+real (r8), dimension(:,:), allocatable :: sa_seaice, t_seaice, w_seaice
+real (r8), dimension(:,:), allocatable :: lat_ice, long_ice
 
-real (r14), dimension(:), allocatable :: lat_cast, long_cast
+real (r8), dimension(:), allocatable :: lat_cast, long_cast
 
-real (r14), dimension(:,:), allocatable :: value, check_value
-real (r14), dimension(:,:), allocatable :: val1, val2, val3
+real (r8), dimension(:,:), allocatable :: value, check_value
+real (r8), dimension(:,:), allocatable :: val1, val2, val3
 
-real (r14), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
-real (r14), dimension(:,:), allocatable :: h, rho, alpha, beta, ctf, tf
-real (r14), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
+real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
+real (r8), dimension(:,:), allocatable :: h, rho, alpha, beta, ctf, tf
+real (r8), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
 
 call gsw_saar_init (.true.)
 
@@ -646,6 +645,7 @@ contains
     print *, title
     print *
 
+    return
     end subroutine section_title
 
     subroutine check_accuracy (func_name, fvalue, var_name, vprint)
@@ -655,13 +655,13 @@ contains
     implicit none
 
     character (*), intent(in) :: func_name
-    real (r14), intent(in) :: fvalue(:,:)
+    real (r8), intent(in) :: fvalue(:,:)
     character (*), intent(in), optional :: var_name
     logical, intent(in), optional :: vprint
 
     integer :: ndots, i, j, k
-    real (r14) :: check_limit
-    real (r14) :: diff(size(fvalue,1),size(fvalue,2))
+    real (r8) :: check_limit
+    real (r8) :: diff(size(fvalue,1),size(fvalue,2))
     character (len(func_name)+len(var_name)+3) :: message
     character (4) :: errflg
 
@@ -715,6 +715,7 @@ contains
         print *, trim(message), dots(:ndots), ' passed', errflg
     endif
 
+    return
     end subroutine check_accuracy
 
 end

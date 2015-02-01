@@ -15,12 +15,13 @@ use gsw_mod_toolbox, only : gsw_gibbs
 
 use gsw_mod_teos10_constants, only : gsw_t0
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, t, p 
+real (r8), intent(in) :: sa, t, p 
 
-real (r14) :: gsw_enthalpy_t_exact
+real (r8) :: gsw_enthalpy_t_exact
 
 integer, parameter :: n0=0, n1=1
 

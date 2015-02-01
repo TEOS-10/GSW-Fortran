@@ -16,12 +16,13 @@ use gsw_mod_toolbox, only : gsw_sa_from_sp, gsw_sr_from_sp
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sp, p, long, lat 
+real (r8), intent(in) :: sp, p, long, lat 
 
-real (r14) :: gsw_deltasa_from_sp
+real (r8) :: gsw_deltasa_from_sp
 
 character (*), parameter :: func_name = "gsw_deltasa_from_sp"
 

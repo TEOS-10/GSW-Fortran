@@ -29,33 +29,34 @@ use gsw_mod_toolbox, only : gsw_rho_alpha_beta, gsw_specvol
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
-implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
+use gsw_mod_kinds
 
-real (r14), intent(in) :: rho, sa, p
-real (r14), intent(out) :: ct
-real (r14), intent(out), optional :: ct_multiple
+implicit none
+
+real (r8), intent(in) :: rho, sa, p
+real (r8), intent(out) :: ct
+real (r8), intent(out), optional :: ct_multiple
 
 integer :: number_of_iterations
-real (r14) :: a, alpha_freezing, alpha_mean, b, c, ct_a, ct_b, ct_diff
-real (r14) :: ct_freezing, ct_max_rho, ct_mean, ct_old
-real (r14) :: delta_ct, delta_v, factor, factorqa, factorqb
-real (r14) :: rho_40, rho_extreme, rho_freezing, rho_max, rho_mean
-real (r14) :: rho_old, sqrt_disc, top, v_ct, v_lab
+real (r8) :: a, alpha_freezing, alpha_mean, b, c, ct_a, ct_b, ct_diff
+real (r8) :: ct_freezing, ct_max_rho, ct_mean, ct_old
+real (r8) :: delta_ct, delta_v, factor, factorqa, factorqb
+real (r8) :: rho_40, rho_extreme, rho_freezing, rho_max, rho_mean
+real (r8) :: rho_old, sqrt_disc, top, v_ct, v_lab
 
 character (*), parameter :: func_name = "gsw_ct_from_rho"
 
 ! alpha_limit is the positive value of the thermal expansion coefficient
 ! which is used at the freezing temperature to distinguish between
 ! salty and fresh water.
-real (r14), parameter :: alpha_limit = 1d-5
+real (r8), parameter :: alpha_limit = 1e-5_r8
 
 ! rec_half_rho_TT is a constant representing the reciprocal of half the
 ! second derivative of density with respect to temperature near the
 ! temperature of maximum density.
-real (r14), parameter :: rec_half_rho_tt = -110.0d0
+real (r8), parameter :: rec_half_rho_tt = -110.0_r8
 
-rho_40 = gsw_rho(sa,40d0,p)
+rho_40 = gsw_rho(sa,40.0_r8,p)
 if (rho .lt. rho_40) then
     ct = gsw_error_code(1,func_name)
     if (present(ct_multiple)) ct_multiple = ct
@@ -67,7 +68,7 @@ rho_max = gsw_rho(sa,ct_max_rho,p)
 rho_extreme = rho_max
 
 ! Assumes that the seawater is always saturated with air
-ct_freezing = gsw_ct_freezing_poly(sa,p,1d0)
+ct_freezing = gsw_ct_freezing_poly(sa,p,1.0_r8)
 
 call gsw_rho_alpha_beta(sa,ct_freezing,p,rho=rho_freezing,alpha=alpha_freezing)
 
@@ -82,21 +83,21 @@ end if
 
 if (alpha_freezing .gt. alpha_limit) then
 
-    ct_diff = 40d0 - ct_freezing
+    ct_diff = 40.0_r8 - ct_freezing
     top = rho_40 - rho_freezing + rho_freezing*alpha_freezing*ct_diff
     a = top/(ct_diff*ct_diff)
     b = -rho_freezing*alpha_freezing
     c = rho_freezing - rho
     sqrt_disc = sqrt(b*b - 4*a*c)
-    ct = ct_freezing + 0.5d0*(-b - sqrt_disc)/a
+    ct = ct_freezing + 0.5_r8*(-b - sqrt_disc)/a
 
 else
 
-    ct_diff = 40d0 - ct_max_rho
+    ct_diff = 40.0_r8 - ct_max_rho
     factor = (rho_max - rho)/(rho_max - rho_40)
     delta_ct = ct_diff*sqrt(factor)
     
-    if (delta_ct .gt. 5d0) then
+    if (delta_ct .gt. 5.0_r8) then
 
         ct = ct_max_rho + delta_ct
 
@@ -111,7 +112,7 @@ else
             ct_a = ct_max_rho + (ct_old - ct_max_rho)*sqrt(factorqa)
         end do
 
-        if (ct_freezing - ct_a .lt. 0d0) then
+        if (ct_freezing - ct_a .lt. 0.0_r8) then
             ct = gsw_error_code(3,func_name)
             if (present(ct_multiple)) ct_multiple = ct
             return
@@ -132,7 +133,7 @@ else
         ! After seven iterations of this quadratic iterative procedure,
         ! the error in rho is no larger than 4.6x10^-13 kg/m^3.
 
-        if (ct_freezing - ct_b .lt. 0d0) then
+        if (ct_freezing - ct_b .lt. 0.0_r8) then
             ct = gsw_error_code(4,func_name)
             if (present(ct_multiple)) ct_multiple = ct
             return
@@ -147,7 +148,7 @@ end if
 
 ! Begin the modified Newton-Raphson iterative method
 
-v_lab = 1d0/rho
+v_lab = 1.0_r8/rho
 call gsw_rho_alpha_beta(sa,ct,p,rho=rho_mean,alpha=alpha_mean)
 v_ct = alpha_mean/rho_mean
 
@@ -155,7 +156,7 @@ do number_of_iterations = 1, 3
     ct_old = ct
     delta_v = gsw_specvol(sa,ct_old,p) - v_lab
     ct = ct_old - delta_v/v_ct
-    ct_mean = 0.5d0*(ct + ct_old)
+    ct_mean = 0.5_r8*(ct + ct_old)
     call gsw_rho_alpha_beta(sa,ct_mean,p,rho=rho_mean,alpha=alpha_mean)
     v_ct = alpha_mean/rho_mean
     ct = ct_old - delta_v/v_ct 

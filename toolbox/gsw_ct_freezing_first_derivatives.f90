@@ -26,13 +26,14 @@ use gsw_mod_toolbox, only : gsw_ct_first_derivatives_wrt_t_exact
 use gsw_mod_toolbox, only : gsw_t_freezing_first_derivatives
 use gsw_mod_toolbox, only : gsw_t_freezing_exact
 
+use gsw_mod_kinds
+
 implicit none
-integer, parameter :: r14 = selected_real_kind(14,30)
 
-real (r14), intent(in) :: sa, p, saturation_fraction
-real (r14), intent(out), optional :: ctfreezing_sa, ctfreezing_p
+real (r8), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(out), optional :: ctfreezing_sa, ctfreezing_p
 
-real (r14) :: tf_sa, tf_p, ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t, tf
+real (r8) :: tf_sa, tf_p, ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t, tf
 
 tf = gsw_t_freezing_exact(sa,p,saturation_fraction)
 
