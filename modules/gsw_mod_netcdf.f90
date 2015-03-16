@@ -2,6 +2,8 @@ module gsw_mod_netcdf
 
 use netcdf
 
+use gsw_mod_kinds
+
 integer, private :: ncid
 
 public :: ncdf_open
@@ -13,6 +15,8 @@ public :: ncdf_get_var_att
 private :: ncdf_handle_err
 
 contains
+
+    !--------------------------------------------------------------------------
 
     subroutine ncdf_open (file_name)
     implicit none
@@ -29,6 +33,8 @@ contains
     return
     end subroutine ncdf_open
 
+    !--------------------------------------------------------------------------
+
     subroutine ncdf_close ()
     implicit none
 
@@ -42,6 +48,8 @@ contains
     return
     end subroutine ncdf_close
 
+    !--------------------------------------------------------------------------
+
     integer function ncdf_get_dim (dim_name)
     implicit none
 
@@ -51,7 +59,7 @@ contains
 
     character (*), parameter :: fname = 'ncdf_get_dim'
 
-    istat = nf90_inq_dimid (ncid, dim_name, dimid)
+    istat = nf90_inq_dimid(ncid, dim_name, dimid)
     if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_inq_dimid')
 
     istat = nf90_inquire_dimension(ncid, dimid, len=ncdf_get_dim)
@@ -60,13 +68,13 @@ contains
     return
     end function ncdf_get_dim
 
+    !--------------------------------------------------------------------------
+
     subroutine ncdf_get_var (var_name, var0, var1, var2, var3)
     implicit none
 
-    integer, parameter :: r14 = selected_real_kind(14,30)
-
     character (*), intent(in) :: var_name
-    real (r14), intent(out), optional :: var0, var1(:), var2(:,:), var3(:,:,:)
+    real (r8), intent(out), optional :: var0, var1(:), var2(:,:), var3(:,:,:)
 
     integer :: istat, varid
 
@@ -100,13 +108,13 @@ contains
     return
     end subroutine ncdf_get_var
 
+    !--------------------------------------------------------------------------
+
     subroutine ncdf_get_var_att (var_name, var, att_name, att)
     implicit none
 
-    integer, parameter :: r14 = selected_real_kind(14,30)
-
     character (*), intent(in) :: var_name, att_name
-    real (r14), intent(out) :: var(:,:), att
+    real (r8), intent(out) :: var(:,:), att
 
     integer :: istat, varid
 
@@ -123,6 +131,8 @@ contains
 
     return
     end subroutine ncdf_get_var_att
+
+    !--------------------------------------------------------------------------
 
     subroutine ncdf_handle_err (status, fname, nf90_name)
     implicit none
