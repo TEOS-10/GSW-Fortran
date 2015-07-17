@@ -12,27 +12,20 @@ pure subroutine gsw_ipv_vs_fnsquared_ratio (sa, ct, p, p_ref, &
 !  have a constant value.
 !
 !  IPV_vs_fNsquared_ratio is evaluated at the mid pressure between the 
-!  individual data points in the vertical.  This function uses the 
-!  computationally-efficient 48-term expression for density in terms of 
-!  SA, CT and p (IOC et al., 2010). 
-!  Note. The 48-term equation has been fitted in a restricted range of parameter
-!  space, and is most accurate inside the "oceanographic funnel" described 
-!  in IOC et al. (2010).  The GSW library function "gsw_infunnel(SA,CT,p)" 
-!  is avaialble to be used if one wants to test if some of one's data lies
-!  outside this "funnel".  
+!  individual data points in the vertical.
 
-! sa      : Absolute Salinity         (a profile (length nz))     [g/kg]
-! ct      : Conservative Temperature  (a profile (length nz))     [deg C]
-! p       : sea pressure              (a profile (length nz))     [dbar]
-! p_ref   : reference sea pressure of the potential density surface
+!  sa      : Absolute Salinity         (a profile (length nz))     [g/kg]
+!  ct      : Conservative Temperature  (a profile (length nz))     [deg C]
+!  p       : sea pressure              (a profile (length nz))     [dbar]
+!  p_ref   : reference sea pressure of the potential density surface
 !        ( i.e. absolute reference pressure - 10.1325 dbar )      [dbar]
-! IPV_vs_fNsquared_ratio
-!         : The ratio of the vertical gradient of potential density
-!           referenced to p_ref, to the vertical gradient of locally-
-!           referenced potential density.  It is ouput on the same
-!           vertical (M-1)xN grid as p_mid. 
-!           IPV_vs_fNsquared_ratio is dimensionless.          [ unitless ]
-! p_mid   : Mid pressure between p grid  (length nz-1)           [dbar]
+!  IPV_vs_fNsquared_ratio
+!          : The ratio of the vertical gradient of potential density
+!            referenced to p_ref, to the vertical gradient of locally-
+!            referenced potential density.  It is ouput on the same
+!            vertical (M-1)xN grid as p_mid. 
+!            IPV_vs_fNsquared_ratio is dimensionless.          [ unitless ]
+!  p_mid   : Mid pressure between p grid  (length nz-1)           [dbar]
 !--------------------------------------------------------------------------
 
 use gsw_mod_toolbox, only : gsw_alpha, gsw_beta

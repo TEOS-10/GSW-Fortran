@@ -11,28 +11,35 @@ logical, public :: gsw_abort_on_error = .true.
 
 real (r8), parameter, public :: gsw_error_limit = 1e10_r8
 
-integer, parameter, private :: nfuncs = 27
+integer, parameter, private :: nfuncs = 34
 integer, parameter, private :: maxlen = 40
 character (len=maxlen), dimension(nfuncs), private :: func_list
 
 data func_list / &
-		"gsw_brinesa_ct", &
-		"gsw_brinesa_ct_poly", &
-		"gsw_brinesa_t", &
-		"gsw_brinesa_t_poly", &
+		"gsw_ct_from_enthalpy_exact", &
+		"gsw_ct_from_enthalpy", &
 		"gsw_ct_from_rho", &
 		"gsw_deltasa_atlas", &
 		"gsw_deltasa_from_sp", &
 		"gsw_fdelta", &
+		"gsw_frazil_properties", &
+		"gsw_frazil_properties_potential", &
+		"gsw_frazil_properties_potential_poly", &
 		"gsw_ice_fraction_to_freeze_seawater", &
 		"gsw_ipv_vs_fnsquared_ratio", &
 		"gsw_melting_ice_into_seawater", &
 		"gsw_melting_ice_sa_ct_ratio", &
+		"gsw_melting_ice_sa_ct_ratio_poly", &
 		"gsw_melting_seaice_into_seawater", &
 		"gsw_melting_seaice_sa_ct_ratio", &
+		"gsw_melting_seaice_sa_ct_ratio_poly", &
 		"gsw_nsquared", &
 		"gsw_pressure_freezing_ct", &
 		"gsw_saar", &
+		"gsw_sa_freezing_from_ct", &
+		"gsw_sa_freezing_from_ct_poly", &
+		"gsw_sa_freezing_from_t", &
+		"gsw_sa_freezing_from_t_poly", &
 		"gsw_sa_from_rho", &
 		"gsw_sa_from_sp", &
 		"gsw_sa_from_sstar", &

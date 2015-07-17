@@ -20,7 +20,7 @@ elemental function gsw_pressure_freezing_ct (sa, ct, saturation_fraction)
 !--------------------------------------------------------------------------
 
 use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives, gsw_sa_p_inrange
-use gsw_mod_toolbox, only : gsw_ct_freezing
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
@@ -46,7 +46,7 @@ character (*), parameter :: func_name = "gsw_pressure_freezing_ct"
 
 ! Find CT > CT_freezing_p0.  If this is the case, the input CT value
 ! represent seawater that will not be frozen at any positive p.  
-ct_freezing_p0 = gsw_ct_freezing(sa,0.0_r8,saturation_fraction)
+ct_freezing_p0 = gsw_ct_freezing_exact(sa,0.0_r8,saturation_fraction)
 if (ct .gt. ct_freezing_p0) then
     gsw_pressure_freezing_ct = gsw_error_code(1,func_name)
     return
@@ -54,7 +54,7 @@ end if
  
 ! Find CT < CT_freezing_p10000.  If this is the case, the input CT value
 ! represent seawater that is frozen even at p = 10,000 dbar.   
-ct_freezing_p10000 = gsw_ct_freezing(sa,1e4_r8,saturation_fraction)
+ct_freezing_p10000 = gsw_ct_freezing_exact(sa,1e4_r8,saturation_fraction)
 if (ct .lt. ct_freezing_p10000) then
     gsw_pressure_freezing_ct = gsw_error_code(2,func_name)
     return
@@ -72,7 +72,7 @@ dctf_dp = rec_pa2db*ctfreezing_p
 
 do i_iter = 1, number_of_iterations  
     pf_old = pf
-    f = gsw_ct_freezing(sa,pf_old,saturation_fraction) - ct
+    f = gsw_ct_freezing_exact(sa,pf_old,saturation_fraction) - ct
     pf = pf_old - f/dctf_dp
     pfm = 0.5_r8*(pf + pf_old)
     call gsw_ct_freezing_first_derivatives(sa,pfm,saturation_fraction, &

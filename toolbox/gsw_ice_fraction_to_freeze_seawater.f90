@@ -1,6 +1,6 @@
 !==========================================================================
 elemental subroutine gsw_ice_fraction_to_freeze_seawater (sa, ct, p, &
-                     saturation_fraction, t_ih, sa_freeze, ct_freeze, w_ih)
+                                          t_ih, sa_freeze, ct_freeze, w_ih)
 !==========================================================================
 !
 !  Calculates the mass fraction of ice (mass of ice divided by mass of ice
@@ -13,8 +13,6 @@ elemental subroutine gsw_ice_fraction_to_freeze_seawater (sa, ct, p, &
 !  CT   =  Conservative Temperature of seawater (ITS-90)          [ deg C ]
 !  p    =  sea pressure                                            [ dbar ]
 !            ( i.e. absolute pressure - 10.1325d0 dbar )
-!  saturation_fraction = the saturation fraction of dissolved air in 
-!               seawater.  The saturation_fraction must be between 0 and 1.
 !  t_Ih =  in-situ temperature of the ice at pressure p (ITS-90)  [ deg C ]
 !
 !  SA_freeze = Absolute Salinity of seawater after the mass fraction of 
@@ -33,8 +31,9 @@ elemental subroutine gsw_ice_fraction_to_freeze_seawater (sa, ct, p, &
 !              This output must be between 0 and 1.              [unitless]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
+use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_t_freezing_exact
+use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
 use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
@@ -43,7 +42,7 @@ use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+real (r8), intent(in) :: sa, ct, p, t_ih
 real (r8), intent(out) :: sa_freeze, ct_freeze, w_ih
 
 integer :: no_iter
@@ -51,11 +50,11 @@ real (r8) :: ctf, ctf_mean, ctf_old, ctf_plus1, ctf_zero
 real (r8) :: dfunc_dsaf, func, func_plus1, func_zero, h, h_ih
 real (r8) :: saf, saf_mean, saf_old, tf, h_hat_sa, h_hat_ct, ctf_sa
 
-real (r8), parameter :: sa0 = 0.0_r8
+real (r8), parameter :: sa0 = 0.0_r8, saturation_fraction = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_ice_fraction_to_freeze_seawater"
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 if (ct .lt. ctf) then
     ! The seawater ct input is below the freezing temp
     sa_freeze = gsw_error_code(1,func_name)
@@ -64,7 +63,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf = gsw_t_freezing(sa0,p,saturation_fraction)
+tf = gsw_t_freezing_exact(sa0,p,saturation_fraction)
 if (t_ih .gt. tf) then
     ! The input, t_Ih, exceeds the freezing temperature at sa = 0
     sa_freeze = gsw_error_code(2,func_name)
@@ -73,18 +72,18 @@ if (t_ih .gt. tf) then
     return
 end if
 
-h = gsw_enthalpy(sa,ct,p)
+h = gsw_enthalpy_ct_exact(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_ih,p)
 
-ctf_zero = gsw_ct_freezing(sa0,p,saturation_fraction)
-func_zero = sa*(gsw_enthalpy(sa0,ctf_zero,p) - h_ih)
+ctf_zero = gsw_ct_freezing_exact(sa0,p,saturation_fraction)
+func_zero = sa*(gsw_enthalpy_ct_exact(sa0,ctf_zero,p) - h_ih)
 
-ctf_plus1 = gsw_ct_freezing(sa+1.0_r8,p,saturation_fraction)
-func_plus1 = sa*(gsw_enthalpy(sa+1.0_r8,ctf_plus1,p) - h) - (h - h_ih)
+ctf_plus1 = gsw_ct_freezing_exact(sa+1.0_r8,p,saturation_fraction)
+func_plus1 = sa*(gsw_enthalpy_ct_exact(sa+1.0_r8,ctf_plus1,p) - h) - (h - h_ih)
 
 saf = -(sa+1.0_r8)*func_zero/(func_plus1 - func_zero)      ! initial guess
-ctf = gsw_ct_freezing(saf,p,saturation_fraction)
-call gsw_enthalpy_first_derivatives(saf,ctf,p,h_hat_sa,h_hat_ct)
+ctf = gsw_ct_freezing_exact(saf,p,saturation_fraction)
+call gsw_enthalpy_first_derivatives_ct_exact(saf,ctf,p,h_hat_sa,h_hat_ct)
 call gsw_ct_freezing_first_derivatives(saf,p,1.0_r8,ctfreezing_sa=ctf_sa)
 
 dfunc_dsaf = sa*(h_hat_sa + h_hat_ct*ctf_sa) - (h - h_ih)
@@ -92,16 +91,18 @@ dfunc_dsaf = sa*(h_hat_sa + h_hat_ct*ctf_sa) - (h - h_ih)
 do no_iter = 1, 2
     saf_old = saf
     ctf_old = ctf
-    func = sa*(gsw_enthalpy(saf_old,ctf_old,p) - h)  - (saf_old - sa)*(h - h_ih)
+    func = sa*(gsw_enthalpy_ct_exact(saf_old,ctf_old,p) - h) &
+           - (saf_old - sa)*(h - h_ih)
     saf = saf_old - func/dfunc_dsaf
     saf_mean = 0.5_r8*(saf + saf_old)
-    ctf_mean = gsw_ct_freezing(saf_mean,p,saturation_fraction)
-    call gsw_enthalpy_first_derivatives(saf_mean,ctf_mean,p,h_hat_sa,h_hat_ct)
+    ctf_mean = gsw_ct_freezing_exact(saf_mean,p,saturation_fraction)
+    call gsw_enthalpy_first_derivatives_ct_exact(saf_mean,ctf_mean,p,h_hat_sa, &
+                                                 h_hat_ct)
     call gsw_ct_freezing_first_derivatives(saf_mean,p,saturation_fraction, &
                                            ctfreezing_sa=ctf_sa)
     dfunc_dsaf = sa*(h_hat_sa + h_hat_ct*ctf_sa) - (h - h_ih)
     saf = saf_old - func/dfunc_dsaf 
-    ctf = gsw_ct_freezing(saf,p,saturation_fraction)
+    ctf = gsw_ct_freezing_exact(saf,p,saturation_fraction)
 end do
 
 ! After these 2 iterations of this modified Newton-Raphson method, the
@@ -111,7 +112,7 @@ end do
 
 sa_freeze = saf
 ct_freeze = ctf
-w_ih = (h - gsw_enthalpy(sa_freeze,ct_freeze,p))/(h - h_ih)
+w_ih = (h - gsw_enthalpy_ct_exact(sa_freeze,ct_freeze,p))/(h - h_ih)
 
 return
 end subroutine

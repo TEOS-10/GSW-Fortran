@@ -5,10 +5,7 @@ elemental function gsw_enthalpy_ct_exact (sa, ct, p)
 !  Calculates specific enthalpy of seawater from Absolute Salinity and 
 !  Conservative Temperature and pressure.  
 !
-!  Note that this function uses the full Gibbs function.  There is an 
-!  alternative to calling this function, namely gsw_enthalpy_CT(SA,CT,p),
-!  which uses the computationally-efficient 48-term expression for density 
-!  in terms of SA, CT and p (IOC et al., 2010). 
+!  Note that this function uses the full Gibbs function.
 !    
 !  SA  =  Absolute Salinity                                        [ g/kg ]
 !  CT  =  Conservative Temperature (ITS-90)                       [ deg C ]

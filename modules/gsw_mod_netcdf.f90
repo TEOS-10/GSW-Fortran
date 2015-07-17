@@ -28,7 +28,8 @@ contains
     character (*), parameter :: fname = 'ncdf_open'
 
     istat = nf90_open(file_name, nf90_nowrite, ncid)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_open')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_open',file_name)
 
     return
     end subroutine ncdf_open
@@ -60,11 +61,12 @@ contains
     character (*), parameter :: fname = 'ncdf_get_dim'
 
     istat = nf90_inq_dimid(ncid, dim_name, dimid)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_inq_dimid')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_inq_dimid',dim_name)
 
     istat = nf90_inquire_dimension(ncid, dimid, len=ncdf_get_dim)
-    if (istat /= nf90_noerr) &
-                     call ncdf_handle_err(istat,fname,'nf90_inquire_dimension')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                             'nf90_inquire_dimension',dim_name)
     return
     end function ncdf_get_dim
 
@@ -81,27 +83,32 @@ contains
     character (*), parameter :: fname = 'ncdf_get_var'
 
     istat = nf90_inq_varid(ncid, var_name, varid)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_inq_varid')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_inq_varid',var_name)
 
     if (present(var0)) then
 
        istat = nf90_get_var(ncid, varid, var0)
-       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_var')
+       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                     'nf90_get_var',var_name)
 
     else if (present(var1)) then
 
        istat = nf90_get_var(ncid, varid, var1)
-       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_var')
+       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                     'nf90_get_var',var_name)
 
     else if (present(var2)) then
 
        istat = nf90_get_var(ncid, varid, var2)
-       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_var')
+       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                     'nf90_get_var',var_name)
 
     else if (present(var3)) then
 
        istat = nf90_get_var(ncid, varid, var3)
-       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_var')
+       if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                     'nf90_get_var',var_name)
 
     end if
 
@@ -121,28 +128,37 @@ contains
     character (*), parameter :: fname = 'ncdf_get_var_att'
 
     istat = nf90_inq_varid(ncid, var_name, varid)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_inq_varid')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_inq_varid',var_name)
 
     istat = nf90_get_var(ncid, varid, var)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_var')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_get_var',var_name)
 
     istat = nf90_get_att(ncid, varid, att_name, att)
-    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname,'nf90_get_att')
+    if (istat /= nf90_noerr) call ncdf_handle_err(istat,fname, &
+                                                  'nf90_get_att',att_name)
 
     return
     end subroutine ncdf_get_var_att
 
     !--------------------------------------------------------------------------
 
-    subroutine ncdf_handle_err (status, fname, nf90_name)
+    subroutine ncdf_handle_err (status, fname, nf90_name, var_name)
     implicit none
 
     integer, intent(in) :: status
     character (*), intent(in) :: fname, nf90_name
+    character (*), intent(in), optional :: var_name
 
     if (status == nf90_noerr) return
 
-    print*, '**Error return from ', nf90_name, ' in ', fname, ' ...'
+    if (present(var_name)) then
+        print*, '**Error return from ', nf90_name, ' (', var_name, ') in ', &
+	        fname, ' ...'
+    else
+        print*, '**Error return from ', nf90_name, ' in ', fname, ' ...'
+    end if
     print '(3x,a," (status=",i0,")")', trim(nf90_strerror(status)), status
 
     stop

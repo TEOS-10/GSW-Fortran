@@ -2,7 +2,7 @@
 subroutine gsw_saar_init (load_delta)
 !==========================================================================
 !
-! Loads gsw_data_v3_0.dat into memory
+! Loads gsw_data_v3_0.nc contents into memory
 !
 ! load_delta  :  optionally loads delta_sa_ref data
 !--------------------------------------------------------------------------

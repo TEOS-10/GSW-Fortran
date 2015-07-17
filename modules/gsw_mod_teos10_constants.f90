@@ -44,6 +44,10 @@ real (r8), parameter :: gsw_ups = gsw_sso/35.0_r8
 
 real (r8), parameter :: gsw_sfac = 0.0248826675584615_r8
 
+!  deltaS = 24, offset = deltaS*gsw_sfac
+
+real (r8), parameter :: offset = 5.971840214030754e-1_r8
+
 !  C3515  =  Conductivity at (SP=35, t_68=15, p=0)                [ mS/cm ]
 
 real (r8), parameter :: gsw_c3515 = 42.9140_r8

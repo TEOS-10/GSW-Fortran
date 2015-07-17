@@ -14,11 +14,6 @@ public :: gsw_alpha_wrt_t_exact
 public :: gsw_alpha_wrt_t_ice
 public :: gsw_beta_const_t_exact
 public :: gsw_beta
-public :: gsw_brinesa_ct
-public :: gsw_brinesa_ct_poly
-public :: gsw_brinesa_estimate
-public :: gsw_brinesa_t
-public :: gsw_brinesa_t_poly
 public :: gsw_cabbeling
 public :: gsw_c_from_sp
 public :: gsw_chem_potential_water_ice
@@ -26,11 +21,12 @@ public :: gsw_chem_potential_water_t_exact
 public :: gsw_cp_ice
 public :: gsw_ct_first_derivatives
 public :: gsw_ct_first_derivatives_wrt_t_exact
-public :: gsw_ct_freezing_derivative_poly
 public :: gsw_ct_freezing_exact
 public :: gsw_ct_freezing
 public :: gsw_ct_freezing_first_derivatives
+public :: gsw_ct_freezing_first_derivatives_poly
 public :: gsw_ct_freezing_poly
+public :: gsw_ct_from_enthalpy_exact
 public :: gsw_ct_from_enthalpy
 public :: gsw_ct_from_entropy
 public :: gsw_ct_from_pt
@@ -50,7 +46,7 @@ public :: gsw_enthalpy_first_derivatives
 public :: gsw_enthalpy_ice
 public :: gsw_enthalpy_second_derivatives_ct_exact
 public :: gsw_enthalpy_second_derivatives
-public :: gsw_enthalpy_sso_0_p
+public :: gsw_enthalpy_sso_0
 public :: gsw_enthalpy_t_exact
 public :: gsw_entropy_first_derivatives
 public :: gsw_entropy_from_pt
@@ -60,7 +56,11 @@ public :: gsw_entropy_part
 public :: gsw_entropy_part_zerop
 public :: gsw_entropy_second_derivatives
 public :: gsw_fdelta
-public :: gsw_frazil_ratios
+public :: gsw_frazil_properties
+public :: gsw_frazil_properties_potential
+public :: gsw_frazil_properties_potential_poly
+public :: gsw_frazil_ratios_adiabatic
+public :: gsw_frazil_ratios_adiabatic_poly
 public :: gsw_gibbs
 public :: gsw_gibbs_ice
 public :: gsw_gibbs_ice_part_t
@@ -82,14 +82,22 @@ public :: gsw_latentheat_evap_ct
 public :: gsw_latentheat_evap_t
 public :: gsw_latentheat_melting
 public :: gsw_melting_ice_equilibrium_sa_ct_ratio
+public :: gsw_melting_ice_equilibrium_sa_ct_ratio_poly
 public :: gsw_melting_ice_into_seawater
 public :: gsw_melting_ice_sa_ct_ratio
+public :: gsw_melting_ice_sa_ct_ratio_poly
 public :: gsw_melting_seaice_equilibrium_sa_ct_ratio
+public :: gsw_melting_seaice_equilibrium_sa_ct_ratio_poly
 public :: gsw_melting_seaice_into_seawater
 public :: gsw_melting_seaice_sa_ct_ratio
+public :: gsw_melting_seaice_sa_ct_ratio_poly
 public :: gsw_nsquared
 public :: gsw_pot_enthalpy_from_pt_ice
 public :: gsw_pot_enthalpy_from_pt_ice_poly
+public :: gsw_pot_enthalpy_ice_freezing
+public :: gsw_pot_enthalpy_ice_freezing_first_derivatives
+public :: gsw_pot_enthalpy_ice_freezing_first_derivatives_poly
+public :: gsw_pot_enthalpy_ice_freezing_poly
 public :: gsw_pot_rho_t_exact
 public :: gsw_pressure_coefficient_ice
 public :: gsw_pressure_freezing_ct
@@ -108,9 +116,17 @@ public :: gsw_pt_second_derivatives
 public :: gsw_rho_alpha_beta
 public :: gsw_rho
 public :: gsw_rho_first_derivatives
+public :: gsw_rho_first_derivatives_wrt_enthalpy
 public :: gsw_rho_ice
+public :: gsw_rho_second_derivatives
+public :: gsw_rho_second_derivatives_wrt_enthalpy
 public :: gsw_rho_t_exact
 public :: gsw_saar
+public :: gsw_sa_freezing_estimate
+public :: gsw_sa_freezing_from_ct
+public :: gsw_sa_freezing_from_ct_poly
+public :: gsw_sa_freezing_from_t
+public :: gsw_sa_freezing_from_t_poly
 public :: gsw_sa_from_rho
 public :: gsw_sa_from_sp_baltic
 public :: gsw_sa_from_sp
@@ -125,10 +141,15 @@ public :: gsw_sigma4
 public :: gsw_sound_speed
 public :: gsw_sound_speed_ice
 public :: gsw_sound_speed_t_exact
-public :: gsw_specvol_anom
+public :: gsw_specvol_alpha_beta
+public :: gsw_specvol_anom_standard
 public :: gsw_specvol
+public :: gsw_specvol_first_derivatives
+public :: gsw_specvol_first_derivatives_wrt_enthalpy
 public :: gsw_specvol_ice
-public :: gsw_specvol_sso_0_p
+public :: gsw_specvol_second_derivatives
+public :: gsw_specvol_second_derivatives_wrt_enthalpy
+public :: gsw_specvol_sso_0
 public :: gsw_specvol_t_exact
 public :: gsw_sp_from_c
 public :: gsw_sp_from_sa_baltic
@@ -136,14 +157,17 @@ public :: gsw_sp_from_sa
 public :: gsw_sp_from_sk
 public :: gsw_sp_from_sr
 public :: gsw_sp_from_sstar
+public :: gsw_spiciness0
+public :: gsw_spiciness1
+public :: gsw_spiciness2
 public :: gsw_sr_from_sp
 public :: gsw_sstar_from_sa
 public :: gsw_sstar_from_sp
 public :: gsw_t_deriv_chem_potential_water_t_exact
-public :: gsw_t_freezing_derivative_poly
 public :: gsw_t_freezing_exact
 public :: gsw_t_freezing
 public :: gsw_t_freezing_first_derivatives
+public :: gsw_t_freezing_first_derivatives_poly
 public :: gsw_t_freezing_poly
 public :: gsw_t_from_ct
 public :: gsw_t_from_pt0_ice
@@ -186,17 +210,17 @@ interface
     real (r8) :: gsw_adiabatic_lapse_rate_ice
     end function gsw_adiabatic_lapse_rate_ice
     
-    elemental function gsw_alpha (sa, ct, p)  
+    elemental function gsw_alpha (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_alpha
     end function gsw_alpha
     
-    elemental function gsw_alpha_on_beta (sa, ct, p)  
+    elemental function gsw_alpha_on_beta (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_alpha_on_beta
     end function gsw_alpha_on_beta
     
@@ -221,53 +245,17 @@ interface
     real (r8) :: gsw_beta_const_t_exact
     end function gsw_beta_const_t_exact
     
-    elemental function gsw_beta (sa, ct, p) 
+    elemental function gsw_beta (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p 
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_beta
     end function gsw_beta
     
-    elemental function gsw_brinesa_ct (ct, p, saturation_fraction)
+    elemental function gsw_cabbeling (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: ct, p, saturation_fraction
-    real (r8) :: gsw_brinesa_ct
-    end function gsw_brinesa_ct
-    
-    elemental function gsw_brinesa_ct_poly (ct, p, saturation_fraction)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: ct, p, saturation_fraction
-    real (r8) :: gsw_brinesa_ct_poly
-    end function gsw_brinesa_ct_poly
-    
-    elemental function gsw_brinesa_estimate (p, saturation_fraction, ct, t)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: p, saturation_fraction
-    real (r8), intent(in), optional :: ct, t
-    real (r8) :: gsw_brinesa_estimate
-    end function gsw_brinesa_estimate
-    
-    elemental function gsw_brinesa_t (t, p, saturation_fraction)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: t, p, saturation_fraction
-    real (r8) :: gsw_brinesa_t
-    end function gsw_brinesa_t
-    
-    elemental function gsw_brinesa_t_poly (t, p, saturation_fraction)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: t, p, saturation_fraction
-    real (r8) :: gsw_brinesa_t_poly
-    end function gsw_brinesa_t_poly
-    
-    elemental function gsw_cabbeling (sa, ct, p)  
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_cabbeling
     end function gsw_cabbeling
     
@@ -314,14 +302,6 @@ interface
     real (r8), intent(out), optional :: ct_p_wrt_t, ct_sa_wrt_t, ct_t_wrt_t
     end subroutine gsw_ct_first_derivatives_wrt_t_exact
     
-    elemental function gsw_ct_freezing_derivative_poly (sa, p, &
-                                                        saturation_fraction)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: sa, p, saturation_fraction
-    real (r8) :: gsw_ct_freezing_derivative_poly
-    end function gsw_ct_freezing_derivative_poly
-    
     elemental function gsw_ct_freezing_exact (sa, p, saturation_fraction)
     use gsw_mod_kinds
     implicit none
@@ -345,12 +325,27 @@ interface
     real (r8), intent(out), optional :: ctfreezing_sa, ctfreezing_p
     end subroutine gsw_ct_freezing_first_derivatives
     
+    elemental subroutine gsw_ct_freezing_first_derivatives_poly (sa, p, &
+                              saturation_fraction, ctfreezing_sa, ctfreezing_p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p, saturation_fraction
+    real (r8), intent(out), optional :: ctfreezing_sa, ctfreezing_p
+    end subroutine gsw_ct_freezing_first_derivatives_poly
+    
     elemental function gsw_ct_freezing_poly (sa, p, saturation_fraction)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, p, saturation_fraction
     real (r8) :: gsw_ct_freezing_poly
     end function gsw_ct_freezing_poly
+    
+    elemental function gsw_ct_from_enthalpy_exact (sa, h, p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, h, p
+    real (r8) :: gsw_ct_from_enthalpy_exact
+    end function gsw_ct_from_enthalpy_exact
     
     elemental function gsw_ct_from_enthalpy (sa, h, p)
     use gsw_mod_kinds
@@ -424,10 +419,10 @@ interface
     real (r8) :: gsw_dilution_coefficient_t_exact
     end function gsw_dilution_coefficient_t_exact
     
-    elemental function gsw_dynamic_enthalpy (sa, ct, p) 
+    elemental function gsw_dynamic_enthalpy (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p 
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_dynamic_enthalpy
     end function gsw_dynamic_enthalpy
     
@@ -445,10 +440,10 @@ interface
     real (r8) :: gsw_enthalpy_diff
     end function gsw_enthalpy_diff
     
-    elemental function gsw_enthalpy (sa, ct, p)  
+    elemental function gsw_enthalpy (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_enthalpy
     end function gsw_enthalpy
     
@@ -482,20 +477,20 @@ interface
     real (r8), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
     end subroutine gsw_enthalpy_second_derivatives_ct_exact
     
-    elemental subroutine gsw_enthalpy_second_derivatives (sa, ct, p, &
-                                                     h_sa_sa, h_sa_ct, h_ct_ct)
+    elemental subroutine gsw_enthalpy_second_derivatives (sa, ct, p, h_sa_sa, &
+                                                          h_sa_ct, h_ct_ct)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, ct, p
     real (r8), intent(out), optional :: h_sa_sa, h_sa_ct, h_ct_ct
     end subroutine gsw_enthalpy_second_derivatives
     
-    elemental function gsw_enthalpy_sso_0_p (p) 
+    elemental function gsw_enthalpy_sso_0 (p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: p 
-    real (r8) :: gsw_enthalpy_sso_0_p
-    end function gsw_enthalpy_sso_0_p
+    real (r8), intent(in) :: p
+    real (r8) :: gsw_enthalpy_sso_0
+    end function gsw_enthalpy_sso_0
     
     elemental function gsw_enthalpy_t_exact (sa, t, p) 
     use gsw_mod_kinds
@@ -561,13 +556,45 @@ interface
     real (r8) :: gsw_fdelta
     end function gsw_fdelta
     
-    elemental subroutine gsw_frazil_ratios (sa, p, w_ih, dsa_dct_frazil, &
-                                            dsa_dp_frazil, dct_dp_frazil)
+    elemental subroutine gsw_frazil_properties (sa_bulk, h_bulk, p, &
+                                                sa_final, ct_final, w_ih_final)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa_bulk, h_bulk, p
+    real (r8), intent(out) :: sa_final, ct_final, w_ih_final
+    end subroutine gsw_frazil_properties
+    
+    elemental subroutine gsw_frazil_properties_potential (sa_bulk, h_pot_bulk,&
+                                             p, sa_final, ct_final, w_ih_final)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa_bulk, h_pot_bulk, p
+    real (r8), intent(out) :: sa_final, ct_final, w_ih_final
+    end subroutine gsw_frazil_properties_potential
+    
+    elemental subroutine gsw_frazil_properties_potential_poly (sa_bulk, &
+                                 h_pot_bulk, p, sa_final, ct_final, w_ih_final)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa_bulk, h_pot_bulk, p
+    real (r8), intent(out) :: sa_final, ct_final, w_ih_final
+    end subroutine gsw_frazil_properties_potential_poly
+    
+    elemental subroutine gsw_frazil_ratios_adiabatic (sa, p, w_ih, &
+                                  dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, p, w_ih
     real (r8), intent(out) :: dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil
-    end subroutine gsw_frazil_ratios
+    end subroutine gsw_frazil_ratios_adiabatic
+    
+    elemental subroutine gsw_frazil_ratios_adiabatic_poly (sa, p, w_ih, &
+                                  dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p, w_ih
+    real (r8), intent(out) :: dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil
+    end subroutine gsw_frazil_ratios_adiabatic_poly
     
     elemental function gsw_gibbs (ns, nt, np, sa, t, p)
     use gsw_mod_kinds
@@ -635,10 +662,10 @@ interface
     end function gsw_hill_ratio_at_sp2
     
     elemental subroutine gsw_ice_fraction_to_freeze_seawater (sa, ct, p, &
-                         saturation_fraction, t_ih, sa_freeze, ct_freeze, w_ih)
+                                              t_ih, sa_freeze, ct_freeze, w_ih)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+    real (r8), intent(in) :: sa, ct, p, t_ih
     real (r8), intent(out) :: sa_freeze, ct_freeze, w_ih
     end subroutine gsw_ice_fraction_to_freeze_seawater
     
@@ -671,10 +698,10 @@ interface
     real (r8) :: gsw_kappa_const_t_ice
     end function gsw_kappa_const_t_ice
     
-    elemental function gsw_kappa (sa, ct, p)  
+    elemental function gsw_kappa (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_kappa
     end function gsw_kappa
     
@@ -713,55 +740,79 @@ interface
     real (r8) :: gsw_latentheat_melting
     end function gsw_latentheat_melting
     
-    elemental function gsw_melting_ice_equilibrium_sa_ct_ratio (sa, p, &
-                                                           saturation_fraction)
+    elemental function gsw_melting_ice_equilibrium_sa_ct_ratio (sa, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, p, saturation_fraction
+    real (r8), intent(in) :: sa, p
     real (r8) :: gsw_melting_ice_equilibrium_sa_ct_ratio
     end function gsw_melting_ice_equilibrium_sa_ct_ratio
     
-    elemental subroutine gsw_melting_ice_into_seawater (sa, ct, p, &
-                           saturation_fraction, w_ih, t_ih, sa_final, ct_final)
+    elemental function gsw_melting_ice_equilibrium_sa_ct_ratio_poly (sa, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, w_ih, t_ih
-    real (r8), intent(out) :: sa_final, ct_final
+    real (r8), intent(in) :: sa, p
+    real (r8) :: gsw_melting_ice_equilibrium_sa_ct_ratio_poly
+    end function gsw_melting_ice_equilibrium_sa_ct_ratio_poly
+    
+    elemental subroutine gsw_melting_ice_into_seawater (sa, ct, p, w_ih, t_ih,&
+                                                sa_final, ct_final, w_ih_final)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p, w_ih, t_ih
+    real (r8), intent(out) :: sa_final, ct_final, w_ih_final
     end subroutine gsw_melting_ice_into_seawater
     
-    elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, &
-                                                    saturation_fraction, t_ih)
+    elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, t_ih)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+    real (r8), intent(in) :: sa, ct, p, t_ih
     real (r8) :: gsw_melting_ice_sa_ct_ratio
     end function gsw_melting_ice_sa_ct_ratio
     
-    elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p, &
-                                                           saturation_fraction)
+    elemental function gsw_melting_ice_sa_ct_ratio_poly (sa, ct, p, t_ih)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, p, saturation_fraction
+    real (r8), intent(in) :: sa, ct, p, t_ih
+    real (r8) :: gsw_melting_ice_sa_ct_ratio_poly
+    end function gsw_melting_ice_sa_ct_ratio_poly
+    
+    elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p
     real (r8) :: gsw_melting_seaice_equilibrium_sa_ct_ratio
     end function gsw_melting_seaice_equilibrium_sa_ct_ratio
     
-    elemental subroutine gsw_melting_seaice_into_seawater (sa, ct, p, &
-        saturation_fraction, w_seaice, sa_seaice, t_seaice, sa_final, ct_final)
+    elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio_poly (sa, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, w_seaice
-    real (r8), intent(in) :: sa_seaice, t_seaice
+    real (r8), intent(in) :: sa, p
+    real (r8) :: gsw_melting_seaice_equilibrium_sa_ct_ratio_poly
+    end function gsw_melting_seaice_equilibrium_sa_ct_ratio_poly
+    
+    elemental subroutine gsw_melting_seaice_into_seawater (sa, ct, p, &
+                             w_seaice, sa_seaice, t_seaice, sa_final, ct_final)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p, w_seaice, sa_seaice, t_seaice
     real (r8), intent(out) :: sa_final, ct_final
     end subroutine gsw_melting_seaice_into_seawater
     
-    elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, &
-                                      saturation_fraction, sa_seaice, t_seaice)
+    elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, sa_seaice, &
+                                                       t_seaice)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
-    real (r8), intent(in) :: t_seaice
+    real (r8), intent(in) :: sa, ct, p, sa_seaice, t_seaice
     real (r8) :: gsw_melting_seaice_sa_ct_ratio
     end function gsw_melting_seaice_sa_ct_ratio
+    
+    elemental function gsw_melting_seaice_sa_ct_ratio_poly (sa, ct, p, &
+                                                           sa_seaice, t_seaice)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p, sa_seaice, t_seaice
+    real (r8) :: gsw_melting_seaice_sa_ct_ratio_poly
+    end function gsw_melting_seaice_sa_ct_ratio_poly
     
     pure subroutine gsw_nsquared (sa, ct, p, lat, n2, p_mid)
     use gsw_mod_kinds
@@ -783,6 +834,38 @@ interface
     real (r8), intent(in) :: pt0_ice
     real (r8) :: gsw_pot_enthalpy_from_pt_ice_poly
     end function gsw_pot_enthalpy_from_pt_ice_poly
+    
+    elemental function gsw_pot_enthalpy_ice_freezing (sa, p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p
+    real (r8) :: gsw_pot_enthalpy_ice_freezing
+    end function gsw_pot_enthalpy_ice_freezing
+    
+    elemental subroutine gsw_pot_enthalpy_ice_freezing_first_derivatives (sa, &
+                  p, pot_enthalpy_ice_freezing_sa, pot_enthalpy_ice_freezing_p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p
+    real (r8), intent(out), optional :: pot_enthalpy_ice_freezing_sa
+    real (r8), intent(out), optional :: pot_enthalpy_ice_freezing_p
+    end subroutine gsw_pot_enthalpy_ice_freezing_first_derivatives
+    
+    elemental subroutine gsw_pot_enthalpy_ice_freezing_first_derivatives_poly(&
+             sa, p, pot_enthalpy_ice_freezing_sa, pot_enthalpy_ice_freezing_p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p
+    real (r8), intent(out), optional :: pot_enthalpy_ice_freezing_sa
+    real (r8), intent(out), optional :: pot_enthalpy_ice_freezing_p
+    end subroutine gsw_pot_enthalpy_ice_freezing_first_derivatives_poly
+    
+    elemental function gsw_pot_enthalpy_ice_freezing_poly (sa, p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p
+    real (r8) :: gsw_pot_enthalpy_ice_freezing_poly
+    end function gsw_pot_enthalpy_ice_freezing_poly
     
     elemental function gsw_pot_rho_t_exact (sa, t, p, p_ref)  
     use gsw_mod_kinds
@@ -897,10 +980,10 @@ interface
     real (r8), intent(out), optional :: rho, alpha, beta
     end subroutine gsw_rho_alpha_beta
     
-    elemental function gsw_rho (sa, ct, p) 
+    elemental function gsw_rho (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p 
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_rho
     end function gsw_rho
     
@@ -912,12 +995,37 @@ interface
     real (r8), intent(out), optional :: drho_dsa, drho_dct, drho_dp
     end subroutine gsw_rho_first_derivatives
     
+    elemental subroutine gsw_rho_first_derivatives_wrt_enthalpy (sa, ct, p, &
+                                                                 rho_sa, rho_h)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    real (r8), intent(out), optional :: rho_sa, rho_h
+    end subroutine gsw_rho_first_derivatives_wrt_enthalpy
+    
     elemental function gsw_rho_ice (t, p)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: t, p
     real (r8) :: gsw_rho_ice
     end function gsw_rho_ice
+    
+    elemental subroutine gsw_rho_second_derivatives (sa, ct, p, rho_sa_sa, &
+                                      rho_sa_ct, rho_ct_ct, rho_sa_p, rho_ct_p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    real (r8), intent(out), optional :: rho_sa_sa, rho_sa_ct, rho_ct_ct
+    real (r8), intent(out), optional :: rho_sa_p, rho_ct_p
+    end subroutine gsw_rho_second_derivatives
+    
+    elemental subroutine gsw_rho_second_derivatives_wrt_enthalpy (sa, ct, p, &
+                                                  rho_sa_sa, rho_sa_h, rho_h_h)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    real (r8), intent(out), optional :: rho_sa_sa, rho_sa_h, rho_h_h
+    end subroutine gsw_rho_second_derivatives_wrt_enthalpy
     
     elemental function gsw_rho_t_exact (sa, t, p) 
     use gsw_mod_kinds
@@ -932,6 +1040,42 @@ interface
     real (r8), intent(in) :: p, long, lat
     real (r8) :: gsw_saar
     end function gsw_saar
+    
+    elemental function gsw_sa_freezing_estimate (p, saturation_fraction, ct, t)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: p, saturation_fraction
+    real (r8), intent(in), optional :: ct, t
+    real (r8) :: gsw_sa_freezing_estimate
+    end function gsw_sa_freezing_estimate
+    
+    elemental function gsw_sa_freezing_from_ct (ct, p, saturation_fraction)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: ct, p, saturation_fraction
+    real (r8) :: gsw_sa_freezing_from_ct
+    end function gsw_sa_freezing_from_ct
+    
+    elemental function gsw_sa_freezing_from_ct_poly (ct, p, saturation_fraction)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: ct, p, saturation_fraction
+    real (r8) :: gsw_sa_freezing_from_ct_poly
+    end function gsw_sa_freezing_from_ct_poly
+    
+    elemental function gsw_sa_freezing_from_t (t, p, saturation_fraction)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: t, p, saturation_fraction
+    real (r8) :: gsw_sa_freezing_from_t
+    end function gsw_sa_freezing_from_t
+    
+    elemental function gsw_sa_freezing_from_t_poly (t, p, saturation_fraction)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: t, p, saturation_fraction
+    real (r8) :: gsw_sa_freezing_from_t_poly
+    end function gsw_sa_freezing_from_t_poly
     
     elemental function gsw_sa_from_rho (rho, ct, p)
     use gsw_mod_kinds
@@ -969,18 +1113,17 @@ interface
     end function gsw_sa_p_inrange
     
     elemental subroutine gsw_seaice_fraction_to_freeze_seawater (sa, ct, p, &
-      saturation_fraction, sa_seaice, t_seaice, sa_freeze, ct_freeze, w_seaice)
+                           sa_seaice, t_seaice, sa_freeze, ct_freeze, w_seaice)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
-    real (r8), intent(in) :: t_seaice
+    real (r8), intent(in) :: sa, ct, p, sa_seaice, t_seaice
     real (r8), intent(out) :: sa_freeze, ct_freeze, w_seaice
     end subroutine gsw_seaice_fraction_to_freeze_seawater
     
-    elemental function gsw_sigma0 (sa, ct) 
+    elemental function gsw_sigma0 (sa, ct)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct 
+    real (r8), intent(in) :: sa, ct
     real (r8) :: gsw_sigma0
     end function gsw_sigma0
     
@@ -1012,10 +1155,10 @@ interface
     real (r8) :: gsw_sigma4
     end function gsw_sigma4
     
-    elemental function gsw_sound_speed (sa, ct, p) 
+    elemental function gsw_sound_speed (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p 
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_sound_speed
     end function gsw_sound_speed
     
@@ -1033,19 +1176,45 @@ interface
     real (r8) :: gsw_sound_speed_t_exact
     end function gsw_sound_speed_t_exact
     
-    elemental function gsw_specvol_anom (sa, ct, p)  
+    elemental subroutine gsw_specvol_alpha_beta (sa, ct, p, specvol, alpha, &
+                                                 beta)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    real (r8), intent(out), optional :: specvol, alpha, beta
+    end subroutine gsw_specvol_alpha_beta
+    
+    elemental function gsw_specvol_anom_standard (sa, ct, p)  
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, ct, p  
-    real (r8) :: gsw_specvol_anom
-    end function gsw_specvol_anom
+    real (r8) :: gsw_specvol_anom_standard
+    end function gsw_specvol_anom_standard
     
-    elemental function gsw_specvol (sa, ct, p) 
+    elemental function gsw_specvol (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p 
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_specvol
     end function gsw_specvol
+    
+    elemental subroutine gsw_specvol_first_derivatives (sa, ct, p, v_sa, v_ct, &
+                                                        v_p, iflag)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    integer, intent(in), optional :: iflag
+    real (r8), intent(out), optional :: v_sa, v_ct, v_p
+    end subroutine gsw_specvol_first_derivatives
+    
+    elemental subroutine gsw_specvol_first_derivatives_wrt_enthalpy (sa, ct, &
+                                                           p, v_sa, v_h, iflag)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    integer, intent(in), optional :: iflag
+    real (r8), intent(out), optional :: v_sa, v_h
+    end subroutine gsw_specvol_first_derivatives_wrt_enthalpy
     
     elemental function gsw_specvol_ice (t, p)
     use gsw_mod_kinds
@@ -1054,12 +1223,30 @@ interface
     real (r8) :: gsw_specvol_ice
     end function gsw_specvol_ice
     
-    elemental function gsw_specvol_sso_0_p (p) 
+    elemental subroutine gsw_specvol_second_derivatives (sa, ct, p, v_sa_sa, &
+                                       v_sa_ct, v_ct_ct, v_sa_p, v_ct_p, iflag)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: p 
-    real (r8) :: gsw_specvol_sso_0_p
-    end function gsw_specvol_sso_0_p
+    real (r8), intent(in) :: sa, ct, p
+    integer, intent(in), optional :: iflag
+    real (r8), intent(out), optional :: v_sa_sa, v_sa_ct, v_ct_ct, v_sa_p, v_ct_p
+    end subroutine gsw_specvol_second_derivatives
+    
+    elemental subroutine gsw_specvol_second_derivatives_wrt_enthalpy (sa, ct, &
+                                              p, v_sa_sa, v_sa_h, v_h_h, iflag)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    integer, intent(in), optional :: iflag
+    real (r8), intent(out), optional :: v_sa_sa, v_sa_h, v_h_h
+    end subroutine gsw_specvol_second_derivatives_wrt_enthalpy
+    
+    elemental function gsw_specvol_sso_0 (p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: p
+    real (r8) :: gsw_specvol_sso_0
+    end function gsw_specvol_sso_0
     
     elemental function gsw_specvol_t_exact (sa, t, p)  
     use gsw_mod_kinds
@@ -1110,6 +1297,27 @@ interface
     real (r8) :: gsw_sp_from_sstar
     end function gsw_sp_from_sstar
     
+    elemental function gsw_spiciness0 (sa, ct)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct
+    real (r8) :: gsw_spiciness0
+    end function gsw_spiciness0
+    
+    elemental function gsw_spiciness1 (sa, ct)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct
+    real (r8) :: gsw_spiciness1
+    end function gsw_spiciness1
+    
+    elemental function gsw_spiciness2 (sa, ct)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct
+    real (r8) :: gsw_spiciness2
+    end function gsw_spiciness2
+    
     elemental function gsw_sr_from_sp (sp) 
     use gsw_mod_kinds
     implicit none
@@ -1138,13 +1346,6 @@ interface
     real (r8) :: gsw_t_deriv_chem_potential_water_t_exact
     end function gsw_t_deriv_chem_potential_water_t_exact
     
-    elemental function gsw_t_freezing_derivative_poly (sa, p, saturation_fraction)
-    use gsw_mod_kinds
-    implicit none
-    real (r8), intent(in) :: sa, p, saturation_fraction
-    real (r8) :: gsw_t_freezing_derivative_poly
-    end function gsw_t_freezing_derivative_poly
-    
     elemental function gsw_t_freezing_exact (sa, p, saturation_fraction)
     use gsw_mod_kinds
     implicit none
@@ -1167,6 +1368,14 @@ interface
     real (r8), intent(in) :: sa, p, saturation_fraction
     real (r8), intent(out), optional :: tfreezing_sa, tfreezing_p
     end subroutine gsw_t_freezing_first_derivatives
+    
+    elemental subroutine gsw_t_freezing_first_derivatives_poly (sa, p, &
+                                saturation_fraction, tfreezing_sa, tfreezing_p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, p, saturation_fraction
+    real (r8), intent(out), optional :: tfreezing_sa, tfreezing_p
+    end subroutine gsw_t_freezing_first_derivatives_poly
     
     elemental function gsw_t_freezing_poly (sa, p, saturation_fraction, polynomial)
     use gsw_mod_kinds
@@ -1191,10 +1400,10 @@ interface
     real (r8) :: gsw_t_from_pt0_ice
     end function gsw_t_from_pt0_ice
     
-    elemental function gsw_thermobaric (sa, ct, p)  
+    elemental function gsw_thermobaric (sa, ct, p)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa, ct, p  
+    real (r8), intent(in) :: sa, ct, p
     real (r8) :: gsw_thermobaric
     end function gsw_thermobaric
     

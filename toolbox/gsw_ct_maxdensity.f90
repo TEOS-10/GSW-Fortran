@@ -5,9 +5,7 @@ elemental function gsw_ct_maxdensity (sa, p)
 !  Calculates the Conservative Temperature of maximum density of seawater. 
 !  This function returns the Conservative temperature at which the density
 !  of seawater is a maximum, at given Absolute Salinity, SA, and sea 
-!  pressure, p (in dbar).  This function uses the computationally-efficient
-!  48-term expression for density in terms of SA, CT and p (IOC et
-!  al., 2010).
+!  pressure, p (in dbar).
 !
 !  SA =  Absolute Salinity                                         [ g/kg ]
 !  p  =  sea pressure                                              [ dbar ]

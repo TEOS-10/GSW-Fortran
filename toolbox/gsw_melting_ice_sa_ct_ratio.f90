@@ -1,6 +1,5 @@
 !==========================================================================
-elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, &
-                                                saturation_fraction, t_ih)
+elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, t_ih)
 !==========================================================================
 !
 !  Calculates the ratio of SA to CT changes when ice melts into seawater.
@@ -16,8 +15,6 @@ elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, &
 !  CT   =  Conservative Temperature of seawater (ITS-90)          [ deg C ]
 !  p    =  sea pressure at which the melting occurs                [ dbar ]
 !         ( i.e. absolute pressure - 10.1325d0 dbar ) 
-!  saturation_fraction = the saturation fraction of dissolved air in 
-!               seawater.  The saturation_fraction must be between 0 and 1.
 !  t_Ih =  the in-situ temperature of the ice (ITS-90)            [ deg C ]
 !
 !  melting_ice_SA_CT_ratio = the ratio of SA to CT changes when ice melts
@@ -25,8 +22,9 @@ elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, &
 !                                                          [ g kg^-1 K^-1 ] 
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
-use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
+use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_t_freezing, gsw_enthalpy_ice
+use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
@@ -34,11 +32,13 @@ use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct, p, saturation_fraction, t_ih
+real (r8), intent(in) :: sa, ct, p, t_ih
 
 real (r8) :: gsw_melting_ice_sa_ct_ratio
 
-real (r8) :: ctf, denominator, h, h_ih, tf, h_hat_sa, h_hat_ct
+real (r8) :: ctf, h, h_ih, tf, h_hat_sa, h_hat_ct
+
+real (r8), parameter :: saturation_fraction = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_melting_ice_sa_ct_ratio"
 
@@ -56,13 +56,12 @@ if (t_ih .gt. tf) then
     return
 end if
 
-h = gsw_enthalpy(sa,ct,p)
+h = gsw_enthalpy_ct_exact(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_ih,p)
-call gsw_enthalpy_first_derivatives(sa,ct,p,h_hat_sa,h_hat_ct)
-! Note that h_hat_CT is equal to cp0*(273.15 + t)/(273.15 + pt0)
+call gsw_enthalpy_first_derivatives_ct_exact(sa,ct,p,h_hat_sa,h_hat_ct)
+	! Note that h_hat_CT is equal to cp0*(273.15 + t)/(273.15 + pt0)
 
-denominator = h - h_ih - sa*h_hat_sa
-gsw_melting_ice_sa_ct_ratio = sa*h_hat_ct/denominator
+gsw_melting_ice_sa_ct_ratio = sa*h_hat_ct/(h - h_ih - sa*h_hat_sa)
 
 return
 end function

@@ -3,9 +3,7 @@ elemental subroutine gsw_ct_from_rho (rho, sa, p, ct, ct_multiple)
 ! =========================================================================
 !
 !  Calculates the Conservative Temperature of a seawater sample, for given
-!  values of its density, Absolute Salinity and sea pressure (in dbar), 
-!  using the computationally-efficient 48-term expression for density in 
-!  terms of SA, CT and p (IOC et al., 2010)
+!  values of its density, Absolute Salinity and sea pressure (in dbar).
 !
 !  rho  =  density of a seawater sample (e.g. 1026 kg/m^3)       [ kg/m^3 ]
 !   Note. This input has not had 1000 kg/m^3 subtracted from it.
@@ -67,8 +65,8 @@ ct_max_rho = gsw_ct_maxdensity(sa,p)
 rho_max = gsw_rho(sa,ct_max_rho,p)
 rho_extreme = rho_max
 
-! Assumes that the seawater is always saturated with air
-ct_freezing = gsw_ct_freezing_poly(sa,p,1.0_r8)
+! Assumes that the seawater is always unsaturated with air
+ct_freezing = gsw_ct_freezing_poly(sa,p,0.0_r8)
 
 call gsw_rho_alpha_beta(sa,ct_freezing,p,rho=rho_freezing,alpha=alpha_freezing)
 

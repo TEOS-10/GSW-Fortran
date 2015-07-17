@@ -24,8 +24,8 @@ real (r8), intent(in) :: sa, ct
 
 real (r8) :: gsw_pt_from_ct
 
-real (r8) :: a5ct, b3ct, ct_factor, pt_num, pt_den, ct_diff
-real (r8) :: ct0, pt, pt_old, ptm, dct, dct_dpt, s1
+real (r8) :: a5ct, b3ct, ct_factor, pt_num, pt_recden, ct_diff
+real (r8) :: ct0, pt, pt_old, ptm, dct, dpt_dct, s1
 
 real (r8), parameter :: a0 = -1.446013646344788e-2_r8
 real (r8), parameter :: a1 = -3.305308995852924e-3_r8
@@ -46,25 +46,25 @@ b3ct = b3*ct
 
 ct_factor = (a3 + a4*s1 + a5ct)
 pt_num = a0 + s1*(a1 + a2*s1) + ct*ct_factor
-pt_den = b0 + b1*s1 + ct*(b2 + b3ct)
-pt = (pt_num)/(pt_den)
+pt_recden = 1.0_r8/(b0 + b1*s1 + ct*(b2 + b3ct))
+pt = pt_num*pt_recden
 
-dct_dpt = (pt_den)/(ct_factor + a5ct - (b2 + b3ct + b3ct)*pt)
+dpt_dct = (ct_factor + a5ct - (b2 + b3ct + b3ct)*pt)*pt_recden
 
 ! Start the 1.5 iterations through the modified Newton-Rapshon iterative,
 ! method, which is also known as the Newton-McDougall method. 
 
 ct_diff = gsw_ct_from_pt(sa,pt) - ct
 pt_old = pt
-pt = pt_old - (ct_diff)/dct_dpt
+pt = pt_old - ct_diff*dpt_dct
 ptm = 0.5_r8*(pt + pt_old)
 
-dct_dpt = -(ptm + gsw_t0)*gsw_gibbs_pt0_pt0(sa,ptm)/gsw_cp0
+dpt_dct = -gsw_cp0/((ptm + gsw_t0)*gsw_gibbs_pt0_pt0(sa,ptm))
 
-pt = pt_old - (ct_diff)/dct_dpt
+pt = pt_old - ct_diff*dpt_dct
 ct_diff = gsw_ct_from_pt(sa,pt) - ct
 pt_old = pt
-gsw_pt_from_ct = pt_old - (ct_diff)/dct_dpt
+gsw_pt_from_ct = pt_old - ct_diff*dpt_dct
 
 return 
 end function

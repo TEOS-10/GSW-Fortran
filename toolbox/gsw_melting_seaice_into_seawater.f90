@@ -1,6 +1,6 @@
 !==========================================================================
 elemental subroutine gsw_melting_seaice_into_seawater (sa, ct, p, &
-    saturation_fraction, w_seaice, sa_seaice, t_seaice, sa_final, ct_final)
+                         w_seaice, sa_seaice, t_seaice, sa_final, ct_final)
 !==========================================================================
 !
 !  Calculates the Absolute Salinity and Conservative Temperature that 
@@ -29,8 +29,6 @@ elemental subroutine gsw_melting_seaice_into_seawater (sa, ct, p, &
 !  CT  =  Conservative Temperature of seawater (ITS-90)           [ deg C ]
 !  p   =  sea pressure at which the melting occurs                 [ dbar ]
 !         ( i.e. absolute pressure - 10.1325 dbar ) 
-!  saturation_fraction = the saturation fraction of dissolved air in 
-!               seawater.  The saturation_fraction must be between 0 and 1.
 !  w_seaice  =  mass fraction of sea ice, that is the mass of sea ice 
 !               divided by the sum of the masses of sea ice and seawater. 
 !               That is, the mass of sea ice divided by the mass of the 
@@ -48,9 +46,10 @@ elemental subroutine gsw_melting_seaice_into_seawater (sa, ct, p, &
 !               sea ice (or ice) and the orignal seawater         [ deg C ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_t_freezing_exact
 use gsw_mod_toolbox, only : gsw_enthalpy_t_exact, gsw_enthalpy_ice
-use gsw_mod_toolbox, only : gsw_brinesa_t, gsw_ct_from_enthalpy
+use gsw_mod_toolbox, only : gsw_sa_freezing_from_t, gsw_ct_from_enthalpy_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
@@ -58,15 +57,16 @@ use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct, p, saturation_fraction, w_seaice
-real (r8), intent(in) :: sa_seaice, t_seaice
+real (r8), intent(in) :: sa, ct, p, w_seaice, sa_seaice, t_seaice
 real (r8), intent(out) :: sa_final, ct_final
 
 real (r8) :: ctf, h, h_brine, h_final, h_ih, sa_brine, tf_sa_seaice
 
+real (r8), parameter :: saturation_fraction = 0.0_r8
+
 character (*), parameter :: func_name = "gsw_melting_seaice_into_seawater"
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 if (ct .lt. ctf) then
     ! The seawater ct input is below the freezing temp
     sa_final = gsw_error_code(1,func_name)
@@ -74,7 +74,7 @@ if (ct .lt. ctf) then
     return
 end if
 
-tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1e-6_r8
+tf_sa_seaice = gsw_t_freezing_exact(sa_seaice,p,saturation_fraction) - 1e-6_r8
 if (t_seaice .gt. tf_sa_seaice) then
     ! The 1e-6 C buffer in the allowable t_seaice is to ensure that there is
     ! some ice Ih in the sea ice. Without this buffer, that is if t_seaice
@@ -85,7 +85,7 @@ if (t_seaice .gt. tf_sa_seaice) then
     return
 end if
 
-sa_brine = gsw_brinesa_t(t_seaice,p,saturation_fraction)
+sa_brine = gsw_sa_freezing_from_t(t_seaice,p,saturation_fraction)
 if (sa_brine .gt. gsw_error_limit) then
     sa_final = gsw_error_code(3,func_name,sa_brine)
     ct_final = sa_final
@@ -93,24 +93,28 @@ if (sa_brine .gt. gsw_error_limit) then
 end if
 h_brine = gsw_enthalpy_t_exact(sa_brine,t_seaice,p)
 
-h = gsw_enthalpy(sa,ct,p)
+h = gsw_enthalpy_ct_exact(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_seaice,p)
 
 h_final = h - w_seaice*(h - h_ih - (h_brine - h_ih)*sa_seaice/sa_brine)
 
 sa_final = sa - w_seaice*(sa - sa_seaice)
 
-ctf = gsw_ct_freezing(sa_final,p,saturation_fraction)
+!ctf = gsw_ct_freezing_exact(sa_final,p,saturation_fraction)
+!
+!if (h_final .lt. gsw_enthalpy_ct_exact(sa_final,ctf,p)) then
+!    ! Melting this much seaice is not possible as it would result in
+!    ! frozen seawater
+!    sa_final = gsw_error_code(4,func_name)
+!    ct_final = sa_final
+!    return
+!end if
 
-if (h_final .lt. gsw_enthalpy(sa_final,ctf,p)) then
-    ! Melting this much seaice is not possible as it would result in
-    ! frozen seawater
-    sa_final = gsw_error_code(4,func_name)
-    ct_final = sa_final
+ct_final = gsw_ct_from_enthalpy_exact(sa_final,h_final,p)
+if (ct_final .gt. gsw_error_limit) then
+    sa_final = ct_final
     return
-end if
-
-ct_final = gsw_ct_from_enthalpy(sa_final,h_final,p)
+endif
 
 return
 end subroutine

@@ -1,6 +1,5 @@
 !==========================================================================
-elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p, &
-                                                       saturation_fraction)
+elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p)
 !==========================================================================
 !
 !  Calculates the ratio of SA to CT changes when sea ice melts into 
@@ -26,8 +25,6 @@ elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p, &
 !  SA  =  Absolute Salinity of seawater                            [ g/kg ]
 !  p   =  sea pressure at which the melting occurs                 [ dbar ]
 !         ( i.e. absolute pressure - 10.1325 dbar ) 
-!  saturation_fraction = the saturation fraction of dissolved air in 
-!               seawater.  The saturation_fraction must be between 0 and 1.
 !
 !  melting_seaice_equilibrium_SA_CT_ratio = the ratio dSA/dCT of SA to CT  
 !                            changes when sea ice melts into seawater, with   
@@ -35,29 +32,31 @@ elemental function gsw_melting_seaice_equilibrium_sa_ct_ratio (sa, p, &
 !                            freezing temperature.             [ g/(kg K) ] 
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
-use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_t_freezing_exact, gsw_enthalpy_ice
+use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 
 use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, p, saturation_fraction
+real (r8), intent(in) :: sa, p
 
 real (r8) :: gsw_melting_seaice_equilibrium_sa_ct_ratio
 
-real (r8) :: ctf, denominator, h, h_ih, t_seaice, h_hat_sa, h_hat_ct
+real (r8) :: ctf, h, h_ih, t_seaice, h_hat_sa, h_hat_ct
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
-t_seaice = gsw_t_freezing(sa,p,saturation_fraction)
+real (r8), parameter :: saturation_fraction = 0.0_r8
 
-h = gsw_enthalpy(sa,ctf,p)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
+t_seaice = gsw_t_freezing_exact(sa,p,saturation_fraction)
+
+h = gsw_enthalpy_ct_exact(sa,ctf,p)
 h_ih = gsw_enthalpy_ice(t_seaice,p)
-call gsw_enthalpy_first_derivatives(sa,ctf,p,h_hat_sa,h_hat_ct)
-          ! note that h_hat_ct is equal to cp0*(273.15 + t)/(273.15 + pt0)
+call gsw_enthalpy_first_derivatives_ct_exact(sa,ctf,p,h_hat_sa,h_hat_ct)
 
-denominator = h - h_ih - sa*h_hat_sa
-gsw_melting_seaice_equilibrium_sa_ct_ratio = sa*h_hat_ct/denominator
+gsw_melting_seaice_equilibrium_sa_ct_ratio = sa*h_hat_ct / &
+                                                 (h - h_ih - sa*h_hat_sa)
          
 return
 end function

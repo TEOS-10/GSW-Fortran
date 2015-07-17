@@ -1,8 +1,8 @@
 !==========================================================================
-elemental function gsw_brinesa_estimate (p, saturation_fraction, ct, t)
+elemental function gsw_sa_freezing_estimate (p, saturation_fraction, ct, t)
 !==========================================================================
 !
-! Form an estimate of brineSA_t from a polynomial in CT and p 
+! Form an estimate of SA from a polynomial in CT and p 
 !
 !--------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ implicit none
 real (r8), intent(in) :: p, saturation_fraction
 real (r8), intent(in), optional :: ct, t
 
-real (r8) :: gsw_brinesa_estimate
+real (r8) :: gsw_sa_freezing_estimate
 
 real (r8) :: ctx, ctsat, sa
 
@@ -41,7 +41,7 @@ real (r8), parameter :: p12 =  1.256474634100811e-12_r8
 real (r8), parameter :: p13 =  2.105103897918125e-15_r8
 real (r8), parameter :: p14 =  8.663811778227171e-19_r8
 
-! a rough estimate to get the saturated ct
+! A very rough estimate of sa to get the saturated ct
 if (present(ct)) then
     sa = max(-(ct + 9e-4_r8*p)/0.06_r8, 0.0_r8)
     ctx = ct
@@ -49,7 +49,7 @@ else if (present(t)) then
     sa = max(-(t + 9e-4_r8*p)/0.06_r8, 0.0_r8)
     ctx = gsw_ct_from_t(sa,t,p)
 else
-    gsw_brinesa_estimate = 0.0_r8
+    gsw_sa_freezing_estimate = 0.0_r8
     return
 end if
 
@@ -60,7 +60,7 @@ end if
 ctsat = ctx - (1.0_r8-saturation_fraction)* &
         (1e-3_r8)*(2.4_r8-aa*sa)*(1.0_r8+bb*(1.0_r8-sa/gsw_sso))
 
-gsw_brinesa_estimate = p0 &
+gsw_sa_freezing_estimate = p0 &
         + p*(p2 + p4*ctsat + p*(p5 + ctsat*(p7 + p9*ctsat) &
         + p*(p8  + ctsat*(p10 + p12*ctsat) + p*(p11 + p13*ctsat + p14*p)))) &
         + ctsat*(p1 + ctsat*(p3 + p6*p))

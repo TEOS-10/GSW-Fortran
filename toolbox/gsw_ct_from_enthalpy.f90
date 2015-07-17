@@ -3,10 +3,7 @@ elemental function gsw_ct_from_enthalpy (sa, h, p)
 !==========================================================================
 !
 !  Calculates the Conservative Temperature of seawater, given the Absolute 
-!  Salinity, specific enthalpy, h, and pressure p.  The specific enthalpy 
-!  input is the one calculated from the computationally-efficient 48-term
-!  expression for specific volume in terms of SA, CT and p (IOC et al., 
-!  2010).
+!  Salinity, specific enthalpy, h, and pressure p.
 !
 !  SA  =  Absolute Salinity                                        [ g/kg ]
 !  h   =  specific enthalpy                                        [ J/kg ]
@@ -19,6 +16,10 @@ elemental function gsw_ct_from_enthalpy (sa, h, p)
 use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
 
+use gsw_mod_error_functions, only : gsw_error_code
+
+use gsw_mod_teos10_constants, only : gsw_cp0
+
 use gsw_mod_kinds
 
 implicit none
@@ -30,13 +31,29 @@ real (r8) :: gsw_ct_from_enthalpy
 real (r8) :: ct, ct_freezing, ct_mean, ct_old, f, h_freezing
 real (r8) :: h_ct, h_40
 
-ct_freezing = gsw_ct_freezing(sa,p,0.0_r8)
-h_freezing = gsw_enthalpy(sa,ct_freezing,p)
+real (r8), parameter :: ct_40 = 40.0_r8
 
-h_40 = gsw_enthalpy(sa,40.0_r8,p)
+character (*), parameter :: func_name = "gsw_ct_from_enthalpy"
+
+ct_freezing = gsw_ct_freezing(sa,p,0.0_r8)
+
+h_freezing = gsw_enthalpy(sa,ct_freezing,p)
+if (h .lt. h_freezing - gsw_cp0) then
+    ! The input, seawater enthalpy h, is less than the enthalpy at the
+    ! freezing temperature, i.e. the water is frozen.
+    gsw_ct_from_enthalpy = gsw_error_code(1,func_name)
+    return
+endif
+
+h_40 = gsw_enthalpy(sa,ct_40,p)
+if (h .gt. h_40) then
+    ! The input seawater enthalpy is greater than the enthalpy when CT is 40C
+    gsw_ct_from_enthalpy = gsw_error_code(2,func_name)
+    return
+endif
 
 ! first guess of ct
-ct = ct_freezing + (40.0_r8 - ct_freezing)*(h - h_freezing)/(h_40 - h_freezing)
+ct = ct_freezing + (ct_40 - ct_freezing)*(h - h_freezing)/(h_40 - h_freezing)
 call gsw_enthalpy_first_derivatives(sa,ct,p,h_ct=h_ct)
 
 !--------------------------------------------------------------------------

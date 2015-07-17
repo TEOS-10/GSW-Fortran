@@ -8,7 +8,10 @@
 # Usage: ./mat2f90.sh file
 #
 
-outfile=`basename $1 m | tr '[:upper:]' '[:lower:]'`f90
+if [ $# -gt 1 ]
+then outfile=$2
+else outfile=`basename $1 m | tr '[:upper:]' '[:lower:]'`f90
+fi
 
 tmpfile1=__temp1.$$
 tmpfile2=__temp2.$$
@@ -33,20 +36,17 @@ sed -n '
 	s/\.\.\./\&/g
 	s/any\((.*)\)/\1 then/g
 	y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/
-	s/gsw_enthalpy_ct_exact/gsw_enthalpy/
-	s/gsw_ct_from_enthalpy_exact/gsw_ct_from_enthalpy/
-	s/gsw_enthalpy_first_derivatives_ct_exact/gsw_enthalpy_first_derivatives/
 	s/size(\([a-z_0-9]*\))/size-\1/g
 	s/zeros(\([-a-z_0-9]*\))/0.0_r8/g
 	s/ones(\([-a-z_0-9]*\))/1.0_r8/g
 /^ *for /! {
-	s/\([^e]\)\(-[0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2.0_r8\3/g
-	s/\([0-9]*\.[0-9][0-9]*\)\([ \n\r+*/)-]\)/\1_r8\2/g
+	s/\([^e]\)\(-[0-9][0-9]*\)\([ ,\n\f\r+*/)-]\)/\1\2.0_r8\3/g
+	s/\([0-9]*\.[0-9][0-9]*\)\([ ,\n\f\r+*/)-]\)/\1_r8\2/g
 	s/\([0-9][0-9]*\)e\([-+]*[0-9][0-9]*\)/\1e\2_r8/g
 	s/\([0-9]\.\)e\([-+]*[0-9][0-9]*\)/\10e\2_r8/g
 	s/\(\.[0-9][0-9]*\)e0_r8/\1_r8/g
 	s/e0_r8/\.0_r8/g
-	s/\([^-a-z0-9_]\)\([0-9][0-9]*\)\([ ,\n\r+*/)-]\)/\1\2.0_r8\3/g
+	s/\([^-a-z0-9_]\)\([0-9][0-9]*\)\([ ,\n\f\r+*/)-]\)/\1\2.0_r8\3/g
 }
 /gsw_gibbs/ {
 	s/\.0_r8,/,/g
@@ -69,7 +69,7 @@ sed -n '
 	s/(/ (/
 }
 /^function / {
-	s/function *[a-z_]* *= *\(.*\)/elemental function \1/
+	s/function *[a-z0-9_]* *= *\(.*\)/elemental function \1/
 	s/,/, /g
 	s/(/ (/
 }
@@ -94,7 +94,7 @@ $ {
 # Add arguments from subroutine calls to variable list in $tmpfile2
 
 sed -n '
-/ *call *(/ {
+/ *call .*(/ {
 	s/.*(\(.*\)).*/\1/
 	s/ //g
 	p

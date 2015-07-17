@@ -4,8 +4,6 @@ elemental function gsw_sa_from_rho (rho, ct, p)
 !
 !  Calculates the Absolute Salinity of a seawater sample, for given values
 !  of its density, Conservative Temperature and sea pressure (in dbar). 
-!  This function uses the computationally-efficient 48-term expression for 
-!  density in terms of SA, CT and p (IOC et al., 2010).
 
 !  rho =  density of a seawater sample (e.g. 1026 kg/m^3).       [ kg/m^3 ]
 !   Note. This input has not had 1000 kg/m^3 subtracted from it. 
@@ -16,7 +14,7 @@ elemental function gsw_sa_from_rho (rho, ct, p)
 !  sa  =  Absolute Salinity                                          [g/kg]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_rho_alpha_beta, gsw_specvol
+use gsw_mod_toolbox, only : gsw_specvol, gsw_specvol_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
@@ -53,8 +51,7 @@ do no_iter = 1, 2
     delta_v = gsw_specvol(sa_old,ct,p) - v_lab
     sa = sa_old - delta_v/v_sa 
     sa_mean = 0.5_r8*(sa + sa_old)
-    call gsw_rho_alpha_beta(sa_mean,ct,p,rho=rho_mean,beta=beta_mean)
-    v_sa = -beta_mean/rho_mean
+    call gsw_specvol_first_derivatives(sa_mean,ct,p,v_sa)
     sa = sa_old - delta_v/v_sa
     if (sa.lt.0_r8.or.sa.gt.50_r8) then
         gsw_sa_from_rho = gsw_error_code(no_iter+1,func_name)

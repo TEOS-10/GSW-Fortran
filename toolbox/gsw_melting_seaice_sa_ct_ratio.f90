@@ -1,6 +1,6 @@
 !==========================================================================
-elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, &
-                                  saturation_fraction, sa_seaice, t_seaice)
+elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, sa_seaice, &
+                                                   t_seaice)
 !==========================================================================
 !
 ! Calculates the ratio of SA to CT changes when sea ice melts into seawater.
@@ -31,8 +31,6 @@ elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, &
 !  CT  =  Conservative Temperature of seawater (ITS-90)           [ deg C ]
 !  p   =  sea pressure at which the melting occurs                 [ dbar ]
 !         ( i.e. absolute pressure - 10.1325 dbar ) 
-!  saturation_fraction = the saturation fraction of dissolved air in 
-!               seawater.  The saturation_fraction must be between 0 and 1.
 !  SA_seaice  =  Absolute Salinity of sea ice, that is, the mass fraction 
 !                of salt in sea ice expressed in g of salt per kg of 
 !                sea ice                                           [ g/kg ]
@@ -42,10 +40,10 @@ elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, &
 !                sea ice melts into a large mass of seawater   [ g/(kg K) ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
-use gsw_mod_toolbox, only : gsw_brinesa_t, gsw_enthalpy_ice
-use gsw_mod_toolbox, only : gsw_enthalpy_t_exact
-use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
+use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_sa_freezing_from_t, gsw_enthalpy_ice
+use gsw_mod_toolbox, only : gsw_enthalpy_t_exact, gsw_t_freezing
+use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
 
@@ -53,13 +51,14 @@ use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct, p, saturation_fraction, sa_seaice
-real (r8), intent(in) :: t_seaice
+real (r8), intent(in) :: sa, ct, p, sa_seaice, t_seaice
 
 real (r8) :: gsw_melting_seaice_sa_ct_ratio
 
-real (r8) :: ctf, delsa, denominator, h, h_brine, h_ih, sa_brine
+real (r8) :: ctf, delsa, h, h_brine, h_ih, sa_brine
 real (r8) :: tf_sa_seaice, h_hat_sa, h_hat_ct
+
+real (r8), parameter :: saturation_fraction = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_melting_seaice_sa_ct_ratio"
 
@@ -87,12 +86,11 @@ end if
 ! 100% brine at Absolute Salinity of SA_seaice.
 !--------------------------------------------------------------------------
 
-h = gsw_enthalpy(sa,ct,p)
+h = gsw_enthalpy_ct_exact(sa,ct,p)
 h_ih = gsw_enthalpy_ice(t_seaice,p)
-call gsw_enthalpy_first_derivatives(sa,ct,p,h_hat_sa,h_hat_ct)
-! Note that h_hat_CT is equal to cp0*(273.15 + t)./(273.15 + pt0)
+call gsw_enthalpy_first_derivatives_ct_exact(sa,ct,p,h_hat_sa,h_hat_ct)
 
-sa_brine = gsw_brinesa_t(t_seaice,p,saturation_fraction)
+sa_brine = gsw_sa_freezing_from_t(t_seaice,p,saturation_fraction)
 if (sa_brine .gt. gsw_error_limit) then
     gsw_melting_seaice_sa_ct_ratio = gsw_error_code(4,func_name,sa_brine)
     return
@@ -100,8 +98,8 @@ end if
 h_brine = gsw_enthalpy_t_exact(sa_brine,t_seaice,p)
 delsa = sa - sa_seaice
 
-denominator = h - h_ih - delsa*h_hat_sa - sa_seaice*(h_brine - h_ih)/sa_brine
-gsw_melting_seaice_sa_ct_ratio = h_hat_ct*delsa/denominator
+gsw_melting_seaice_sa_ct_ratio = h_hat_ct*delsa / &
+              (h - h_ih - delsa*h_hat_sa - sa_seaice*(h_brine - h_ih)/sa_brine)
 
 return
 end function

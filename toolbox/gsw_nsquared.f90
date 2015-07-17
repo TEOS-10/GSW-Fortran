@@ -13,20 +13,12 @@ pure subroutine gsw_nsquared (sa, ct, p, lat, n2, p_mid)
 !  The pressure increment, dP, in the above formula is in Pa, so that it is
 !  10^4 times the pressure increment dp in dbar. 
 !
-!  Note. This routine uses rho from "gsw_rho", which is the computationally
-!  efficient 48-term expression for density in terms of SA, CT and p.  The    
-!  48-term equation has been fitted in a restricted range of parameter 
-!  space, and is most accurate inside the "oceanographic funnel" described 
-!  in IOC et al. (2010).  The GSW library function "gsw_infunnel(SA,CT,p)" 
-!  is avaialble to be used if one wants to test if some of one's data lies
-!  outside this "funnel".
-!
-! sa     : Absolute Salinity         (a profile (length nz))     [g/kg]
-! ct     : Conservative Temperature  (a profile (length nz))     [deg C]
-! p      : sea pressure              (a profile (length nz))     [dbar]
-! lat    : latitude                  (a profile (length nz))     [deg N]
-! n2     : Brunt-Vaisala Frequency squared  (length nz-1)        [s^-2]
-! p_mid  : Mid pressure between p grid      (length nz-1)        [dbar]
+!  sa     : Absolute Salinity         (a profile (length nz))     [g/kg]
+!  ct     : Conservative Temperature  (a profile (length nz))     [deg C]
+!  p      : sea pressure              (a profile (length nz))     [dbar]
+!  lat    : latitude                  (a profile (length nz))     [deg N]
+!  n2     : Brunt-Vaisala Frequency squared  (length nz-1)        [s^-2]
+!  p_mid  : Mid pressure between p grid      (length nz-1)        [dbar]
 !--------------------------------------------------------------------------
 
 use gsw_mod_toolbox, only : gsw_alpha, gsw_beta, gsw_grav, gsw_rho

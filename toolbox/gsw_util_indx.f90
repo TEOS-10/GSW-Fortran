@@ -38,7 +38,7 @@ if(z.gt.x(1).and.z.lt.x(n)) then
    end if
 elseif (z.le.x(1)) then
       k = 1
-elseif (z.ge.x(n)) then
+else	!if (z.ge.x(n)) then - removed (GBH 3/6/2015) so z=NaN has somewhere to go (otherwise k is undefined and gives segmentation fault)
       k = n-1
 end if
 

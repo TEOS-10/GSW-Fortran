@@ -80,7 +80,7 @@ do k = 1,4
    saar(k) = saar_ref(indz0,indy0+delj(k),indx0+deli(k))
 end do
 
-if (  longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and. &
+if (  longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and.&
     lats_pan(npan).le.lat      .and.      lat.le.lats_pan(1)) then
   saar_old = saar
   call gsw_add_barrier(saar_old,long_tmp,lat,longs_ref(indx0), &
@@ -97,7 +97,7 @@ do k = 1,4
    saar(k) = saar_ref(indz0+1,indy0+delj(k),indx0+deli(k))
 end do
 
-if (  longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and. &
+if (  longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and.&
     lats_pan(npan).le.lat      .and.      lat.le.lats_pan(1)) then
    saar_old = saar
    call gsw_add_barrier(saar_old,long_tmp,lat,longs_ref(indx0), &

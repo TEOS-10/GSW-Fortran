@@ -4,6 +4,8 @@ use gsw_mod_kinds
 use gsw_mod_netcdf
 use gsw_mod_toolbox
 
+use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
+
 implicit none
 
 integer :: gsw_error_flag = 0
@@ -24,11 +26,12 @@ real (r8), dimension(:,:), allocatable :: lat_ice, long_ice
 real (r8), dimension(:), allocatable :: lat_cast, long_cast
 
 real (r8), dimension(:,:), allocatable :: value, check_value
-real (r8), dimension(:,:), allocatable :: val1, val2, val3
+real (r8), dimension(:,:), allocatable :: val1, val2, val3, val4, val5
 
 real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
-real (r8), dimension(:,:), allocatable :: h, rho, alpha, beta, ctf, tf
+real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff
 real (r8), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
+real (r8), dimension(:,:), allocatable :: sa_bulk, h_pot_bulk, h_bulk
 
 call gsw_saar_init (.true.)
 
@@ -69,26 +72,30 @@ allocate(w_ice(cast_ice_m,cast_ice_n))
 allocate(lat_ice(cast_ice_m,cast_ice_n))
 allocate(long_ice(cast_ice_m,cast_ice_n))
 allocate(pt0(cast_ice_m,cast_ice_n))
+allocate(sa_bulk(cast_ice_m,cast_ice_n))
+allocate(h_pot_bulk(cast_ice_m,cast_ice_n))
+allocate(h_bulk(cast_ice_m,cast_ice_n))
 
 allocate(value(cast_m,cast_n))
 allocate(check_value(cast_m,cast_n))
 allocate(val1(cast_m,cast_n))
 allocate(val2(cast_m,cast_n))
 allocate(val3(cast_m,cast_n))
+allocate(val4(cast_m,cast_n))
+allocate(val5(cast_m,cast_n))
 
 allocate(c(cast_m,cast_n))
 allocate(sr(cast_m,cast_n))
 allocate(sstar(cast_m,cast_n))
 allocate(pt(cast_m,cast_n))
 allocate(entropy(cast_m,cast_n))
-allocate(rho(cast_m,cast_n))
-allocate(alpha(cast_m,cast_n))
-allocate(beta(cast_m,cast_n))
 allocate(ctf(cast_m,cast_n))
+allocate(rho(cast_m,cast_n))
 allocate(tf(cast_m,cast_n))
 allocate(ctf_poly(cast_m,cast_n))
 allocate(tf_poly(cast_m,cast_n))
 allocate(h(cast_m,cast_n))
+allocate(diff(cast_m,cast_n))
 
 call ncdf_get_var("CT_chck_cast", var2=ct)
 call ncdf_get_var("Rt_chck_cast", var2=rt)
@@ -116,6 +123,10 @@ call ncdf_get_var("t_seaice", var2=t_seaice)
 call ncdf_get_var("w_seaice", var2=w_seaice)
 call ncdf_get_var("t_ice", var2=t_ice)
 call ncdf_get_var("w_ice", var2=w_ice)
+
+call ncdf_get_var("SA_bulk", var2=sa_bulk)
+call ncdf_get_var("h_pot_bulk", var2=h_pot_bulk)
+call ncdf_get_var("h_bulk", var2=h_bulk)
 
 call ncdf_get_var("pr", var0=pref)
 
@@ -175,11 +186,11 @@ call check_accuracy('SP_from_SA',value)
 sstar = gsw_sstar_from_sa(sa,p,long,lat)
 call check_accuracy('Sstar_from_SA',sstar)
 
-value = gsw_sp_from_sstar(sstar,p,long,lat)
-call check_accuracy('SP_from_Sstar',value)
-
 value = gsw_sa_from_sstar(sstar,p,long,lat)
 call check_accuracy('SA_from_Sstar',value)
+
+value = gsw_sp_from_sstar(sstar,p,long,lat)
+call check_accuracy('SP_from_Sstar',value)
 
 pt = gsw_pt_from_ct(sa,ct)
 call check_accuracy('pt_from_CT',pt)
@@ -215,10 +226,10 @@ value = gsw_adiabatic_lapse_rate_from_ct(sa,ct,p)
 call check_accuracy('adiabatic_lapse_rate_from_CT',value)
 
 !------------------------------------------------------------------------------
-call section_title('Density and Enthalpy, based on the 48-term expression for density')
+call section_title('Specific Volume, Density and Enthalpy')
 
-value = gsw_rho(sa,ct,p)
-call check_accuracy('rho',value)
+value = gsw_specvol(sa,ct,p)
+call check_accuracy('specvol',value)
 
 value = gsw_alpha(sa,ct,p)
 call check_accuracy('alpha',value)
@@ -226,24 +237,66 @@ call check_accuracy('alpha',value)
 value = gsw_beta(sa,ct,p)
 call check_accuracy('beta',value)
 
-call gsw_rho_alpha_beta(sa,ct,p,rho,alpha,beta)
-call check_accuracy('gsw_rho_alpha_beta',rho,'rho_rab')
-call check_accuracy('gsw_rho_alpha_beta',alpha,'alpha_rab')
-call check_accuracy('gsw_rho_alpha_beta',beta,'beta_rab')
-
 value = gsw_alpha_on_beta(sa,ct,p)
 call check_accuracy('alpha_on_beta',value)
 
+call gsw_specvol_alpha_beta(sa,ct,p,val1,val2,val3)
+call check_accuracy('specvol_alpha_beta',val1,'v_vab')
+call check_accuracy('specvol_alpha_beta',val2,'alpha_vab')
+call check_accuracy('specvol_alpha_beta',val3,'beta_vab')
+
+call gsw_specvol_first_derivatives(sa,ct,p,val1,val2,val3)
+call check_accuracy('specvol_first_derivatives',val1,'v_SA')
+call check_accuracy('specvol_first_derivatives',val2,'v_CT')
+call check_accuracy('specvol_first_derivatives',val3,'v_P')
+
+call gsw_specvol_second_derivatives(sa,ct,p,val1,val2,val3,val4,val5)
+call check_accuracy('specvol_second_derivatives',val1,'v_SA_SA')
+call check_accuracy('specvol_second_derivatives',val2,'v_SA_CT')
+call check_accuracy('specvol_second_derivatives',val3,'v_CT_CT')
+call check_accuracy('specvol_second_derivatives',val4,'v_SA_P')
+call check_accuracy('specvol_second_derivatives',val5,'v_CT_P')
+
+call gsw_specvol_first_derivatives_wrt_enthalpy(sa,ct,p,val1,val2)
+call check_accuracy('specvol_first_derivatives_wrt_enthalpy',val1,'v_SA_wrt_h')
+call check_accuracy('specvol_first_derivatives_wrt_enthalpy',val2,'v_h')
+
+call gsw_specvol_second_derivatives_wrt_enthalpy(sa,ct,p,val1,val2,val3)
+call check_accuracy('specvol_second_derivatives_wrt_enthalpy',val1,'v_SA_SA_wrt_h')
+call check_accuracy('specvol_second_derivatives_wrt_enthalpy',val2,'v_SA_h')
+call check_accuracy('specvol_second_derivatives_wrt_enthalpy',val3,'v_h_h')
+
+value = gsw_specvol_anom_standard(sa,ct,p)
+call check_accuracy('specvol_anom_standard',value)
+
+rho = gsw_rho(sa,ct,p)
+call check_accuracy('rho',rho)
+
+call gsw_rho_alpha_beta(sa,ct,p,val1,val2,val3)
+call check_accuracy('rho_alpha_beta',val1,'rho_rab')
+call check_accuracy('rho_alpha_beta',val2,'alpha_rab')
+call check_accuracy('rho_alpha_beta',val3,'beta_rab')
+
 call gsw_rho_first_derivatives(sa,ct,p,val1,val2,val3)
-call check_accuracy('gsw_rho_first_derivatives',val1,'drho_dSA')
-call check_accuracy('gsw_rho_first_derivatives',val2,'drho_dCT')
-call check_accuracy('gsw_rho_first_derivatives',val3,'drho_dp')
+call check_accuracy('rho_first_derivatives',val1,'rho_SA')
+call check_accuracy('rho_first_derivatives',val2,'rho_CT')
+call check_accuracy('rho_first_derivatives',val3,'rho_P')
 
-value = gsw_specvol(sa,ct,p)
-call check_accuracy('specvol',value)
+call gsw_rho_second_derivatives(sa,ct,p,val1,val2,val3,val4,val5)
+call check_accuracy('rho_second_derivatives',val1,'rho_SA_SA')
+call check_accuracy('rho_second_derivatives',val2,'rho_SA_CT')
+call check_accuracy('rho_second_derivatives',val3,'rho_CT_CT')
+call check_accuracy('rho_second_derivatives',val4,'rho_SA_P')
+call check_accuracy('rho_second_derivatives',val5,'rho_CT_P')
 
-value = gsw_specvol_anom(sa,ct,p)
-call check_accuracy('specvol_anom',value)
+call gsw_rho_first_derivatives_wrt_enthalpy(sa,ct,p,val1,val2)
+call check_accuracy('rho_first_derivatives_wrt_enthalpy',val1,'rho_SA_wrt_h')
+call check_accuracy('rho_first_derivatives_wrt_enthalpy',val2,'rho_h')
+
+call gsw_rho_second_derivatives_wrt_enthalpy(sa,ct,p,val1,val2,val3)
+call check_accuracy('rho_second_derivatives_wrt_enthalpy',val1,'rho_SA_SA_wrt_h')
+call check_accuracy('rho_second_derivatives_wrt_enthalpy',val2,'rho_SA_h')
+call check_accuracy('rho_second_derivatives_wrt_enthalpy',val3,'rho_h_h')
 
 value = gsw_sigma0(sa,ct)
 call check_accuracy('sigma0',value)
@@ -338,7 +391,8 @@ call check_accuracy('pt_second_derivatives',val3,'pt_CT_CT')
 !------------------------------------------------------------------------------
 call section_title('Freezing temperatures')
 
-saturation_fraction = 0.5d0
+saturation_fraction = 0.5_r8
+
 ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 call check_accuracy('CT_freezing',ctf)
 
@@ -351,25 +405,51 @@ call check_accuracy('t_freezing',tf)
 tf_poly = gsw_t_freezing_poly(sa,p,saturation_fraction)
 call check_accuracy('t_freezing_poly',tf_poly)
 
-value = gsw_brinesa_ct(ctf,p,saturation_fraction)
-call check_accuracy('brineSA_CT',value)
+value = gsw_pot_enthalpy_ice_freezing(sa,p)
+call check_accuracy('pot_enthalpy_ice_freezing',value)
 
-value = gsw_brinesa_ct_poly(ctf_poly,p,saturation_fraction)
-call check_accuracy('brineSA_CT_poly',value)
+value = gsw_pot_enthalpy_ice_freezing_poly(sa,p)
+call check_accuracy('pot_enthalpy_ice_freezing_poly',value)
 
-value = gsw_brinesa_t(tf,p,saturation_fraction)
-call check_accuracy('brineSA_t',value)
+value = gsw_sa_freezing_from_ct(ctf,p,saturation_fraction)
+call check_accuracy('SA_freezing_from_CT',value)
 
-value = gsw_brinesa_t_poly(tf_poly,p,saturation_fraction)
-call check_accuracy('brineSA_t_poly',value)
+value = gsw_sa_freezing_from_ct_poly(ctf_poly,p,saturation_fraction)
+call check_accuracy('SA_freezing_from_CT_poly',value)
+
+value = gsw_sa_freezing_from_t(tf,p,saturation_fraction)
+call check_accuracy('SA_freezing_from_t',value)
+
+value = gsw_sa_freezing_from_t_poly(tf_poly,p,saturation_fraction)
+call check_accuracy('SA_freezing_from_t_poly',value)
 
 call gsw_ct_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
 call check_accuracy('CT_freezing_first_derivatives',val1,'CTfreezing_SA')
 call check_accuracy('CT_freezing_first_derivatives',val2,'CTfreezing_P')
 
+call gsw_ct_freezing_first_derivatives_poly(sa,p,saturation_fraction,val4,val5)
+call check_accuracy('CT_freezing_first_derivatives_poly',val4,'CTfreezing_SA_poly')
+call check_accuracy('CT_freezing_first_derivatives_poly',val5,'CTfreezing_P_poly')
+
 call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
 call check_accuracy('t_freezing_first_derivatives',val1,'tfreezing_SA')
 call check_accuracy('t_freezing_first_derivatives',val2,'tfreezing_P')
+
+call gsw_t_freezing_first_derivatives_poly(sa,p,saturation_fraction,val4,val5)
+call check_accuracy('t_freezing_first_derivatives_poly',val4,'tfreezing_SA_poly')
+call check_accuracy('t_freezing_first_derivatives_poly',val5,'tfreezing_P_poly')
+
+call gsw_pot_enthalpy_ice_freezing_first_derivatives(sa,p,val1,val2)
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives',val1, &
+                    'pot_enthalpy_ice_freezing_SA')
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives',val2, &
+                    'pot_enthalpy_ice_freezing_P')
+
+call gsw_pot_enthalpy_ice_freezing_first_derivatives_poly(sa,p,val1,val2)
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives_poly',val1, &
+                    'pot_enthalpy_ice_freezing_SA_poly')
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives_poly',val2, &
+                    'pot_enthalpy_ice_freezing_P_poly')
 
 !------------------------------------------------------------------------------
 call section_title('Isobaric Melting Enthalpy and Isobaric Evaporation Enthalpy')
@@ -458,7 +538,7 @@ value = gsw_fdelta(p,long,lat)
 call check_accuracy('Fdelta',value)
 
 !------------------------------------------------------------------------------
-call section_title('Water column properties, based on the 48-term expression for density')
+call section_title('Water column properties, based on the 75-term polynomial for specific volume')
 
 deallocate(check_value,val1,val2,val3)
 allocate(check_value(cast_mpres_m,cast_mpres_n))
@@ -558,6 +638,11 @@ call check_accuracy('pot_enthalpy_from_pt_ice_poly',h)
 value = gsw_pt_from_pot_enthalpy_ice_poly(h)
 call check_accuracy('pt_from_pot_enthalpy_ice_poly',value)
 
+saturation_fraction = 0.5_r8
+
+value = gsw_pressure_freezing_ct(sa_arctic,ct_arctic-1.0_r8,saturation_fraction)
+call check_accuracy('pressure_freezing_CT',value)
+
 !------------------------------------------------------------------------------
 call section_title('Thermodynamic interaction between ice and seawater')
 
@@ -566,25 +651,29 @@ allocate(val1(cast_ice_m,cast_ice_n))
 allocate(val2(cast_ice_m,cast_ice_n))
 allocate(val3(cast_ice_m,cast_ice_n))
 
-saturation_fraction = 0.4d0
-
-value = gsw_melting_ice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic, &
-                                    saturation_fraction,t_ice)
+value = gsw_melting_ice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic,t_ice)
 call check_accuracy('melting_ice_SA_CT_ratio',value)
 
-value = gsw_melting_ice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic, &
-                                                saturation_fraction)
+value = gsw_melting_ice_sa_ct_ratio_poly(sa_arctic,ct_arctic,p_arctic,t_ice)
+call check_accuracy('melting_ice_SA_CT_ratio_poly',value)
+
+value = gsw_melting_ice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic)
 call check_accuracy('melting_ice_equilibrium_SA_CT_ratio',value)
 
-call gsw_melting_ice_into_seawater(sa_arctic,ct_arctic,p_arctic, &
-                                   saturation_fraction,w_ice,t_ice,val1,val2)
+value = gsw_melting_ice_equilibrium_sa_ct_ratio_poly(sa_arctic,p_arctic)
+call check_accuracy('melting_ice_equilibrium_SA_CT_ratio_poly',value)
+
+call gsw_melting_ice_into_seawater(sa_arctic,ct_arctic+0.1_r8,p_arctic,w_ice,t_ice, &
+                                   val1,val2,val3)
 call check_accuracy('melting_ice_into_seawater',val1, &
                     'melting_ice_into_seawater_SA_final')
 call check_accuracy('melting_ice_into_seawater',val2, &
                     'melting_ice_into_seawater_CT_final')
+!call check_accuracy('melting_ice_into_seawater',val3, &
+!                    'melting_ice_into_seawater_w_Ih')
 
-call gsw_ice_fraction_to_freeze_seawater(sa_arctic,ct_arctic,p_arctic, &
-                                   saturation_fraction,t_ice,val1,val2,val3)
+call gsw_ice_fraction_to_freeze_seawater(sa_arctic,ct_arctic,p_arctic,t_ice, &
+                                         val1,val2,val3)
 call check_accuracy('ice_fraction_to_freeze_seawater',val1, &
                     'ice_fraction_to_freeze_seawater_SA_freeze')
 call check_accuracy('ice_fraction_to_freeze_seawater',val2, &
@@ -592,31 +681,64 @@ call check_accuracy('ice_fraction_to_freeze_seawater',val2, &
 call check_accuracy('ice_fraction_to_freeze_seawater',val3, &
                     'ice_fraction_to_freeze_seawater_w_Ih')
 
-call gsw_frazil_ratios(sa_arctic,p_arctic,w_ice,val1,val2,val3)
-call check_accuracy('frazil_ratios',val1,'dSA_dCT_frazil')
-call check_accuracy('frazil_ratios',val2,'dSA_dP_frazil')
-call check_accuracy('frazil_ratios',val3,'dCT_dP_frazil')
+call gsw_frazil_ratios_adiabatic(sa_arctic,p_arctic,w_ice,val1,val2,val3)
+call check_accuracy('frazil_ratios_adiabatic',val1,'dSA_dCT_frazil')
+call check_accuracy('frazil_ratios_adiabatic',val2,'dSA_dP_frazil')
+call check_accuracy('frazil_ratios_adiabatic',val3,'dCT_dP_frazil')
+
+call gsw_frazil_ratios_adiabatic_poly(sa_arctic,p_arctic,w_ice,val1,val2,val3)
+call check_accuracy('frazil_ratios_adiabatic_poly',val1,'dSA_dCT_frazil_poly')
+call check_accuracy('frazil_ratios_adiabatic_poly',val2,'dSA_dP_frazil_poly')
+call check_accuracy('frazil_ratios_adiabatic_poly',val3,'dCT_dP_frazil_poly')
+
+call gsw_frazil_properties_potential(sa_bulk,h_pot_bulk,p_arctic,val1,val2,val3)
+call check_accuracy('frazil_properties_potential',val1, &
+                    'frazil_properties_potential_SA_final')
+call check_accuracy('frazil_properties_potential',val2, &
+                    'frazil_properties_potential_CT_final')
+call check_accuracy('frazil_properties_potential',val3, &
+                    'frazil_properties_potential_w_Ih_final')
+
+call gsw_frazil_properties_potential_poly(sa_bulk,h_pot_bulk,p_arctic,val1, &
+                                          val2,val3)
+call check_accuracy('frazil_properties_potential_poly',val1, &
+                    'frazil_properties_potential_poly_SA_final')
+call check_accuracy('frazil_properties_potential_poly',val2, &
+                    'frazil_properties_potential_poly_CT_final')
+call check_accuracy('frazil_properties_potential_poly',val3, &
+                    'frazil_properties_potential_poly_w_Ih_final')
+
+call gsw_frazil_properties(sa_bulk,h_bulk,p_arctic,val1,val2,val3)
+call check_accuracy('frazil_properties',val1,'frazil_properties_SA_final')
+call check_accuracy('frazil_properties',val2,'frazil_properties_CT_final')
+call check_accuracy('frazil_properties',val3,'frazil_properties_w_Ih_final')
 
 !------------------------------------------------------------------------------
-call section_title('Thermodynamic interaction between sea ice and seawater')
+call section_title('Thermodynamic interaction between seaice and seawater')
 
 value = gsw_melting_seaice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic, &
-                                       saturation_fraction,sa_seaice,t_seaice)
+                                       sa_seaice,t_seaice)
 call check_accuracy('melting_seaice_SA_CT_ratio',value)
 
-value = gsw_melting_seaice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic, &
-                                                   saturation_fraction)
+value = gsw_melting_seaice_sa_ct_ratio_poly(sa_arctic,ct_arctic,p_arctic, &
+                                            sa_seaice,t_seaice)
+call check_accuracy('melting_seaice_SA_CT_ratio_poly',value)
+
+value = gsw_melting_seaice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic)
 call check_accuracy('melting_seaice_equilibrium_SA_CT_ratio',value)
 
+value = gsw_melting_seaice_equilibrium_sa_ct_ratio_poly(sa_arctic,p_arctic)
+call check_accuracy('melting_seaice_equilibrium_SA_CT_ratio_poly',value)
+
 call gsw_melting_seaice_into_seawater(sa_arctic,ct_arctic,p_arctic, &
-                     saturation_fraction,w_seaice,sa_seaice,t_seaice,val1,val2)
+                                      w_seaice,sa_seaice,t_seaice,val1,val2)
 call check_accuracy('melting_seaice_into_seawater',val1, &
                     'melting_seaice_into_seawater_SA_final')
 call check_accuracy('melting_seaice_into_seawater',val2, &
                     'melting_seaice_into_seawater_CT_final')
 
 call gsw_seaice_fraction_to_freeze_seawater(sa_arctic,ct_arctic,p_arctic, &
-                         saturation_fraction,sa_seaice,t_seaice,val1,val2,val3)
+                                            sa_seaice,t_seaice,val1,val2,val3)
 call check_accuracy('seaice_fraction_to_freeze_seawater',val1, &
                     'seaice_fraction_to_freeze_seawater_SA_freeze')
 call check_accuracy('seaice_fraction_to_freeze_seawater',val2, &
@@ -626,15 +748,21 @@ call check_accuracy('seaice_fraction_to_freeze_seawater',val3, &
 
 !------------------------------------------------------------------------------
 if (gsw_error_flag.eq.1) then
-  print*;
-  print*; print*, 'Your installation of the Gibbs SeaWater (GSW) Oceanographic Toolbox has errors!'
+  print*
+  print*
+  print*, 'Your installation of the Gibbs SeaWater (GSW) Oceanographic Toolbox has errors!'
 else  
-  print*;
-  print*; print*, 'Well done! The gsw_check_fuctions confirms that the Gibbs'
-  print*; print*, 'SeaWater (GSW) Oceanographic Toolbox is installed correctly.'
+  print*
+  print*
+  print*, 'Well done! The gsw_check_fuctions confirms that the'
+  print*
+  print*, 'Gibbs SeaWater (GSW) Oceanographic Toolbox is installed correctly.'
+  print*
 endif
 
 contains
+
+    !--------------------------------------------------------------------------
 
     subroutine section_title (title)
 
@@ -648,6 +776,8 @@ contains
     return
     end subroutine section_title
 
+    !--------------------------------------------------------------------------
+
     subroutine check_accuracy (func_name, fvalue, var_name, vprint)
 
     use gsw_mod_error_functions, only : gsw_error_limit
@@ -659,22 +789,22 @@ contains
     character (*), intent(in), optional :: var_name
     logical, intent(in), optional :: vprint
 
-    integer :: ndots, i, j, k
-    real (r8) :: check_limit
+    integer :: ndots, i, j, k, ik, jk
+    real (r8) :: check_limit, dmax, drel
     real (r8) :: diff(size(fvalue,1),size(fvalue,2))
     character (len(func_name)+len(var_name)+3) :: message
     character (4) :: errflg
 
     character (*), parameter :: att_name = 'computation_accuracy'
     character (*), parameter :: &
-             dots = ' .......................................................'
+        dots = ' .............................................................'
 
     if (present(var_name)) then
 
         call ncdf_get_var_att(var_name, check_value, att_name, check_limit)
 
-	if (len(message).gt.48) then
-	    k = len(message) - 45
+	if (len(message).gt.58) then
+	    k = len(message) - 55
 	    message = func_name // ' (..' // var_name(k:) // ')'
 	else
 	    message = func_name // ' (' // var_name // ')'
@@ -691,6 +821,7 @@ contains
 
     if (present(vprint)) then
         if (vprint) then
+	    print *, "Limit =", check_limit
             print '(i3,3ES24.15)', ((i,fvalue(i,j),check_value(i,j),diff(i,j), &
 	            i=1,size(fvalue,1)), j=1,size(fvalue,2))
             print *
@@ -698,18 +829,30 @@ contains
     end if
 
     if (any(fvalue .gt. gsw_error_limit)) then
-        where (fvalue .gt. gsw_error_limit) diff = 0d0
+        where (fvalue .gt. gsw_error_limit) diff = 0.0_r8
 	errflg = ' (*)'
     else
 	errflg = '    '
     end if
-    ndots = 55 - len(trim(message))
+    ndots = 65 - len(trim(message))
 
     if (any(diff .ge. check_limit)) then
         gsw_error_flag = 1
+	dmax = 0.0_r8
+	do i = 1, size(fvalue,1)
+	    do j = 1, size(fvalue,2)
+	         if (diff(i,j) .gt. dmax) then
+		     dmax = diff(i,j)
+		     ik = i
+		     jk = j
+		 end if
+	    end do
+	end do
+	drel = dmax*100.0_r8/abs(fvalue(ik,jk))
         print *, trim(message), dots(:ndots-3), ' << failed >>'
 	print *
-	print *, "  Max. difference =", maxval(diff), ", limit =", check_limit
+	print *, "  Max. difference =", dmax, ", limit =", check_limit
+	print *, "  Max. diff (rel) =", drel, ", limit =", check_limit*100.0_r8/abs(fvalue(ik,jk))
 	print *
     else
         print *, trim(message), dots(:ndots), ' passed', errflg

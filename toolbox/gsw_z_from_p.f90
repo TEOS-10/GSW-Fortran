@@ -10,7 +10,7 @@ elemental function gsw_z_from_p (p, lat)
 ! gsw_z_from_p : height                                    [m]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_enthalpy_sso_0_p
+use gsw_mod_toolbox, only : gsw_enthalpy_sso_0
 
 use gsw_mod_teos10_constants, only : deg2rad, gamma
 
@@ -27,7 +27,7 @@ real (r8) :: sin2, b, c, a
 sin2 = sin(lat*deg2rad)**2
 b = 9.780327_r8*(1.0_r8 + (5.2792e-3_r8 + (2.32e-5_r8*sin2))*sin2) 
 a = -0.5_r8*gamma*b 
-c = gsw_enthalpy_sso_0_p(p)
+c = gsw_enthalpy_sso_0(p)
 
 gsw_z_from_p = -2.0_r8*c/(b + sqrt(b*b - 4.0_r8*a*c))
 

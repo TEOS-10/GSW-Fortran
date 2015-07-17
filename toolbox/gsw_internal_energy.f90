@@ -2,15 +2,13 @@
 elemental function gsw_internal_energy (sa, ct, p)  
 !==========================================================================
 !
-!  Calculates internal energy of seawater using the computationally
-!  efficient 48-term expression for density in terms of SA, CT and p
-!  (IOC et al., 2010)
+!  Calculates specific internal energy of seawater.
 !
-! sa     : Absolute Salinity                               [g/kg]
-! ct     : Conservative Temperature                        [deg C]
-! p      : sea pressure                                    [dbar]
+!  sa     : Absolute Salinity                               [g/kg]
+!  ct     : Conservative Temperature                       [deg C]
+!  p      : sea pressure                                    [dbar]
 ! 
-! gsw_internal_energy  :  internal_energy of seawater (48 term equation)
+!  gsw_internal_energy  :  internal_energy of seawater    [ J/kg ]
 !--------------------------------------------------------------------------
 
 use gsw_mod_toolbox, only : gsw_enthalpy, gsw_specvol

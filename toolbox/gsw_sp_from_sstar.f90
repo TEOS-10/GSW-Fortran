@@ -43,7 +43,7 @@ else
    if (saar .gt. gsw_error_limit) then
       gsw_sp_from_sstar = gsw_error_code(1,func_name,saar)
    else
-      gsw_sp_from_sstar = (sstar/gsw_ups)/(1 - 0.35_r8*saar)
+      gsw_sp_from_sstar = (sstar/gsw_ups)/(1.0_r8 - 0.35_r8*saar)
    end if
 
 end if

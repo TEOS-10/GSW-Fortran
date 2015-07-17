@@ -1,6 +1,6 @@
 !==========================================================================
-elemental subroutine gsw_frazil_ratios (sa, p, w_ih, dsa_dct_frazil, &
-                                        dsa_dp_frazil, dct_dp_frazil)
+elemental subroutine gsw_frazil_ratios_adiabatic (sa, p, w_ih, &
+                              dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil)
 !==========================================================================
 !
 !  Calculates the ratios of SA, CT and P changes when frazil ice forms or
@@ -30,9 +30,10 @@ elemental subroutine gsw_frazil_ratios (sa, p, w_ih, dsa_dct_frazil, &
 !                    to that of pressure (in Pa)                   [ K/Pa ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy, gsw_t_freezing
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_t_freezing_exact, gsw_enthalpy_ice
 use gsw_mod_toolbox, only : gsw_adiabatic_lapse_rate_ice, gsw_cp_ice
-use gsw_mod_toolbox, only : gsw_enthalpy_ice, gsw_enthalpy_first_derivatives
+use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 use gsw_mod_toolbox, only : gsw_ct_freezing_first_derivatives
 use gsw_mod_toolbox, only : gsw_t_freezing_first_derivatives
 
@@ -48,15 +49,15 @@ real (r8) :: tf, wcp, h_hat_sa, h_hat_ct, tf_sa, tf_p, ctf, ctf_sa, ctf_p
 
 real (r8), parameter :: saturation_fraction = 0.0_r8
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
-tf = gsw_t_freezing(sa,p,saturation_fraction)
-h = gsw_enthalpy(sa,ctf,p)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
+tf = gsw_t_freezing_exact(sa,p,saturation_fraction)
+h = gsw_enthalpy_ct_exact(sa,ctf,p)
 h_ih = gsw_enthalpy_ice(tf,p)
 cp_ih = gsw_cp_ice(tf,p)
 gamma_ih = gsw_adiabatic_lapse_rate_ice(tf,p)
-call gsw_enthalpy_first_derivatives(sa,ctf,p,h_hat_sa,h_hat_ct)
-call gsw_t_freezing_first_derivatives(sa,p,1.0_r8,tf_sa,tf_p)
-call gsw_ct_freezing_first_derivatives(sa,p,1.0_r8,ctf_sa,ctf_p)
+call gsw_enthalpy_first_derivatives_ct_exact(sa,ctf,p,h_hat_sa,h_hat_ct)
+call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction,tf_sa,tf_p)
+call gsw_ct_freezing_first_derivatives(sa,p,saturation_fraction,ctf_sa,ctf_p)
 
 wcp = cp_ih*w_ih/(1.0_r8 - w_ih)
 part = (tf_p - gamma_ih)/ctf_p

@@ -8,13 +8,7 @@ elemental subroutine gsw_enthalpy_first_derivatives_ct_exact (sa, ct, p, &
 !       constant CT and p, and
 !   (2) h_CT, derivative with respect to CT at constant SA and p. 
 !  Note that h_P is specific volume (1/rho) it can be calulated by calling
-!  gsw_specvol_CT_exact(SA,CT,p).
-!
-!  Note that this function uses the full Gibbs function.  There is an 
-!  alternative to calling gsw_enthalpy_first_derivatives(SA,CT,p)
-!  which uses the computationally
-!  efficient 48-term expression for density in terms of SA, CT and p 
-!  (IOC et al., 2010).   
+!  gsw_specvol_CT_exact(SA,CT,p). This function uses the full Gibbs function.
 !
 !  SA  =  Absolute Salinity                                        [ g/kg ]
 !  CT  =  Conservative Temperature (ITS-90)                       [ deg C ]

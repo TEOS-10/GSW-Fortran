@@ -8,19 +8,13 @@ pure subroutine gsw_turner_rsubrho (sa, ct, p, tu, rsubrho, p_mid)
 !  and Absolute Salinity to the vertical stability (the square of the 
 !  Brunt-Vaisala Frequency squared, N^2).  Tu and Rsubrho are evaluated at 
 !  the mid pressure between the individual data points in the vertical.  
-!  This function uses computationally-efficient 48-term expression for 
-!  density in terms of SA, CT and p (IOC et al., 2010).  Note that 
-!  in the double-diffusive literature, papers concerned with the 
-!  "diffusive" form of double-diffusive convection often define the 
+!  density in terms of SA, CT and p (IOC et al., 2010).
+!
+!  Note that in the double-diffusive literature, papers concerned with
+!  the "diffusive" form of double-diffusive convection often define the 
 !  stability ratio as the reciprocal of what is defined here as the 
 !  stability ratio.  
 !
-!  Note. The 48-term equation has been fitted in a restricted range of parameter
-!  space, and is most accurate inside the "oceanographic funnel" described 
-!  in IOC et al. (2010).  The GSW library function "gsw_infunnel(SA,CT,p)" 
-!  is available to be used if one wants to test if some of one's data lies
-!  outside this "funnel".  
-
 ! sa      : Absolute Salinity         (a profile (length nz))     [g/kg]
 ! ct      : Conservative Temperature  (a profile (length nz))     [deg C]
 ! p       : sea pressure              (a profile (length nz))     [dbar]
@@ -31,7 +25,7 @@ pure subroutine gsw_turner_rsubrho (sa, ct, p, tu, rsubrho, p_mid)
 ! p_mid   : Mid pressure between p grid  (length nz-1)           [dbar]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_alpha, gsw_beta
+use gsw_mod_toolbox, only : gsw_specvol_alpha_beta
 
 use gsw_mod_teos10_constants, only : rad2deg
 
@@ -70,8 +64,8 @@ forall (k = 1: nz-1)
     p_mid(k) = 0.5_r8*(p(k) + p(k+1))
 end forall
 
-alpha_mid = gsw_alpha(sa_mid,ct_mid,p_mid(1:nz-1))
-beta_mid = gsw_beta(sa_mid,ct_mid,p_mid(1:nz-1))
+call gsw_specvol_alpha_beta(sa_mid,ct_mid,p_mid(1:nz-1), &
+                            alpha=alpha_mid,beta=beta_mid)
 
 tu(1:nz-1) = rad2deg*atan2((alpha_mid*dct + beta_mid*dsa), &
                               (alpha_mid*dct - beta_mid*dsa))

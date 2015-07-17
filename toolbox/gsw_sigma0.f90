@@ -1,43 +1,45 @@
 !==========================================================================
-elemental function gsw_sigma0 (sa, ct) 
+elemental function gsw_sigma0 (sa, ct)
 !==========================================================================
-!
+! 
 !  Calculates potential density anomaly with reference pressure of 0 dbar,
 !  this being this particular potential density minus 1000 kg/m^3.  This
 !  function has inputs of Absolute Salinity and Conservative Temperature.
-!  This function uses the computationally-efficient 48-term expression for 
-!  density in terms of SA, CT and p (IOC et al., 2010).
+!  This function uses the computationally-efficient expression for 
+!  specific volume in terms of SA, CT and p (Roquet et al., 2014).
 !
-! sa     : Absolute Salinity                               [g/kg]
-! ct     : Conservative Temperature                        [deg C]
-! 
-! gsw_sigma0  : potential density anomaly with reference pressure of 0
-!                                                      (48 term equation)
+!  SA  =  Absolute Salinity                                        [ g/kg ]
+!  CT  =  Conservative Temperature (ITS-90)                       [ deg C ]
+!
+!  sigma0  =  potential density anomaly with                     [ kg/m^3 ]
+!             respect to a reference pressure of 0 dbar,   
+!             that is, this potential density - 1000 kg/m^3.
 !--------------------------------------------------------------------------
 
-use gsw_mod_rho_coefficients
+use gsw_mod_teos10_constants, only : gsw_sfac, offset
+
+use gsw_mod_specvol_coefficients
 
 use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct 
+real (r8), intent(in) :: sa, ct
 
 real (r8) :: gsw_sigma0
 
-real (r8) :: v_hat_denominator, v_hat_numerator, sqrtsa
+real (r8) :: vp0, xs, ys
 
-sqrtsa = sqrt(sa)
+xs = sqrt(gsw_sfac*sa + offset)
+ys = ct*0.025_r8
 
-v_hat_denominator = v01 + ct*(v02 + ct*(v03 + v04*ct))  &
-              + sa*(v05 + ct*(v06 + v07*ct) &
-          + sqrtsa*(v08 + ct*(v09 + ct*(v10 + v11*ct))))
+vp0 = v000 + xs*(v010 + xs*(v020 + xs*(v030 + xs*(v040 + xs*(v050 &
+    + v060*xs))))) + ys*(v100 + xs*(v110 + xs*(v120 + xs*(v130 + xs*(v140 &
+    + v150*xs)))) + ys*(v200 + xs*(v210 + xs*(v220 + xs*(v230 + v240*xs))) &
+    + ys*(v300 + xs*(v310 + xs*(v320 + v330*xs)) + ys*(v400 + xs*(v410 &
+    + v420*xs) + ys*(v500 + v510*xs + v600*ys)))))
 
-v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
-            + sa*(v26 + ct*(v27 + ct*(v28 + ct*(v29 + v30*ct))) + v36*sa &
-        + sqrtsa*(v31 + ct*(v32 + ct*(v33 + ct*(v34 + v35*ct)))))
-
-gsw_sigma0 = v_hat_denominator/v_hat_numerator - 1e3_r8
+gsw_sigma0 = 1.0_r8/vp0 - 1000.0_r8
 
 return
 end function

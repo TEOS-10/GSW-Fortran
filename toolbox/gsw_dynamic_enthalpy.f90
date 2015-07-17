@@ -1,68 +1,53 @@
 !==========================================================================
-elemental function gsw_dynamic_enthalpy (sa, ct, p) 
+elemental function gsw_dynamic_enthalpy (sa, ct, p)
 !==========================================================================
 !
-! Calculates dynamic enthalpy of seawater using the computationally
-! efficient 48-term expression for density in terms of SA, CT and p
-! (IOC et al., 2010)
+!  Calculates dynamic enthalpy of seawater using the computationally-
+!  efficient expression for specific volume in terms of SA, CT and p
+!  (Roquet et al., 2014).  Dynamic enthalpy is defined as enthalpy minus
+!  potential enthalpy (Young, 2010). 
 !
-! sa     : Absolute Salinity                               [g/kg]
-! ct     : Conservative Temperature                        [deg C]
-! p      : sea pressure                                    [dbar]
-! 
-! gsw_dynamic_enthalpy  :  dynamic enthalpy of seawater (48 term equation)
+!  SA  =  Absolute Salinity                                        [ g/kg ]
+!  CT  =  Conservative Temperature (ITS-90)                       [ deg C ]
+!  p   =  sea pressure                                             [ dbar ]
+!         ( i.e. absolute pressure - 10.1325 dbar )
+!
+!  dynamic_enthalpy  =  dynamic enthalpy                           [ J/kg ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_teos10_constants, only : db2pa
+use gsw_mod_teos10_constants, only : db2pa, gsw_sfac, offset
 
-use gsw_mod_rho_coefficients
+use gsw_mod_specvol_coefficients
 
 use gsw_mod_kinds
 
 implicit none
 
-real (r8), intent(in) :: sa, ct, p 
+real (r8), intent(in) :: sa, ct, p
 
 real (r8) :: gsw_dynamic_enthalpy
 
-real (r8) :: sqrtsa, a0, a1, a2, a3, b0, b1, b2, b1sq
-real (r8) :: sqrt_disc, ca, cb, cn, cm, part
+real (r8) :: dynamic_enthalpy_part, xs, ys, z
 
-sqrtsa = sqrt(sa)
+xs = sqrt(gsw_sfac*sa + offset)
+ys = ct*0.025_r8
+z = p*1e-4_r8
 
-a0 = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
-         + sa*(v26 + ct*(v27 + ct*(v28 + ct*(v29 + v30*ct))) + v36*sa  &
-     + sqrtsa*(v31 + ct*(v32 + ct*(v33 + ct*(v34 + v35*ct)))))
- 
-a1 = v37 + ct*(v38 + ct*(v39 + v40*ct)) + sa*(v41 + v42*ct)
+dynamic_enthalpy_part =  z*(h001 + xs*(h101 + xs*(h201 + xs*(h301 + xs*(h401 &
+    + xs*(h501 + h601*xs))))) + ys*(h011 + xs*(h111 + xs*(h211 + xs*(h311 &
+    + xs*(h411 + h511*xs)))) + ys*(h021 + xs*(h121 + xs*(h221 + xs*(h321 &
+    + h421*xs))) + ys*(h031 + xs*(h131 + xs*(h231 + h331*xs)) + ys*(h041 &
+    + xs*(h141 + h241*xs) + ys*(h051 + h151*xs + h061*ys))))) + z*(h002 &
+    + xs*(h102 + xs*(h202 + xs*(h302 + xs*(h402 + h502*xs)))) + ys*(h012 &
+    + xs*(h112 + xs*(h212 + xs*(h312 + h412*xs))) + ys*(h022 + xs*(h122 &
+    + xs*(h222 + h322*xs)) + ys*(h032 + xs*(h132 + h232*xs) + ys*(h042 &
+    + h142*xs + h052*ys)))) + z*(h003 + xs*(h103 + xs*(h203 + xs*(h303 &
+    + h403*xs))) + ys*(h013 + xs*(h113 + xs*(h213 + h313*xs)) + ys*(h023 &
+    + xs*(h123 + h223*xs) + ys*(h033 + h133*xs + h043*ys))) + z*(h004 &
+    + xs*(h104 + h204*xs) + ys*(h014 + h114*xs + h024*ys) + z*(h005 &
+    + h105*xs + h015*ys + z*(h006 + h007*z))))))
 
-a2 = v43 + ct*(v44 + v45*ct + v46*sa)
-
-a3 = v47 + v48*ct
-
-b0 = v01 + ct*(v02 + ct*(v03 + v04*ct))  &
-         + sa*(v05 + ct*(v06 + v07*ct)  &
-     + sqrtsa*(v08 + ct*(v09 + ct*(v10 + v11*ct))))
- 
-b1 = 0.5_r8*(v12 + ct*(v13 + v14*ct) + sa*(v15 + v16*ct))
-
-b2 = v17 + ct*(v18 + v19*ct) + v20*sa
-
-b1sq = b1*b1 
-sqrt_disc = sqrt(b1sq - b0*b2)
-
-cn = a0 + (2.0_r8*a3*b0*b1/b2 - a2*b0)/b2
-
-cm = a1 + (4.0_r8*a3*b1sq/b2 - a3*b0 - 2.0_r8*a2*b1)/b2
-
-ca = b1 - sqrt_disc
-cb = b1 + sqrt_disc
-
-part = (cn*b2 - cm*b1)/(b2*(cb - ca))
-
-gsw_dynamic_enthalpy = db2pa*(p*(a2 - 2.0_r8*a3*b1/b2 + 0.5_r8*a3*p)/b2  &
-                     + (cm/(2.0_r8*b2))*log(1.0_r8 + p*(2.0_r8*b1 + b2*p)/b0) &
-                     + part*log(1.0_r8 + (b2*p*(cb - ca))/(ca*(cb + b2*p))))
+gsw_dynamic_enthalpy = dynamic_enthalpy_part*db2pa*1e4_r8
 
 return
 end function

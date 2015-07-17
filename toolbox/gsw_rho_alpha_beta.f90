@@ -5,23 +5,18 @@ elemental subroutine gsw_rho_alpha_beta (sa, ct, p, rho, alpha, beta)
 !  Calculates in-situ density, the appropiate thermal expansion coefficient
 !  and the appropriate saline contraction coefficient of seawater from 
 !  Absolute Salinity and Conservative Temperature.  This function uses the
-!  computationally-efficient 48-term expression for density in terms of 
-!  SA, CT and p (IOC et al., 2010).
+!  computationally-efficient expression for specific volume in terms of 
+!  SA, CT and p (Roquet et al., 2014).
 !
 !  Note that potential density (pot_rho) with respect to reference pressure
 !  p_ref is obtained by calling this function with the pressure argument 
 !  being p_ref as in [pot_rho, ~, ~] = gsw_rho_alpha_beta(SA,CT,p_ref).
 !
-!  Note that the 48-term equation has been fitted in a restricted range of 
-!  parameter space, and is most accurate inside the "oceanographic funnel" 
-!  described in IOC et al. (2010).  The GSW library function 
-!  "gsw_infunnel(SA,CT,p)" is avaialble to be used if one wants to test if 
-!  some of one's data lies outside this "funnel".  
-!
 !  SA  =  Absolute Salinity                                        [ g/kg ]
 !  CT  =  Conservative Temperature (ITS-90)                       [ deg C ]
 !  p   =  sea pressure                                             [ dbar ]
 !         ( i.e. absolute pressure - 10.1325 dbar )
+!
 !  rho    =  in-situ density                                       [ kg/m ]
 !  alpha  =  thermal expansion coefficient                          [ 1/K ]
 !            with respect to Conservative Temperature
@@ -29,7 +24,11 @@ elemental subroutine gsw_rho_alpha_beta (sa, ct, p, rho, alpha, beta)
 !            coefficient at constant Conservative Temperature
 !--------------------------------------------------------------------------
 
-use gsw_mod_rho_coefficients
+use gsw_mod_toolbox, only : gsw_rho
+
+use gsw_mod_teos10_constants, only : gsw_sfac, offset
+
+use gsw_mod_specvol_coefficients
 
 use gsw_mod_kinds
 
@@ -38,63 +37,59 @@ implicit none
 real (r8), intent(in) :: sa, ct, p
 real (r8), intent(out), optional :: rho, alpha, beta
 
-real (r8) :: dvhatden_dct, dvhatden_dsa, dvhatnum_dct, dvhatnum_dsa
-real (r8) :: v_hat_denominator, v_hat_numerator
-real (r8) :: rec_num, spec_vol, sqrtsa
+real (r8) :: v, v_ct_part, v_sa_part, xs, ys, z
 
-sqrtsa = sqrt(sa)
+xs = sqrt(gsw_sfac*sa + offset)
+ys = ct*0.025_r8
+z = p*1e-4_r8
 
-v_hat_denominator = v01 + ct*(v02 + ct*(v03 + v04*ct))  &
-              + sa*(v05 + ct*(v06 + v07*ct) &
-          + sqrtsa*(v08 + ct*(v09 + ct*(v10 + v11*ct)))) &
-               + p*(v12 + ct*(v13 + v14*ct) + sa*(v15 + v16*ct) &
-               + p*(v17 + ct*(v18 + v19*ct) + v20*sa))
-          
-v_hat_numerator = v21 + ct*(v22 + ct*(v23 + ct*(v24 + v25*ct))) &
-            + sa*(v26 + ct*(v27 + ct*(v28 + ct*(v29 + v30*ct))) + v36*sa &
-        + sqrtsa*(v31 + ct*(v32 + ct*(v33 + ct*(v34 + v35*ct)))))  &
-             + p*(v37 + ct*(v38 + ct*(v39 + v40*ct))  &
-            + sa*(v41 + v42*ct) &
-             + p*(v43 + ct*(v44 + v45*ct + v46*sa) &
-             + p*(v47 + v48*ct)))
+v = v000 + xs*(v010 + xs*(v020 + xs*(v030 + xs*(v040 + xs*(v050 &
+    + v060*xs))))) + ys*(v100 + xs*(v110 + xs*(v120 + xs*(v130 + xs*(v140 &
+    + v150*xs)))) + ys*(v200 + xs*(v210 + xs*(v220 + xs*(v230 + v240*xs))) &
+    + ys*(v300 + xs*(v310 + xs*(v320 + v330*xs)) + ys*(v400 + xs*(v410 &
+    + v420*xs) + ys*(v500 + v510*xs + v600*ys))))) + z*(v001 + xs*(v011 &
+    + xs*(v021 + xs*(v031 + xs*(v041 + v051*xs)))) + ys*(v101 + xs*(v111 &
+    + xs*(v121 + xs*(v131 + v141*xs))) + ys*(v201 + xs*(v211 + xs*(v221 &
+    + v231*xs)) + ys*(v301 + xs*(v311 + v321*xs) + ys*(v401 + v411*xs &
+    + v501*ys)))) + z*(v002 + xs*(v012 + xs*(v022 + xs*(v032 + v042*xs))) &
+    + ys*(v102 + xs*(v112 + xs*(v122 + v132*xs)) + ys*(v202 + xs*(v212 &
+    + v222*xs) + ys*(v302 + v312*xs + v402*ys))) + z*(v003 + xs*(v013 &
+    + v023*xs) + ys*(v103 + v113*xs + v203*ys) + z*(v004 + v014*xs + v104*ys &
+    + z*(v005 + v006*z)))))
 
-rec_num = 1.0_r8/v_hat_numerator
-
-if (present(rho)) rho = rec_num*v_hat_denominator
-
-if (.not. present(alpha) .and. .not. present(beta)) return
-
-spec_vol = v_hat_numerator/v_hat_denominator
+if (present(rho)) rho = 1.0_r8/v
 
 if (present(alpha)) then
 
-    dvhatden_dct = a01 + ct*(a02 + a03*ct) &
-             + sa*(a04 + a05*ct &
-         + sqrtsa*(a06 + ct*(a07 + a08*ct))) &
-              + p*(a09 + a10*ct + a11*sa &
-              + p*(a12 + a13*ct))
+    v_ct_part = a000 + xs*(a100 + xs*(a200 + xs*(a300 + xs*(a400 + a500*xs)))) &
+             + ys*(a010 + xs*(a110 + xs*(a210 + xs*(a310 + a410*xs))) &
+             + ys*(a020 + xs*(a120 + xs*(a220 + a320*xs)) + ys*(a030 &
+             + xs*(a130 + a230*xs) + ys*(a040 + a140*xs + a050*ys )))) &
+             + z*(a001 + xs*(a101 + xs*(a201 + xs*(a301 + a401*xs))) &
+             + ys*(a011 + xs*(a111 + xs*(a211 + a311*xs)) + ys*(a021 &
+             + xs*(a121 + a221*xs) + ys*(a031 + a131*xs + a041*ys))) &
+             + z*(a002 + xs*(a102 + xs*(a202 + a302*xs)) + ys*(a012 &
+             + xs*(a112 + a212*xs) + ys*(a022 + a122*xs + a032*ys)) &
+             + z*(a003 + a103*xs + a013*ys + a004*z))) 
 
-    dvhatnum_dct = a14 + ct*(a15 + ct*(a16 + a17*ct)) &
-             + sa*(a18 + ct*(a19 + ct*(a20 + a21*ct)) &
-         + sqrtsa*(a22 + ct*(a23 + ct*(a24 + a25*ct)))) &
-              + p*(a26 + ct*(a27 + a28*ct) + a29*sa &
-              + p*(a30 + a31*ct + a32*sa + a33*p))
- 
-    alpha = rec_num*(dvhatnum_dct - dvhatden_dct*spec_vol)
+    alpha = 0.025_r8*v_ct_part/v
 
 end if
 
 if (present(beta)) then
 
-    dvhatden_dsa = b01 + ct*(b02 + b03*ct) &
-         + sqrtsa*(b04 + ct*(b05 + ct*(b06 + b07*ct))) &
-              + p*(b08 + b09*ct + b10*p) 
-
-    dvhatnum_dsa = b11 + ct*(b12 + ct*(b13 + ct*(b14 + b15*ct))) &
-         + sqrtsa*(b16 + ct*(b17 + ct*(b18 + ct*(b19 + b20*ct)))) + b21*sa &
-              + p*(b22 + ct*(b23 + b24*p))
-
-    beta = rec_num*(dvhatden_dsa*spec_vol - dvhatnum_dsa)
+    v_sa_part = b000 + xs*(b100 + xs*(b200 + xs*(b300 + xs*(b400 + b500*xs)))) &
+           + ys*(b010 + xs*(b110 + xs*(b210 + xs*(b310 + b410*xs))) &
+           + ys*(b020 + xs*(b120 + xs*(b220 + b320*xs)) + ys*(b030 &
+           + xs*(b130 + b230*xs) + ys*(b040 + b140*xs + b050*ys)))) &
+           + z*(b001 + xs*(b101 + xs*(b201 + xs*(b301 + b401*xs))) &
+           + ys*(b011 + xs*(b111 + xs*(b211 + b311*xs)) + ys*(b021 &
+           + xs*(b121 + b221*xs) + ys*(b031 + b131*xs + b041*ys))) &
+           + z*(b002 + xs*(b102 + xs*(b202 + b302*xs))+ ys*(b012 &
+           + xs*(b112 + b212*xs) + ys*(b022 + b122*xs + b032*ys)) &
+           + z*(b003 +  b103*xs + b013*ys + b004*z)))
+ 
+    beta = -v_sa_part*0.5_r8*gsw_sfac/(v*xs)
 
 end if
 
