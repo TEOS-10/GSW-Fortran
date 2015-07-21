@@ -144,13 +144,13 @@ call check_accuracy('SA_freezing_from_t',val1,val2)
 
 call gsw_ct_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
 call gsw_ct_freezing_first_derivatives_poly(sa,p,saturation_fraction,val3,val4)
-call check_accuracy('CT_freezing_first_derivatives',val1,val3)
-call check_accuracy('CT_freezing_first_derivatives',val2,val4)
+call check_accuracy('CT_freezing_first_derivatives (ctf_sa)',val1,val3)
+call check_accuracy('CT_freezing_first_derivatives (ctf_p)',val2,val4)
 
 call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
 call gsw_t_freezing_first_derivatives_poly(sa,p,saturation_fraction,val3,val4)
-call check_accuracy('t_freezing_first_derivatives',val1,val3)
-call check_accuracy('t_freezing_first_derivatives',val2,val4)
+call check_accuracy('t_freezing_first_derivatives (tf_sa)',val1,val3)
+call check_accuracy('t_freezing_first_derivatives (tf_p)',val2,val4)
 
 !------------------------------------------------------------------------------
 call section_title('Themodynamic properties of ice Ih')
@@ -190,9 +190,9 @@ call check_accuracy('melting_ice_equilibrium_SA_CT_ratio',val1,val2)
 
 call gsw_frazil_ratios_adiabatic(sa_arctic,p_arctic,w_ice,val1,val2,val3)
 call gsw_frazil_ratios_adiabatic_poly(sa_arctic,p_arctic,w_ice,val4,val5,val6)
-call check_accuracy('frazil_ratios_adiabatic',val1,val4)
-call check_accuracy('frazil_ratios_adiabatic',val2,val5)
-call check_accuracy('frazil_ratios_adiabatic',val3,val6)
+call check_accuracy('frazil_ratios_adiabatic (dsa_dct)',val1,val4)
+call check_accuracy('frazil_ratios_adiabatic (dsa_dp)',val2,val5)
+call check_accuracy('frazil_ratios_adiabatic (dct_dp)',val3,val6)
 
 !------------------------------------------------------------------------------
 call section_title('Thermodynamic interaction between seaice and seawater')

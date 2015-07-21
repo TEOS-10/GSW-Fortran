@@ -1,13 +1,13 @@
 ==========================================================================
- Gibbs SeaWater (GSW) Oceanographic Toolbox of TEOS-10 version 3.10 (Fortran)
+ Gibbs SeaWater (GSW) Oceanographic Toolbox of TEOS-10 (Fortran)
 ==========================================================================
 
  This is a subset of functions contained in the Gibbs SeaWater (GSW) 
- Oceanographic Toolbox of TEOS-10 (version 3.03).
+ Oceanographic Toolbox of TEOS-10.
 
  Version 1.0 written by David Jackett
  Modified by Paul Barker (version 3.02)
- Modified by Glenn Hyland (version 3.10)
+ Modified by Glenn Hyland (version 3.04+)
 
  For help with this Oceanographic Toolbox email: help@teos-10.org
 
@@ -27,14 +27,8 @@
  toolbox is installed correctly and there are no conflicts. This toolbox has
  been tested to compile and run with gfortran.
 
- cd modules
- gfortran -c gsw_mod_kinds.f90
- gfortran -I/usr/include -c *.f90
- cd ../toolbox
- gfortran -I../modules -c *.f90
- cd ../test
- gfortran -I../modules -c gsw_check_functions.f90
- gfortran -o gsw_check ../modules/*.o ../toolbox/*.o gsw_check_functions.o -lnetcdf -lnetcdff
+ cd test
+ make
  ./gsw_check
 
  Note that gfortran is the name of the GNU Fortran project, developing a
