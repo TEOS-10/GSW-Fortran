@@ -100,7 +100,7 @@ if (present(drho_dp)) then
           + z*(c002 + xs*(c102 + c202*xs) + ys*(c012 + c112*xs + c022*ys) &
           + z*(c003 + c103*xs + c013*ys + z*(c004 + c005*z))))
   
-    drho_dp = 1e-4_r8*pa2db*-rho2*v_p
+    drho_dp = -rho2*1e-4_r8*pa2db*v_p
 
 end if
 
