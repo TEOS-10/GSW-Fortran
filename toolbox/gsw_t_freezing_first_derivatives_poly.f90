@@ -47,7 +47,7 @@ if (present(tfreezing_sa)) tfreezing_sa = &
     (t1 + x*(1.5_r8*t2 + x*(2.0_r8*t3 + x*(2.5_r8*t4 + x*(3.0_r8*t5 &
         + 3.5_r8*t6*x)))) + p_r*(t10 + x*(1.5_r8*t11 + x*(2.0_r8*t13 &
 	+ x*(2.5_r8*t16 + x*(3.0_r8*t19 + 3.5_r8*t22*x)))) &
-        + p_r*(t12*+ x*(1.5_r8*t14 + x*(2.0_r8*t17 + 2.5_r8*t20*x)) &
+        + p_r*(t12 + x*(1.5_r8*t14 + x*(2.0_r8*t17 + 2.5_r8*t20*x)) &
         + p_r*(t15 + x*(1.5_r8*t18 + 2.0_r8*t21*x)))))*1e-2_r8 &
         + saturation_fraction*c
 
