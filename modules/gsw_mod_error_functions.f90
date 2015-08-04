@@ -79,13 +79,6 @@ contains
     integer :: ival, k
     real (r8) :: gsw_error_code, base_code, mult
 
-    interface
-        elemental function gsw_error_fnum (func_name)
-        character (*), intent(in) :: func_name
-        integer :: gsw_error_fnum
-        end function gsw_error_fnum
-    end interface
-
     if (present(error_code)) then
         k = int(error_code/1.0e14_r8) - 90
 	base_code = error_code + 1.0e14_r8

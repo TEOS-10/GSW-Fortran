@@ -792,7 +792,7 @@ contains
     integer :: ndots, i, j, k, ik, jk
     real (r8) :: check_limit, dmax, drel
     real (r8) :: diff(size(fvalue,1),size(fvalue,2))
-    character (len(func_name)+len(var_name)+3) :: message
+    character (80) :: message
     character (4) :: errflg
 
     character (*), parameter :: att_name = 'computation_accuracy'
@@ -803,8 +803,8 @@ contains
 
         call ncdf_get_var_att(var_name, check_value, att_name, check_limit)
 
-	if (len(message).gt.58) then
-	    k = len(message) - 55
+	if (len(func_name)+len(var_name).gt.55) then
+	    k = len(func_name) + len(var_name) - 55
 	    message = func_name // ' (..' // var_name(k:) // ')'
 	else
 	    message = func_name // ' (' // var_name // ')'

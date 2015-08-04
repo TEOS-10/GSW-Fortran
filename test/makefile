@@ -3,6 +3,7 @@ FC := gfortran
 FFLAGS := 
 
 NETCDF_INCDIR := /usr/include/
+NETCDF_LIBDIR := 
 NETCDF_LIBS := -lnetcdf -lnetcdff
 
 SCRIPTS_DIR ?= ../scripts
@@ -43,13 +44,13 @@ MODULES_MODS := $(MODULES_SRCS:.f90=.mod)
 all:	$(PROG1) $(PROG2)
 
 $(PROG1): $(OBJS1) $(TOOLBOX_OBJS)
-	$(FC) $(MODULES_DIR)/*.o $(TOOLBOX_DIR)/*.o $(NETCDF_LIBS) $< -o $@
+	$(FC) $(MODULES_DIR)/*.o $(TOOLBOX_DIR)/*.o -L$(NETCDF_LIBDIR) -Wl,-rpath,$(NETCDF_LIBDIR) $(NETCDF_LIBS) $< -o $@
 
 $(OBJS1): $(SRCS1) $(MOD_TOOLBOX) $(MODULES_MODS)
 	$(FC) -I$(MODULES_DIR) $(FFLAGS) -c $< -o $@
 
 $(PROG2): $(OBJS2) $(TOOLBOX_OBJS)
-	$(FC) $(MODULES_DIR)/*.o $(TOOLBOX_DIR)/*.o $(NETCDF_LIBS) $< -o $@
+	$(FC) $(MODULES_DIR)/*.o $(TOOLBOX_DIR)/*.o -L$(NETCDF_LIBDIR) -Wl,-rpath,$(NETCDF_LIBDIR) $(NETCDF_LIBS) $< -o $@
 
 $(OBJS2): $(SRCS2) $(MOD_TOOLBOX) $(MODULES_MODS)
 	$(FC) -I$(MODULES_DIR) $(FFLAGS) -c $< -o $@
