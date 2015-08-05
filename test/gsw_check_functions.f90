@@ -133,7 +133,7 @@ call ncdf_get_var("pr", var0=pref)
 print*
 print*,'============================================================================'
 print*
-print*,' Gibbs SeaWater (GSW) Oceanographic Toolbox of TEOS-10 version 3.01 (Fortran)'
+print*,' Gibbs SeaWater (GSW) Oceanographic Toolbox of TEOS-10 (Fortran)'
 print*
 print*,'============================================================================'
 print*
@@ -141,7 +141,7 @@ print*,' These are the check values for the subset of functions that have been '
 print*
 print*,' converted into FORTRAN 95 from the Gibbs SeaWater (GSW) Oceanographic '
 print*
-print*,' Toolbox of TEOS-10 (version 3.03).'
+print*,' Toolbox of TEOS-10.'
 print*
 
 !------------------------------------------------------------------------------

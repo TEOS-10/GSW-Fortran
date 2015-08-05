@@ -135,11 +135,11 @@ tf_poly = gsw_t_freezing_poly(sa,p,saturation_fraction)
 call check_accuracy('t_freezing',tf,tf_poly)
 
 val1 = gsw_sa_freezing_from_ct(ctf,p,saturation_fraction)
-val2 = gsw_sa_freezing_from_ct_poly(ctf_poly,p,saturation_fraction)
+val2 = gsw_sa_freezing_from_ct_poly(ctf,p,saturation_fraction)
 call check_accuracy('SA_freezing_from_CT',val1,val2)
 
 val1 = gsw_sa_freezing_from_t(tf,p,saturation_fraction)
-val2 = gsw_sa_freezing_from_t_poly(tf_poly,p,saturation_fraction)
+val2 = gsw_sa_freezing_from_t_poly(tf,p,saturation_fraction)
 call check_accuracy('SA_freezing_from_t',val1,val2)
 
 call gsw_ct_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
