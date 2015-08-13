@@ -71,7 +71,7 @@ if (present(alpha)) then
 
 end if
 
-if (present(alpha)) then
+if (present(beta)) then
 
     v_sa_part = b000 + xs*(b100 + xs*(b200 + xs*(b300 + xs*(b400 + b500*xs)))) &
            + ys*(b010 + xs*(b110 + xs*(b210 + xs*(b310 + b410*xs))) &
