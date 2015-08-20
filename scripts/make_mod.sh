@@ -40,7 +40,23 @@ while [ -n "$1" ]; do
 
 	echo "public :: "`basename $1 .f90` >> $outfile
 
-	sed -n '
+	awk '
+/^contains/ {
+	incon = 1;
+	next;
+}
+/^end fun/ {
+	incon = 0;
+}
+/^end sub/ {
+	incon = 0;
+}
+incon == 1 {
+	next;
+}
+	{
+	print $0;
+}' $1 | sed -n '
 /^elemental sub.*& *$/ {
 	N
 	p
@@ -89,6 +105,8 @@ while [ -n "$1" ]; do
 }
 /^pure sub/ {
 	p
+	s/^.*\(gsw_[a-z0-9_]*\) *(.*/\1/
+	h
 	b
 }
 /:: *gsw_.*/ {
@@ -111,7 +129,7 @@ while [ -n "$1" ]; do
 /implicit / { p }
 /intent(in)/ { p }
 /intent(out)/ { p }
-' $1 >> $tmpfile
+' >> $tmpfile
 
 	echo "" >> $tmpfile
 	shift

@@ -94,9 +94,10 @@ $ {
 # Add arguments from subroutine calls to variable list in $tmpfile2
 
 sed -n '
-/ *call .*(/ {
-	s/.*(\(.*\)).*/\1/
+/ *call *[a-z0-9_]*(/ {
+	s/ *call *[a-z0-9_]*(\(.*\)).*/\1/
 	s/ //g
+	s/\([a-z0-9_]*\)([^)]*)/\1/g
 	p
 }
 ' $tmpfile1 | awk -F, '

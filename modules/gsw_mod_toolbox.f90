@@ -61,6 +61,8 @@ public :: gsw_frazil_properties_potential
 public :: gsw_frazil_properties_potential_poly
 public :: gsw_frazil_ratios_adiabatic
 public :: gsw_frazil_ratios_adiabatic_poly
+public :: gsw_geo_strf_dyn_height
+public :: gsw_geo_strf_dyn_height_pc
 public :: gsw_gibbs
 public :: gsw_gibbs_ice
 public :: gsw_gibbs_ice_part_t
@@ -81,6 +83,7 @@ public :: gsw_kappa_t_exact
 public :: gsw_latentheat_evap_ct
 public :: gsw_latentheat_evap_t
 public :: gsw_latentheat_melting
+public :: gsw_linear_interp_sa_ct
 public :: gsw_melting_ice_equilibrium_sa_ct_ratio
 public :: gsw_melting_ice_equilibrium_sa_ct_ratio_poly
 public :: gsw_melting_ice_into_seawater
@@ -121,6 +124,7 @@ public :: gsw_rho_ice
 public :: gsw_rho_second_derivatives
 public :: gsw_rho_second_derivatives_wrt_enthalpy
 public :: gsw_rho_t_exact
+public :: gsw_rr68_interp_sa_ct
 public :: gsw_saar
 public :: gsw_sa_freezing_estimate
 public :: gsw_sa_freezing_from_ct
@@ -174,6 +178,8 @@ public :: gsw_t_from_pt0_ice
 public :: gsw_thermobaric
 public :: gsw_turner_rsubrho
 public :: gsw_util_indx
+public :: gsw_util_interp1q_int
+public :: gsw_util_sort_real
 public :: gsw_util_xinterp1
 public :: gsw_z_from_p
 
@@ -194,7 +200,7 @@ interface
     implicit none
     real (r8), intent(in), dimension(4) :: data_in
     real (r8), intent(out), dimension(4) :: data_out
-    end subroutine 
+    end subroutine gsw_add_mean
     
     elemental function gsw_adiabatic_lapse_rate_from_ct (sa, ct, p) 
     use gsw_mod_kinds
@@ -596,6 +602,21 @@ interface
     real (r8), intent(out) :: dsa_dct_frazil, dsa_dp_frazil, dct_dp_frazil
     end subroutine gsw_frazil_ratios_adiabatic_poly
     
+    pure function gsw_geo_strf_dyn_height (sa, ct, p, p_ref)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), p(:), p_ref
+    real (r8) :: gsw_geo_strf_dyn_height(size(sa))
+    end function gsw_geo_strf_dyn_height
+    
+    pure subroutine gsw_geo_strf_dyn_height_pc (sa, ct, delta_p, &
+                                                geo_strf_dyn_height_pc, p_mid)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), delta_p(:)
+    real (r8), intent(out) :: geo_strf_dyn_height_pc(:), p_mid(:)
+    end subroutine gsw_geo_strf_dyn_height_pc
+    
     elemental function gsw_gibbs (ns, nt, np, sa, t, p)
     use gsw_mod_kinds
     implicit none
@@ -740,6 +761,13 @@ interface
     real (r8) :: gsw_latentheat_melting
     end function gsw_latentheat_melting
     
+    pure subroutine gsw_linear_interp_sa_ct (sa, ct, p, p_i, sa_i, ct_i)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), p(:), p_i(:)
+    real (r8), intent(out) :: sa_i(:), ct_i(:)
+    end subroutine gsw_linear_interp_sa_ct
+    
     elemental function gsw_melting_ice_equilibrium_sa_ct_ratio (sa, p)
     use gsw_mod_kinds
     implicit none
@@ -819,7 +847,7 @@ interface
     implicit none
     real (r8), intent(in) :: sa(:), ct(:), p(:), lat(:)
     real (r8), intent(out) :: n2(:), p_mid(:)
-    end subroutine 
+    end subroutine gsw_nsquared
     
     elemental function gsw_pot_enthalpy_from_pt_ice (pt0_ice)
     use gsw_mod_kinds
@@ -1033,6 +1061,13 @@ interface
     real (r8), intent(in) :: sa, t, p 
     real (r8) :: gsw_rho_t_exact
     end function gsw_rho_t_exact
+    
+    pure subroutine gsw_rr68_interp_sa_ct (sa, ct, p, p_i, sa_i, ct_i)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), p(:), p_i(:)
+    real (r8), intent(out) :: sa_i(:), ct_i(:)
+    end subroutine gsw_rr68_interp_sa_ct
     
     elemental function gsw_saar (p, long, lat)
     use gsw_mod_kinds
@@ -1412,7 +1447,7 @@ interface
     implicit none
     real (r8), intent(in) :: sa(:), ct(:), p(:)
     real (r8), intent(out) :: tu(:), rsubrho(:), p_mid(:)
-    end subroutine 
+    end subroutine gsw_turner_rsubrho
     
     pure subroutine gsw_util_indx (x, n, z, k)
     use gsw_mod_kinds
@@ -1420,7 +1455,22 @@ interface
     integer, intent(out) :: k
     real (r8), intent(in), dimension(n) :: x
     real (r8), intent(in) :: z
-    end subroutine 
+    end subroutine gsw_util_indx
+    
+    pure function gsw_util_interp1q_int (x, iy, x_i) result(y_i)
+    use gsw_mod_kinds
+    implicit none
+    integer, intent(in) :: iy(:)
+    real (r8), intent(in) :: x(:), x_i(:)
+    real (r8) :: y_i(size(x_i))     !  intent(out)
+    end function gsw_util_interp1q_int
+    
+    pure function gsw_util_sort_real (rarray) result(iarray)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: rarray(:)    ! Values to be sorted
+    integer :: iarray(size(rarray))       ! Sorted ids - intent(out)
+    end function gsw_util_sort_real
     
     pure function gsw_util_xinterp1 (x, y, n, x0)
     use gsw_mod_kinds

@@ -11,11 +11,11 @@ implicit none
 integer :: gsw_error_flag = 0
 
 integer :: cast_m, cast_n, cast_mpres_m, cast_mpres_n, cast_ice_m
-integer :: cast_ice_n, i
+integer :: cast_ice_n, i, m, n
 
 real (r8) :: saturation_fraction, pref
 
-real (r8), dimension(:,:), allocatable :: ct, rt, sa, sk, sp, t, p
+real (r8), dimension(:,:), allocatable :: ct, rt, sa, sk, sp, t, p, delta_p
 real (r8), dimension(:,:), allocatable :: p_shallow, p_deep, lat, long
 
 real (r8), dimension(:,:), allocatable :: ct_arctic, sa_arctic, t_arctic
@@ -53,6 +53,7 @@ allocate(sk(cast_m,cast_n))
 allocate(sp(cast_m,cast_n))
 allocate(t(cast_m,cast_n))
 allocate(p(cast_m,cast_n))
+allocate(delta_p(cast_m,cast_n))
 allocate(p_shallow(cast_m,cast_n))
 allocate(p_deep(cast_m,cast_n))
 allocate(lat(cast_m,cast_n))
@@ -104,6 +105,7 @@ call ncdf_get_var("SK_chck_cast", var2=sk)
 call ncdf_get_var("SP_chck_cast", var2=sp)
 call ncdf_get_var("t_chck_cast", var2=t)
 call ncdf_get_var("p_chck_cast", var2=p)
+call ncdf_get_var("delta_p_chck_cast", var2=delta_p)
 call ncdf_get_var("p_chck_cast_shallow", var2=p_shallow)
 call ncdf_get_var("p_chck_cast_deep", var2=p_deep)
 
@@ -567,8 +569,22 @@ end do
 call check_accuracy('IPV_vs_fNsquared_ratio',val1,'IPVfN2')
 call check_accuracy('IPV_vs_fNsquared_ratio',val2,'p_mid_IPVfN2')
 
+do i = 1, cast_mpres_n
+    n = count(sa(:,i) .eq. sa(:,i))  ! check for NaN's
+    val1(:,i) = gsw_geo_strf_dyn_height(sa(:n,i),ct(:n,i),p(:n,i),pref)
+    if (n .lt. cast_mpres_m) val1(n+1:,i) = sa(n+1:,i)
+end do
+call check_accuracy('geo_strf_dyn_height',val1)
+
+do i = 1, cast_mpres_n
+    call gsw_geo_strf_dyn_height_pc(sa(:,i),ct(:,i),delta_p(:,i), &
+                                    val1(:,i),val2(:,i))
+end do
+call check_accuracy('geo_strf_dyn_height_pc',val1,'geo_strf_dyn_height_pc')
+call check_accuracy('geo_strf_dyn_height_pc',val2,'geo_strf_dyn_height_pc_p_mid')
+
 !------------------------------------------------------------------------------
-call section_title('Themodynamic properties of ice Ih')
+call section_title('Thermodynamic properties of ice Ih')
 
 deallocate(value,check_value,h)
 allocate(value(cast_ice_m,cast_ice_n))
