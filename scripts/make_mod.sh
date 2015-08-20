@@ -41,6 +41,16 @@ while [ -n "$1" ]; do
 	echo "public :: "`basename $1 .f90` >> $outfile
 
 	awk '
+/ *function *(.*) *result(.*)/ {
+	i = index($0,"result(");
+	var = substr($0,i+7);
+	i = index(var,")");
+	var = ":: *"substr(var,0,i-1)
+}
+length(var) > 0 && $0 ~ var {
+	print $0 "!intent(result)";
+	next
+}
 /^contains/ {
 	incon = 1;
 	next;
@@ -129,6 +139,10 @@ incon == 1 {
 /implicit / { p }
 /intent(in)/ { p }
 /intent(out)/ { p }
+/intent(result)/ {
+	s/\(.*\)!intent.*/\1/
+	p
+}
 ' >> $tmpfile
 
 	echo "" >> $tmpfile

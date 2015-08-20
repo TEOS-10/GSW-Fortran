@@ -6,7 +6,7 @@ implicit none
 
 real (r8), intent(in) :: rarray(:)    ! Values to be sorted
 
-integer :: iarray(size(rarray))       ! Sorted ids - intent(out)
+integer :: iarray(size(rarray))       ! Sorted ids
 
 integer :: i, nx, depth_limit
 

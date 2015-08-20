@@ -15,7 +15,7 @@ implicit none
 integer, intent(in) :: iy(:)
 real (r8), intent(in) :: x(:), x_i(:)
 
-real (r8) :: y_i(size(x_i))     !  intent(out)
+real (r8) :: y_i(size(x_i))
 
 logical, allocatable :: in_rng(:)
 integer, allocatable :: j(:), k(:), r(:), jrev(:), ki(:)

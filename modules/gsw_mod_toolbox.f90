@@ -1462,14 +1462,14 @@ interface
     implicit none
     integer, intent(in) :: iy(:)
     real (r8), intent(in) :: x(:), x_i(:)
-    real (r8) :: y_i(size(x_i))     !  intent(out)
+    real (r8) :: y_i(size(x_i))
     end function gsw_util_interp1q_int
     
     pure function gsw_util_sort_real (rarray) result(iarray)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: rarray(:)    ! Values to be sorted
-    integer :: iarray(size(rarray))       ! Sorted ids - intent(out)
+    integer :: iarray(size(rarray))       ! Sorted ids
     end function gsw_util_sort_real
     
     pure function gsw_util_xinterp1 (x, y, n, x0)
