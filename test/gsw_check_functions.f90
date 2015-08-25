@@ -572,7 +572,7 @@ call check_accuracy('IPV_vs_fNsquared_ratio',val2,'p_mid_IPVfN2')
 do i = 1, cast_mpres_n
     n = count(sa(:,i) .eq. sa(:,i))  ! check for NaN's
     val1(:,i) = gsw_geo_strf_dyn_height(sa(:n,i),ct(:n,i),p(:n,i),pref)
-    if (n .lt. cast_mpres_m) val1(n+1:,i) = sa(n+1:,i)
+    if (n .lt. cast_mpres_m) val1(n+1:,i) = sa(n+1:cast_mpres_m,i)
 end do
 call check_accuracy('geo_strf_dyn_height',val1)
 
@@ -852,7 +852,7 @@ contains
     end if
     ndots = 65 - len(trim(message))
 
-    if (any(diff .ge. check_limit)) then
+    if (any(diff .gt. check_limit)) then
         gsw_error_flag = 1
 	dmax = 0.0_r8
 	do i = 1, size(fvalue,1)
