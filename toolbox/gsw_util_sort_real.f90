@@ -1,5 +1,9 @@
 pure function gsw_util_sort_real (rarray) result(iarray)
 
+! Sorts a real array and returns a list of sorted indices. The sort
+! algorithm needs to be stable (should preserve the order of items of
+! equal value).
+
 use gsw_mod_kinds
 
 implicit none
@@ -36,8 +40,11 @@ contains
     ! quicksort implementation on most arrays (even ~200 times on artificial
     ! “evil” arrays consisting of 100,000 elements).
     !
-    ! Note: this version returns an array of sorted indices. So the sorted
+    ! Note 1: this version returns an array of sorted indices. So the sorted
     ! data is real_array(indx) - Glenn Hyland 20/8/2015
+    !
+    ! Note 2: this version of Introsort is stable (preserves the order of
+    ! items of equal value) - Glenn Hyland 28/8/2015
 
     use gsw_mod_kinds
 
@@ -181,8 +188,12 @@ contains
  
     ! Heapsort algorithm
     !
-    ! Note: this version returns an array of sorted indices. So the sorted
+    ! Note 1: this version returns an array of sorted indices. So the sorted
     ! data is real_array(indx) - Glenn Hyland 20/8/2015
+    !
+    ! Note 2: this version of Heapsort is stable (preserves the order of items
+    ! of equal value) through the use of the lexicographic key comparison
+    ! function "less_than" - Glenn Hyland 28/8/2015
 
     integer, intent(inout) :: indx(0:)
 
@@ -215,10 +226,10 @@ contains
 
        child = root*2 + 1
        if (child+1 < bottom) then
-          if (rarray(indx(child)) < rarray(indx(child+1))) child = child + 1
+          if (less_than(indx(child),indx(child+1))) child = child + 1
        end if
  
-       if (rarray(indx(root)) < rarray(indx(child))) then
+       if (less_than(indx(root),indx(child))) then
           t = indx(child); indx(child) = indx(root); indx(root) = t
           root = child
        else
@@ -229,6 +240,30 @@ contains
  
     end subroutine siftdown
  
+    !--------------------------------------------------------------------------
+
+    pure logical function less_than (indx1, indx2)
+
+    ! Lexicographic key comparison function to ensure sorting stability so
+    ! the order of items of equal value is preserved.
+
+    integer, intent(in) :: indx1, indx2
+
+    if (rarray(indx1) .lt. rarray(indx2)) then
+        less_than = .true.
+    else if (rarray(indx1) .eq. rarray(indx2)) then
+        if (indx1 .lt. indx2) then
+            less_than = .true.
+        else
+            less_than = .false.
+        end if
+    else
+        less_than = .false.
+    end if
+    return
+
+    end function less_than
+
 end function
 
 !--------------------------------------------------------------------------
