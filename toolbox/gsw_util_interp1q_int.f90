@@ -37,6 +37,8 @@ allocate (in_rng(nxi))
 in_rng = (x_i .gt. min_x .and. x_i .lt. max_x)
 
 n = count(in_rng)
+if (n .eq. 0) return
+
 allocate (xi(n), k(n), ki(n), r(n), u(n))
 m = nx + n
 allocate (xxi(m), j(m), jrev(m))

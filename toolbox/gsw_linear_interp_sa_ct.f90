@@ -44,6 +44,8 @@ allocate (in_rng(npi))
 in_rng = (p_i .gt. min_p .and. p_i .lt. max_p)
 
 n = count(in_rng)
+if (n .eq. 0) return
+
 allocate (xi(n), k(n), ki(n), r(n), u(n))
 m = np + n
 allocate (xxi(m), j(m), jrev(m))
