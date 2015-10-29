@@ -22,8 +22,8 @@ elemental function gsw_melting_ice_sa_ct_ratio (sa, ct, p, t_ih)
 !                                                          [ g kg^-1 K^-1 ] 
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy_ct_exact
-use gsw_mod_toolbox, only : gsw_t_freezing, gsw_enthalpy_ice
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_t_freezing_exact, gsw_enthalpy_ice
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
@@ -42,14 +42,14 @@ real (r8), parameter :: saturation_fraction = 0.0_r8
 
 character (*), parameter :: func_name = "gsw_melting_ice_sa_ct_ratio"
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 if (ct .lt. ctf) then
     ! the seawater ct input is below the freezing temperature
     gsw_melting_ice_sa_ct_ratio = gsw_error_code(1,func_name)
     return
 end if
 
-tf = gsw_t_freezing(0.0_r8,p,saturation_fraction)
+tf = gsw_t_freezing_exact(0.0_r8,p,saturation_fraction)
 if (t_ih .gt. tf) then
     ! t_ih exceeds the freezing temperature at sa = 0
     gsw_melting_ice_sa_ct_ratio = gsw_error_code(2,func_name)

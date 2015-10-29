@@ -40,9 +40,9 @@ elemental function gsw_melting_seaice_sa_ct_ratio (sa, ct, p, sa_seaice, &
 !                sea ice melts into a large mass of seawater   [ g/(kg K) ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy_ct_exact
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy_ct_exact
 use gsw_mod_toolbox, only : gsw_sa_freezing_from_t, gsw_enthalpy_ice
-use gsw_mod_toolbox, only : gsw_enthalpy_t_exact, gsw_t_freezing
+use gsw_mod_toolbox, only : gsw_enthalpy_t_exact, gsw_t_freezing_exact
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives_ct_exact
 
 use gsw_mod_error_functions, only : gsw_error_code, gsw_error_limit
@@ -67,14 +67,14 @@ if (sa_seaice .lt. 0.0_r8 .or. sa_seaice .gt. 15.0_r8) then
     return
 end if
 
-ctf = gsw_ct_freezing(sa,p,saturation_fraction)
+ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 if (ct .lt. ctf) then    ! the seawater ct input is below the freezing temp
     gsw_melting_seaice_sa_ct_ratio = gsw_error_code(2,func_name)
     return
 end if
 
 !--------------------------------------------------------------------------
-tf_sa_seaice = gsw_t_freezing(sa_seaice,p,saturation_fraction) - 1e-6_r8
+tf_sa_seaice = gsw_t_freezing_exact(sa_seaice,p,saturation_fraction) - 1e-6_r8
 if (t_seaice .gt. tf_sa_seaice) then   ! t_seaice exceeds the freezing sa
     gsw_melting_seaice_sa_ct_ratio = gsw_error_code(3,func_name)
     return

@@ -395,13 +395,13 @@ call section_title('Freezing temperatures')
 
 saturation_fraction = 0.5_r8
 
-ctf = gsw_ct_freezing_exact(sa,p,saturation_fraction)
+ctf = gsw_ct_freezing(sa,p,saturation_fraction)
 call check_accuracy('CT_freezing',ctf)
 
 ctf_poly = gsw_ct_freezing_poly(sa,p,saturation_fraction)
 call check_accuracy('CT_freezing_poly',ctf_poly)
 
-tf = gsw_t_freezing_exact(sa,p,saturation_fraction)
+tf = gsw_t_freezing(sa,p,saturation_fraction)
 call check_accuracy('t_freezing',tf)
 
 tf_poly = gsw_t_freezing_poly(sa,p,saturation_fraction)

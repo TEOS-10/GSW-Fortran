@@ -13,7 +13,7 @@ elemental function gsw_ct_from_enthalpy (sa, h, p)
 !  CT  =  Conservative Temperature ( ITS-90)                      [ deg C ]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_ct_freezing, gsw_enthalpy
+use gsw_mod_toolbox, only : gsw_ct_freezing_exact, gsw_enthalpy
 use gsw_mod_toolbox, only : gsw_enthalpy_first_derivatives
 
 use gsw_mod_error_functions, only : gsw_error_code
@@ -35,7 +35,7 @@ real (r8), parameter :: ct_40 = 40.0_r8
 
 character (*), parameter :: func_name = "gsw_ct_from_enthalpy"
 
-ct_freezing = gsw_ct_freezing(sa,p,0.0_r8)
+ct_freezing = gsw_ct_freezing_exact(sa,p,0.0_r8)
 
 h_freezing = gsw_enthalpy(sa,ct_freezing,p)
 if (h .lt. h_freezing - gsw_cp0) then

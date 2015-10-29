@@ -315,11 +315,11 @@ interface
     real (r8) :: gsw_ct_freezing_exact
     end function gsw_ct_freezing_exact
     
-    elemental function gsw_ct_freezing (sa, p, saturation_fraction, exact)
+    elemental function gsw_ct_freezing (sa, p, saturation_fraction, poly)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, p, saturation_fraction
-    logical, intent(in), optional :: exact
+    logical, intent(in), optional :: poly
     real (r8) :: gsw_ct_freezing
     end function gsw_ct_freezing
     
@@ -1388,11 +1388,11 @@ interface
     real (r8) :: gsw_t_freezing_exact
     end function gsw_t_freezing_exact
     
-    elemental function gsw_t_freezing (sa, p, saturation_fraction, exact)
+    elemental function gsw_t_freezing (sa, p, saturation_fraction, poly)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, p, saturation_fraction
-    logical, intent(in), optional :: exact
+    logical, intent(in), optional :: poly
     real (r8) :: gsw_t_freezing
     end function gsw_t_freezing
     
