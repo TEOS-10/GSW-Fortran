@@ -21,7 +21,7 @@ pure subroutine gsw_nsquared (sa, ct, p, lat, n2, p_mid)
 !  p_mid  : Mid pressure between p grid      (length nz-1)        [dbar]
 !--------------------------------------------------------------------------
 
-use gsw_mod_toolbox, only : gsw_alpha, gsw_beta, gsw_grav, gsw_rho
+use gsw_mod_toolbox, only : gsw_grav, gsw_rho_alpha_beta
 
 use gsw_mod_teos10_constants, only : db2pa
 
@@ -62,9 +62,7 @@ forall (k = 1: nz-1)
     p_mid(k) = 0.5_r8*(p(k) + p(k+1))
 end forall
 
-rho_mid = gsw_rho(sa_mid,ct_mid,p_mid(1:nz-1))
-alpha_mid = gsw_alpha(sa_mid,ct_mid,p_mid(1:nz-1))
-beta_mid = gsw_beta(sa_mid,ct_mid,p_mid(1:nz-1))
+call gsw_rho_alpha_beta(sa_mid,ct_mid,p_mid(1:nz-1),rho_mid,alpha_mid,beta_mid)
 
 n2(1:nz-1) = (grav_local**2) * (rho_mid/(db2pa*dp)) * &
              (beta_mid*dsa - alpha_mid*dct)
