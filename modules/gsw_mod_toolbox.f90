@@ -94,7 +94,11 @@ public :: gsw_melting_seaice_equilibrium_sa_ct_ratio_poly
 public :: gsw_melting_seaice_into_seawater
 public :: gsw_melting_seaice_sa_ct_ratio
 public :: gsw_melting_seaice_sa_ct_ratio_poly
+public :: gsw_mlp
 public :: gsw_nsquared
+public :: gsw_nsquared_lowerlimit
+public :: gsw_nsquared_min
+public :: gsw_nsquared_min_const_t
 public :: gsw_p_from_z
 public :: gsw_pot_enthalpy_from_pt_ice
 public :: gsw_pot_enthalpy_from_pt_ice_poly
@@ -843,12 +847,45 @@ interface
     real (r8) :: gsw_melting_seaice_sa_ct_ratio_poly
     end function gsw_melting_seaice_sa_ct_ratio_poly
     
+    pure function gsw_mlp (sa, ct, p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), p(:)
+    real (r8) :: gsw_mlp
+    end function gsw_mlp
+    
     pure subroutine gsw_nsquared (sa, ct, p, lat, n2, p_mid)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa(:), ct(:), p(:), lat(:)
     real (r8), intent(out) :: n2(:), p_mid(:)
     end subroutine gsw_nsquared
+    
+    elemental function gsw_nsquared_lowerlimit (p)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: p
+    real (r8) :: gsw_nsquared_lowerlimit
+    end function gsw_nsquared_lowerlimit
+    
+    pure subroutine gsw_nsquared_min (sa, ct, p, lat, n2, n2_p, &
+                                   n2_specvol, n2_alpha, n2_beta, dsa, dct, dp)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), ct(:), p(:), lat
+    real (r8), intent(out) :: n2(:), n2_p(:), n2_specvol(:), n2_alpha(:)
+    real (r8), intent(out) :: n2_beta(:), dsa(:), dct(:), dp(:)
+    end subroutine gsw_nsquared_min
+    
+    pure subroutine gsw_nsquared_min_const_t (sa, t, p, lat, n2, n2_p, &
+                    n2_specvol, n2_alpha, n2_beta, dsa, dct, dp, n2_beta_ratio)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa(:), t(:), p(:), lat
+    real (r8), intent(out) :: n2(:), n2_p(:), n2_specvol(:), n2_alpha(:)
+    real (r8), intent(out) :: n2_beta(:), dsa(:), dct(:), dp(:)
+    real (r8), intent(out) :: n2_beta_ratio(:)
+    end subroutine gsw_nsquared_min_const_t
     
     elemental function gsw_p_from_z (z, lat, geo_strf_dyn_height, &
                                                        sea_surface_geopotental)
