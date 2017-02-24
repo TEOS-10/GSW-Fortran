@@ -29,7 +29,7 @@ real (r8), dimension(:,:), allocatable :: value, check_value
 real (r8), dimension(:,:), allocatable :: val1, val2, val3, val4, val5
 
 real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
-real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff
+real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff, z
 real (r8), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
 real (r8), dimension(:,:), allocatable :: sa_bulk, h_pot_bulk, h_bulk
 
@@ -97,6 +97,7 @@ allocate(ctf_poly(cast_m,cast_n))
 allocate(tf_poly(cast_m,cast_n))
 allocate(h(cast_m,cast_n))
 allocate(diff(cast_m,cast_n))
+allocate(z(cast_m,cast_n))
 
 call ncdf_get_var("CT_chck_cast", var2=ct)
 call ncdf_get_var("Rt_chck_cast", var2=rt)
@@ -209,8 +210,11 @@ call check_accuracy('pt0_from_t',value)
 value = gsw_pt_from_t(sa,t,p,pref)
 call check_accuracy('pt_from_t',value)
 
-value = gsw_z_from_p(p,lat)
-call check_accuracy('z_from_p',value)
+z = gsw_z_from_p(p,lat)
+call check_accuracy('z_from_p',z)
+
+value = gsw_p_from_z(z,lat)
+call check_accuracy('p_from_z',value)
 
 entropy = gsw_entropy_from_pt(sa,pt)
 call check_accuracy('entropy_from_pt',entropy)

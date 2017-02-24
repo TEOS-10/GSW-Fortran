@@ -23,12 +23,12 @@ real (r8), dimension(:,:), allocatable :: lat_ice, long_ice
 
 real (r8), dimension(:), allocatable :: lat_cast, long_cast
 
-real (r8), dimension(:,:), allocatable :: value, check_value
 real (r8), dimension(:,:), allocatable :: val1, val2, val3, val4, val5, val6
 
 real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
 real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff
 real (r8), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
+real (r8), dimension(:,:), allocatable :: sa_bulk, h_pot_bulk
 
 call gsw_saar_init (.true.)
 
@@ -69,9 +69,9 @@ allocate(w_ice(cast_ice_m,cast_ice_n))
 allocate(lat_ice(cast_ice_m,cast_ice_n))
 allocate(long_ice(cast_ice_m,cast_ice_n))
 allocate(pt0(cast_ice_m,cast_ice_n))
+allocate(sa_bulk(cast_ice_m,cast_ice_n))
+allocate(h_pot_bulk(cast_ice_m,cast_ice_n))
 
-allocate(value(cast_m,cast_n))
-allocate(check_value(cast_m,cast_n))
 allocate(val1(cast_m,cast_n))
 allocate(val2(cast_m,cast_n))
 allocate(val3(cast_m,cast_n))
@@ -119,6 +119,9 @@ call ncdf_get_var("w_seaice", var2=w_seaice)
 call ncdf_get_var("t_ice", var2=t_ice)
 call ncdf_get_var("w_ice", var2=w_ice)
 
+call ncdf_get_var("SA_bulk", var2=sa_bulk)
+call ncdf_get_var("h_pot_bulk", var2=h_pot_bulk)
+
 call ncdf_get_var("pr", var0=pref)
 
 !------------------------------------------------------------------------------
@@ -133,6 +136,10 @@ call check_accuracy('CT_freezing',ctf,ctf_poly)
 tf = gsw_t_freezing_exact(sa,p,saturation_fraction)
 tf_poly = gsw_t_freezing_poly(sa,p,saturation_fraction)
 call check_accuracy('t_freezing',tf,tf_poly)
+
+val1 = gsw_pot_enthalpy_ice_freezing(sa,p)
+val2 = gsw_pot_enthalpy_ice_freezing_poly(sa,p)
+call check_accuracy('pot_enthalpy_ice_freezing',val1,val2)
 
 val1 = gsw_sa_freezing_from_ct(ctf,p,saturation_fraction)
 val2 = gsw_sa_freezing_from_ct_poly(ctf,p,saturation_fraction)
@@ -151,6 +158,11 @@ call gsw_t_freezing_first_derivatives(sa,p,saturation_fraction,val1,val2)
 call gsw_t_freezing_first_derivatives_poly(sa,p,saturation_fraction,val3,val4)
 call check_accuracy('t_freezing_first_derivatives (tf_sa)',val1,val3)
 call check_accuracy('t_freezing_first_derivatives (tf_p)',val2,val4)
+
+call gsw_pot_enthalpy_ice_freezing_first_derivatives(sa,p,val1,val2)
+call gsw_pot_enthalpy_ice_freezing_first_derivatives_poly(sa,p,val3,val4)
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives (sa)',val1,val3)
+call check_accuracy('pot_enthalpy_ice_freezing_first_derivatives (p)',val2,val4)
 
 !------------------------------------------------------------------------------
 call section_title('Themodynamic properties of ice Ih')
@@ -194,15 +206,25 @@ call check_accuracy('frazil_ratios_adiabatic (dsa_dct)',val1,val4)
 call check_accuracy('frazil_ratios_adiabatic (dsa_dp)',val2,val5)
 call check_accuracy('frazil_ratios_adiabatic (dct_dp)',val3,val6)
 
+call gsw_frazil_properties_potential(sa_bulk,h_pot_bulk,p_arctic,val1,val2,val3)
+call gsw_frazil_properties_potential_poly(sa_bulk,h_pot_bulk,p_arctic,val4, &
+                                          val5,val6)
+call check_accuracy('frazil_properties_potential (sa_final)',val1,val4)
+call check_accuracy('frazil_properties_potential (ct_final)',val2,val5)
+call check_accuracy('frazil_properties_potential (w_ih_final)',val3,val6)
+
 !------------------------------------------------------------------------------
 call section_title('Thermodynamic interaction between seaice and seawater')
 
-value = gsw_melting_seaice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic, &
-                                       sa_seaice,t_seaice)
-!call check_accuracy('melting_seaice_SA_CT_ratio',value)
+val1 = gsw_melting_seaice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic, &
+                                      sa_seaice,t_seaice)
+val2 = gsw_melting_seaice_sa_ct_ratio_poly(sa_arctic,ct_arctic,p_arctic, &
+					   sa_seaice,t_seaice)
+call check_accuracy('melting_seaice_SA_CT_ratio',val1,val2)
 
-value = gsw_melting_seaice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic)
-!call check_accuracy('melting_seaice_equilibrium_SA_CT_ratio',value)
+val1 = gsw_melting_seaice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic)
+val2 = gsw_melting_seaice_equilibrium_sa_ct_ratio_poly(sa_arctic,p_arctic)
+call check_accuracy('melting_seaice_equilibrium_SA_CT_ratio',val1,val2)
 
 call gsw_melting_seaice_into_seawater(sa_arctic,ct_arctic,p_arctic, &
                                       w_seaice,sa_seaice,t_seaice,val1,val2)
@@ -259,8 +281,7 @@ contains
     real (r8), intent(in) :: fvalue1(:,:), fvalue2(:,:)
     logical, intent(in), optional :: vprint
 
-    integer :: ndots, i, j, k, ik, jk
-    real (r8) :: check_limit, dmax, drel
+    integer :: ndots, i, j
     real (r8) :: diff(size(fvalue1,1),size(fvalue1,2))
     character (len(func_name)+3) :: message
     character (4) :: errflg
@@ -287,10 +308,10 @@ contains
     else
 	errflg = '    '
     end if
-    ndots = 50 - len(trim(message))
+    ndots = 52 - len(trim(message))
 
-    print *
-    print '(2a,2es12.3)', trim(message), dots(:ndots), minval(diff), maxval(diff)
+    print '(1x,2a,2es12.3)', trim(message), dots(:ndots), minval(diff), &
+                             maxval(diff)
 
     return
     end subroutine check_accuracy

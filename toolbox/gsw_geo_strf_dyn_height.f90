@@ -179,7 +179,7 @@ else
                 top_pad = p_cnt  
             else
                 ! p_ref is deeper than the minimum bottle pressure. 
-                p_i = (/ 0.0_r8, p_min /)
+                p_i(1:2) = (/ 0.0_r8, p_min /)
                 top_pad = 2
                 p_cnt = 2
             end if
