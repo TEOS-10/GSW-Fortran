@@ -872,7 +872,7 @@ interface
                                    n2_specvol, n2_alpha, n2_beta, dsa, dct, dp)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: sa(:), ct(:), p(:), lat
+    real (r8), intent(in) :: sa(:), ct(:), p(:), lat(:)
     real (r8), intent(out) :: n2(:), n2_p(:), n2_specvol(:), n2_alpha(:)
     real (r8), intent(out) :: n2_beta(:), dsa(:), dct(:), dp(:)
     end subroutine gsw_nsquared_min

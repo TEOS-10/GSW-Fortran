@@ -18,8 +18,6 @@ pure subroutine gsw_nsquared_min (sa, ct, p, lat, n2, n2_p, &
 !  p   =  sea pressure                                             [ dbar ]
 !         ( i.e. absolute pressure - 10.1325 dbar )
 !  lat =  latitude in decimal degrees north                 [ -90 ... +90 ]
-!  Note: If lat is outside this range, a default gravitational
-!        acceleration of 9.7963 m/s^2 (Griffies, 2004) will be applied.
 !
 !  N2         =  minimum Brunt-Vaisala Frequency squared          [ 1/s^2 ]
 !  N2_p       =  pressure of minimum N2                            [ dbar ]
@@ -37,13 +35,15 @@ pure subroutine gsw_nsquared_min (sa, ct, p, lat, n2, n2_p, &
 
 use gsw_mod_toolbox, only : gsw_grav, gsw_specvol_alpha_beta
 
+use gsw_mod_error_functions, only : gsw_error_code
+
 use gsw_mod_kinds
 
 use gsw_mod_teos10_constants, only : db2pa
 
 implicit none
 
-real (r8), intent(in) :: sa(:), ct(:), p(:), lat
+real (r8), intent(in) :: sa(:), ct(:), p(:), lat(:)
 real (r8), intent(out) :: n2(:), n2_p(:), n2_specvol(:), n2_alpha(:)
 real (r8), intent(out) :: n2_beta(:), dsa(:), dct(:), dp(:)
 
@@ -52,18 +52,31 @@ integer :: i, ideep, ishallow, mp
 real (r8) :: n2_deep, n2_shallow
 real (r8), allocatable :: alpha(:), beta(:), specvol(:), grav2(:)
 
-mp = size(sa)
-allocate(grav2(mp),specvol(mp),alpha(mp),beta(mp))
+character (*), parameter :: func_name = "gsw_nsquared_min"
 
-if (lat .lt. -90.0_r8 .or. lat .gt. +90.0_r8) then
-    grav2 = (/ (9.7963_r8**2, i=1,mp) /)
-else
-    grav2 = gsw_grav(lat,p)**2
+mp = size(sa)
+if (size(n2).lt.mp-1 .or. size(n2_p).lt.mp-1 .or. &
+    size(n2_specvol).lt.mp-1 .or. size(n2_alpha).lt.mp-1 .or. &
+    size(n2_beta).lt.mp-1 .or. size(dsa).lt.mp-1 .or. &
+    size(dct).lt.mp-1 .or. size(dp).lt.mp-1) then
+    n2 = gsw_error_code(1,func_name)
+    n2_p = n2(1)
+    n2_specvol = n2(1)
+    n2_alpha = n2(1)
+    n2_beta = n2(1)
+    dsa = n2(1)
+    dct = n2(1)
+    dp = n2(1)
+    return
 end if
 
-dp  =  p(2:mp) -  p(1:mp-1)
-dsa = sa(2:mp) - sa(1:mp-1)
-dct = ct(2:mp) - ct(1:mp-1)
+allocate(grav2(mp),specvol(mp),alpha(mp),beta(mp))
+
+grav2 = gsw_grav(lat,p)**2
+
+dp(1:mp-1)  =  p(2:mp) -  p(1:mp-1)
+dsa(1:mp-1) = sa(2:mp) - sa(1:mp-1)
+dct(1:mp-1) = ct(2:mp) - ct(1:mp-1)
 
 call gsw_specvol_alpha_beta(sa,ct,p,specvol,alpha,beta)
 

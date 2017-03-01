@@ -27,6 +27,7 @@ real (r8), dimension(:), allocatable :: lat_cast, long_cast
 
 real (r8), dimension(:,:), allocatable :: value, check_value
 real (r8), dimension(:,:), allocatable :: val1, val2, val3, val4, val5
+real (r8), dimension(:,:), allocatable :: val6, val7, val8
 
 real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
 real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff, z
@@ -544,19 +545,18 @@ value = gsw_fdelta(p,long,lat)
 call check_accuracy('Fdelta',value)
 
 !------------------------------------------------------------------------------
-call section_title('Water column properties, based on the 75-term polynomial for specific volume')
+call section_title('Vertical stability')
 
-deallocate(check_value,val1,val2,val3)
+deallocate(check_value,val1,val2,val3,val4,val5)
 allocate(check_value(cast_mpres_m,cast_mpres_n))
 allocate(val1(cast_mpres_m,cast_mpres_n))
 allocate(val2(cast_mpres_m,cast_mpres_n))
 allocate(val3(cast_mpres_m,cast_mpres_n))
-
-do i = 1, cast_mpres_n
-    call gsw_nsquared(sa(:,i),ct(:,i),p(:,i),lat(:,i),val1(:,i),val2(:,i))
-end do
-call check_accuracy('Nsquared',val1,'n2')
-call check_accuracy('Nsquared',val2,'p_mid_n2')
+allocate(val4(cast_mpres_m,cast_mpres_n))
+allocate(val5(cast_mpres_m,cast_mpres_n))
+allocate(val6(cast_mpres_m,cast_mpres_n))
+allocate(val7(cast_mpres_m,cast_mpres_n))
+allocate(val8(cast_mpres_m,cast_mpres_n))
 
 do i = 1, cast_mpres_n
     call gsw_turner_rsubrho(sa(:,i),ct(:,i),p(:,i),val1(:,i),val2(:,i), &
@@ -567,11 +567,51 @@ call check_accuracy('Turner_Rsubrho',val2,'Rsubrho')
 call check_accuracy('Turner_Rsubrho',val3,'p_mid_TuRsr')
 
 do i = 1, cast_mpres_n
+    call gsw_nsquared(sa(:,i),ct(:,i),p(:,i),lat(:,i),val1(:,i),val2(:,i))
+end do
+call check_accuracy('Nsquared',val1,'n2')
+call check_accuracy('Nsquared',val2,'p_mid_n2')
+
+do i = 1, cast_mpres_n
+    call gsw_nsquared_min(sa(:,i),ct(:,i),p(:,i),lat(:,i),val1(:,i),val2(:,i), &
+    		val3(:,i),val4(:,i),val5(:,i),val6(:,i),val7(:,i),val8(:,i))
+end do
+call check_accuracy('Nsquared_min',val1,'n2min')
+call check_accuracy('Nsquared_min',val2,'n2min_pmid')
+call check_accuracy('Nsquared_min',val3,'n2min_specvol')
+call check_accuracy('Nsquared_min',val4,'n2min_alpha')
+call check_accuracy('Nsquared_min',val5,'n2min_beta')
+call check_accuracy('Nsquared_min',val6,'n2min_dsa')
+call check_accuracy('Nsquared_min',val7,'n2min_dct')
+call check_accuracy('Nsquared_min',val8,'n2min_dp')
+
+do i = 1, cast_mpres_n
     call gsw_ipv_vs_fnsquared_ratio(sa(:,i),ct(:,i),p(:,i),pref,val1(:,i), &
                                     val2(:,i))
 end do
 call check_accuracy('IPV_vs_fNsquared_ratio',val1,'IPVfN2')
 call check_accuracy('IPV_vs_fNsquared_ratio',val2,'p_mid_IPVfN2')
+
+deallocate(check_value)
+allocate(check_value(cast_m,cast_n))
+
+value = gsw_nsquared_lowerlimit(p)
+call check_accuracy('n2_lowerlimit',value)
+
+deallocate(check_value,value)
+allocate(check_value(cast_mpres_n,1))
+allocate(value(cast_mpres_n,1))
+
+do i = 1, cast_mpres_n
+    value(i,1) = gsw_mlp(sa(:,i),ct(:,i),p(:,i))
+end do
+call check_accuracy('mlp',value)
+
+!------------------------------------------------------------------------------
+call section_title('Geostrophic streamfunctions and acoustic travel time')
+
+deallocate(check_value)
+allocate(check_value(cast_mpres_m,cast_mpres_n))
 
 do i = 1, cast_mpres_n
     n = count(sa(:,i) .eq. sa(:,i))  ! check for NaN's
@@ -775,7 +815,6 @@ else
   print*
   print*
   print*, 'Well done! The gsw_check_fuctions confirms that the'
-  print*
   print*, 'Gibbs SeaWater (GSW) Oceanographic Toolbox is installed correctly.'
   print*
 endif
