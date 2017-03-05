@@ -11,7 +11,7 @@ logical, public :: gsw_abort_on_error = .true.
 
 real (r8), parameter, public :: gsw_error_limit = 1e10_r8
 
-integer, parameter, private :: nfuncs = 38
+integer, parameter, private :: nfuncs = 39
 integer, parameter, private :: maxlen = 40
 character (len=maxlen), dimension(nfuncs), private :: func_list
 
@@ -35,6 +35,7 @@ data func_list / &
 		"gsw_melting_seaice_into_seawater", &
 		"gsw_melting_seaice_sa_ct_ratio", &
 		"gsw_melting_seaice_sa_ct_ratio_poly", &
+		"gsw_mlp", &
 		"gsw_nsquared", &
 		"gsw_nsquared_min", &
 		"gsw_pressure_freezing_ct", &
