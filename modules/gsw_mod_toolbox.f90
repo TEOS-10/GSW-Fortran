@@ -123,6 +123,7 @@ public :: gsw_pt_from_t_ice
 public :: gsw_pt_second_derivatives
 public :: gsw_rho
 public :: gsw_rho_alpha_beta
+public :: gsw_rho_alpha_beta_bsq
 public :: gsw_rho_first_derivatives
 public :: gsw_rho_first_derivatives_wrt_enthalpy
 public :: gsw_rho_ice
@@ -1062,6 +1063,16 @@ interface
     real (r8), intent(in) :: sa, ct, p
     real (r8), intent(out), optional :: rho, alpha, beta
     end subroutine gsw_rho_alpha_beta
+    
+    elemental subroutine gsw_rho_alpha_beta_bsq (sa, ct, p, rho, alpha, beta, &
+                                                 stiffened)
+    use gsw_mod_kinds
+    implicit none
+    real (r8), intent(in) :: sa, ct, p
+    logical, intent(in), optional :: stiffened
+    real (r8), intent(out) :: rho
+    real (r8), intent(out), optional :: alpha, beta
+    end subroutine gsw_rho_alpha_beta_bsq
     
     elemental subroutine gsw_rho_first_derivatives (sa, ct, p, drho_dsa, &
                                                     drho_dct, drho_dp)
