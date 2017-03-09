@@ -2,7 +2,7 @@
 elemental function gsw_saar (p, long, lat)
 !==========================================================================
 !
-! Calculates the Absolute Salinity Anomaly Ratio, SAAR.
+! Calculates the Absolute Salinity Anomaly Ratio, SAAR at a geographic point.
 !
 ! p      : sea pressure                                    [dbar]
 ! long   : longitude                                       [deg E]     
@@ -56,12 +56,18 @@ if (indx0.eq.nx) indx0 = nx-1
 indy0 = floor(1.0_r8 + (ny-1.0_r8)*(lat-lats_ref(1))/(lats_ref(ny)-lats_ref(1)))
 if (indy0.eq.ny) indy0 = ny-1
 
+! Look for the maximum valid "ndepth_ref" value around our point.
+! Note: invalid "ndepth_ref" values are NaNs (a hangover from the codes
+! Matlab origins). These Nans will not satisfy the ".gt. 0.0" test below,
+! so will not be recognised as valid values.
 ndepth_max = -1.0_r8
 do k = 1,4
    if (ndepth_ref(indy0+delj(k),indx0+deli(k)).gt.0.0_r8) &
       ndepth_max = max(ndepth_max,ndepth_ref(indy0+delj(k),indx0+deli(k)))
 end do
 
+! If we are a long way from the ocean then there will be no valid "ndepth_ref"
+! values near the point (ie. surrounded by NaNs) - so just return SAAR = 0.0
 if (ndepth_max.eq.-1.0_r8) then
    gsw_saar = 0.0_r8 
    return
