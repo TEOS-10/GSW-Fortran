@@ -73,7 +73,7 @@ contains
     !       ...
     ! and level error codes comprise ...
     !       a  = error number for level #1 (0-9)
-    !       bc = function number for level #10
+    !       bc = function number for level #1
 
     implicit none
 

@@ -595,7 +595,7 @@ call check_accuracy('IPV_vs_fNsquared_ratio',val2,'p_mid_IPVfN2')
 deallocate(check_value)
 allocate(check_value(cast_m,cast_n))
 
-value = gsw_nsquared_lowerlimit(p)
+value = gsw_nsquared_lowerlimit(p,long,lat)
 call check_accuracy('n2_lowerlimit',value)
 
 deallocate(check_value,value)

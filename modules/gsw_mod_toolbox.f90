@@ -862,10 +862,10 @@ interface
     real (r8), intent(out) :: n2(:), p_mid(:)
     end subroutine gsw_nsquared
     
-    elemental function gsw_nsquared_lowerlimit (p)
+    elemental function gsw_nsquared_lowerlimit (p, long, lat)
     use gsw_mod_kinds
     implicit none
-    real (r8), intent(in) :: p
+    real (r8), intent(in) :: p, long, lat
     real (r8) :: gsw_nsquared_lowerlimit
     end function gsw_nsquared_lowerlimit
     
