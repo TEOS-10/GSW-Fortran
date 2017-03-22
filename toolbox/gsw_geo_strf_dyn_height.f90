@@ -59,17 +59,22 @@ real (r8), allocatable :: geo_strf_dyn_height0(:)
 
 integer :: p_cnt, top_pad, i, nz, ibottle, ipref, np_max, np, ibpr
 
-real (r8) :: dp_min, dp_max, p_min, p_max, max_dp_i
+real (r8) :: dp_min, dp_max, p_min, p_max
+
+! This max_dp_i is the limit we choose for the evaluation of specific
+! volume in the pressure integration. That is, the vertical integration
+! of specific volume with respect to pressure is perfomed with the pressure
+! increment being no more than max_dp_i (the default value being 1 dbar).
+real (r8), parameter :: max_dp_i = 1.0_r8
+
+! This p_max_limit is the maximum pressure we're likely to encounter (at
+! least in real-world situations - Mariana Trench is just over 11km depth).
+! It is used to set memory limits for array allocation (via np_max_limit).
+real (r8), parameter :: p_max_limit = 20000.0_r8
+
+integer, parameter :: np_max_limit = nint(p_max_limit/max_dp_i)
 
 character (*), parameter :: func_name = "gsw_geo_strf_dyn_height"
-
-!--------------------------------------------------------------------------
-!  This max_dp_i is the limit we choose for the evaluation of specific
-!  volume in the pressure integration.  That is, the vertical integration
-!  of specific volume with respect to pressure is perfomed with the pressure
-!  increment being no more than max_dp_i (the default value being 1 dbar).
-max_dp_i = 1.0_r8
-!--------------------------------------------------------------------------
 
 nz = size(sa)
 
@@ -79,16 +84,17 @@ dp = p(2:nz) - p(1:nz-1)
 dp_min = minval(dp)
 dp_max = maxval(dp)
 
-if (dp_min .le. 0.0_r8) then
-    ! pressure must be monotonic
+if (.not. (dp_min .gt. 0.0_r8)) then
+    ! pressure must be monotonic (do negative test to trap NaNs)
     gsw_geo_strf_dyn_height = gsw_error_code(1,func_name)
     return
 end if
 p_min = p(1)
 p_max = p(nz)
 
-if (p_ref .gt. p_max) then
-    ! the reference pressure p_ref is deeper than all bottles
+if (.not. (p_ref .le. p_max)) then
+    ! the reference pressure p_ref is deeper than all bottles (do negative
+    ! test to trap NaNs)
     gsw_geo_strf_dyn_height = gsw_error_code(2,func_name)
     return
 end if
@@ -164,6 +170,10 @@ else
 
         ! interpolation is needed.
         np_max = 2*nint(maxval(p/max_dp_i)+0.5_r8)
+	if (np_max.gt.np_max_limit) then
+            gsw_geo_strf_dyn_height = gsw_error_code(3,func_name)
+            return
+	end if
         allocate (p_i(np_max))
 
         if (p_min .gt. 0.0_r8) then

@@ -35,9 +35,9 @@ else
 end if
 
 if (do_poly) then
-	gsw_ct_freezing = gsw_ct_freezing_poly(sa, p, saturation_fraction)
+	gsw_ct_freezing = gsw_ct_freezing_poly(sa,p,saturation_fraction)
 else
-	gsw_ct_freezing = gsw_ct_freezing_exact(sa, p, saturation_fraction)
+	gsw_ct_freezing = gsw_ct_freezing_exact(sa,p,saturation_fraction)
 end if
 
 return
