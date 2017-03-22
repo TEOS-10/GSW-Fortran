@@ -3,15 +3,9 @@ FC := gfortran
 FFLAGS := -O
 LDFLAGS := 
 
-NETCDF_INCDIR := /usr/include/
-NETCDF_LIBDIR := 
-NETCDF_LIBS := -lnetcdf -lnetcdff
-
 SCRIPTS_DIR ?= ../scripts
 MODULES_DIR ?= ../modules
 TOOLBOX_DIR ?= ../toolbox
-
-LIBS += $(NETCDF_LIBS)
 
 PROG1 = gsw_check
 SRCS1 = gsw_check_functions.f90
@@ -21,7 +15,6 @@ SRCS2 = gsw_poly_check.f90
 
 MOD_TOOLBOX = $(MODULES_DIR)/gsw_mod_toolbox.mod
 MOD_KINDS = $(MODULES_DIR)/gsw_mod_kinds.mod
-MOD_NETCDF = $(MODULES_DIR)/gsw_mod_netcdf.mod
 
 MOD_TOOLBOX_SRC = $(MOD_TOOLBOX:.mod=.f90)
 
@@ -35,15 +28,11 @@ MODULES_SRCS := $(wildcard $(MODULES_DIR)/*.f90)
 MODULES_OBJS := $(MODULES_SRCS:.f90=.o)
 MODULES_MODS := $(MODULES_SRCS:.f90=.mod)
 
-ifdef NETCDF_LIBDIR
-	LDFLAGS += -L$(NETCDF_LIBDIR) -Wl,-rpath,$(NETCDF_LIBDIR)
-endif
-
 %.o : %.f90
 	$(FC) -I$(MODULES_DIR) $(FFLAGS) -c $< -o $@
 
 %.mod : %.f90
-	cd $(MODULES_DIR); $(FC) -I$(NETCDF_INCDIR) $(FFLAGS) -c $(<F)
+	cd $(MODULES_DIR); $(FC) $(FFLAGS) -c $(<F)
 	touch $@
 
 .PHONY:	all
@@ -61,7 +50,7 @@ $(PROG2): $(OBJS2) $(TOOLBOX_OBJS)
 $(OBJS2): $(SRCS2) $(MOD_TOOLBOX) $(MODULES_MODS)
 	$(FC) -I$(MODULES_DIR) $(FFLAGS) -c $< -o $@
 
-$(MOD_TOOLBOX): $(MOD_TOOLBOX_SRC) $(MOD_KINDS) $(MOD_NETCDF)
+$(MOD_TOOLBOX): $(MOD_TOOLBOX_SRC) $(MOD_KINDS)
 
 $(MOD_TOOLBOX_SRC):
 	cd $(MODULES_DIR); $(SCRIPTS_DIR)/make_mod.sh $(TOOLBOX_DIR)/*.f90

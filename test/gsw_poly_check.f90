@@ -1,76 +1,28 @@
 program gsw_poly_check
 
 use gsw_mod_kinds
-use gsw_mod_netcdf
 use gsw_mod_toolbox
+use gsw_mod_check_data
 
 implicit none
 
 integer :: gsw_error_flag = 0
 
-integer :: cast_m, cast_n, cast_mpres_m, cast_mpres_n, cast_ice_m
-integer :: cast_ice_n, i
+integer :: i
 
-real (r8) :: saturation_fraction, pref
+real (r8) :: saturation_fraction
 
-real (r8), dimension(:,:), allocatable :: ct, rt, sa, sk, sp, t, p
-real (r8), dimension(:,:), allocatable :: p_shallow, p_deep, lat, long
-
-real (r8), dimension(:,:), allocatable :: ct_arctic, sa_arctic, t_arctic
-real (r8), dimension(:,:), allocatable :: p_arctic, t_ice, w_ice
-real (r8), dimension(:,:), allocatable :: sa_seaice, t_seaice, w_seaice
-real (r8), dimension(:,:), allocatable :: lat_ice, long_ice
-
-real (r8), dimension(:), allocatable :: lat_cast, long_cast
+real (r8), dimension(:,:), allocatable :: lat, long
 
 real (r8), dimension(:,:), allocatable :: val1, val2, val3, val4, val5, val6
 
 real (r8), dimension(:,:), allocatable :: c, sr, sstar, pt, entropy
-real (r8), dimension(:,:), allocatable :: h, ctf, tf, rho, diff
+real (r8), dimension(:,:), allocatable :: h, ctf, tf, diff
 real (r8), dimension(:,:), allocatable :: ctf_poly, tf_poly, pt0
-real (r8), dimension(:,:), allocatable :: sa_bulk, h_pot_bulk
 
-call gsw_saar_init (.true.)
-
-call ncdf_open('gsw_data_v3_0.nc')
-
-cast_m = ncdf_get_dim("test_cast_length")
-cast_n = ncdf_get_dim("test_cast_number")
-
-cast_ice_m = ncdf_get_dim("Arctic_test_cast_length")
-cast_ice_n = ncdf_get_dim("Arctic_test_cast_number")
-
-cast_mpres_m = ncdf_get_dim("test_cast_midpressure_length")
-cast_mpres_n = ncdf_get_dim("test_cast_midpressure_number")
-
-allocate(ct(cast_m,cast_n))
-allocate(rt(cast_m,cast_n))
-allocate(sa(cast_m,cast_n))
-allocate(sk(cast_m,cast_n))
-allocate(sp(cast_m,cast_n))
-allocate(t(cast_m,cast_n))
-allocate(p(cast_m,cast_n))
-allocate(p_shallow(cast_m,cast_n))
-allocate(p_deep(cast_m,cast_n))
 allocate(lat(cast_m,cast_n))
 allocate(long(cast_m,cast_n))
-allocate(lat_cast(cast_n))
-allocate(long_cast(cast_n))
-
-allocate(ct_arctic(cast_ice_m,cast_ice_n))
-allocate(sa_arctic(cast_ice_m,cast_ice_n))
-allocate(t_arctic(cast_ice_m,cast_ice_n))
-allocate(p_arctic(cast_ice_m,cast_ice_n))
-allocate(sa_seaice(cast_ice_m,cast_ice_n))
-allocate(t_seaice(cast_ice_m,cast_ice_n))
-allocate(w_seaice(cast_ice_m,cast_ice_n))
-allocate(t_ice(cast_ice_m,cast_ice_n))
-allocate(w_ice(cast_ice_m,cast_ice_n))
-allocate(lat_ice(cast_ice_m,cast_ice_n))
-allocate(long_ice(cast_ice_m,cast_ice_n))
 allocate(pt0(cast_ice_m,cast_ice_n))
-allocate(sa_bulk(cast_ice_m,cast_ice_n))
-allocate(h_pot_bulk(cast_ice_m,cast_ice_n))
 
 allocate(val1(cast_m,cast_n))
 allocate(val2(cast_m,cast_n))
@@ -85,44 +37,16 @@ allocate(sstar(cast_m,cast_n))
 allocate(pt(cast_m,cast_n))
 allocate(entropy(cast_m,cast_n))
 allocate(ctf(cast_m,cast_n))
-allocate(rho(cast_m,cast_n))
 allocate(tf(cast_m,cast_n))
 allocate(ctf_poly(cast_m,cast_n))
 allocate(tf_poly(cast_m,cast_n))
 allocate(h(cast_m,cast_n))
 allocate(diff(cast_m,cast_n))
 
-call ncdf_get_var("CT_chck_cast", var2=ct)
-call ncdf_get_var("Rt_chck_cast", var2=rt)
-call ncdf_get_var("SA_chck_cast", var2=sa)
-call ncdf_get_var("SK_chck_cast", var2=sk)
-call ncdf_get_var("SP_chck_cast", var2=sp)
-call ncdf_get_var("t_chck_cast", var2=t)
-call ncdf_get_var("p_chck_cast", var2=p)
-call ncdf_get_var("p_chck_cast_shallow", var2=p_shallow)
-call ncdf_get_var("p_chck_cast_deep", var2=p_deep)
-
-call ncdf_get_var("lat_chck_cast", var1=lat_cast)
-call ncdf_get_var("long_chck_cast", var1=long_cast)
 do i = 1, cast_n
     lat(:,i) = lat_cast(i)
     long(:,i) = long_cast(i)
 end do
-
-call ncdf_get_var("CT_Arctic", var2=ct_arctic)
-call ncdf_get_var("SA_Arctic", var2=sa_arctic)
-call ncdf_get_var("t_Arctic", var2=t_arctic)
-call ncdf_get_var("p_Arctic", var2=p_arctic)
-call ncdf_get_var("SA_seaice", var2=sa_seaice)
-call ncdf_get_var("t_seaice", var2=t_seaice)
-call ncdf_get_var("w_seaice", var2=w_seaice)
-call ncdf_get_var("t_ice", var2=t_ice)
-call ncdf_get_var("w_ice", var2=w_ice)
-
-call ncdf_get_var("SA_bulk", var2=sa_bulk)
-call ncdf_get_var("h_pot_bulk", var2=h_pot_bulk)
-
-call ncdf_get_var("pr", var0=pref)
 
 !------------------------------------------------------------------------------
 call section_title('Freezing temperatures')

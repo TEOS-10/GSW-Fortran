@@ -34,11 +34,6 @@ real (r8) :: r1, s1, t1, dsar_mean, ndepth_max, p_tmp, long_tmp
 
 character (*), parameter :: func_name = "gsw_deltasa_atlas"
 
-if (.not. delta_loaded) then
-   gsw_deltasa_atlas = gsw_error_code(1,func_name)
-   return
-end if
-
 if (lat .lt. -86.0_r8 .or. lat .gt. 90.0_r8) then
    gsw_deltasa_atlas = gsw_error_code(2,func_name)
    return
