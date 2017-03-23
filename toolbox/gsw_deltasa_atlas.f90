@@ -30,26 +30,28 @@ integer :: indx0, indy0, indz0, i, j, k, nmean
 real (r8), dimension(4) :: dsar, dsar_old
 real (r8) :: dlong, dlat
 real (r8) :: p0_original, lon0_in, sa_upper, sa_lower 
-real (r8) :: r1, s1, t1, dsar_mean, ndepth_max, p_tmp, long_tmp
+real (r8) :: r1, s1, t1, dsar_mean, ndepth_max, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_deltasa_atlas"
 
-if (lat .lt. -86.0_r8 .or. lat .gt. 90.0_r8) then
+long360 = long
+if (long360.lt.0.0_r8) long360 = long360 + 360.0_r8
+
+indx0 = floor(1.0_r8 + (nx-1)*(long360-longs_ref(1)) / &
+                (longs_ref(nx)-longs_ref(1)))
+
+indy0 = floor(1.0_r8 + (ny-1)*(lat-lats_ref(1)) / (lats_ref(ny)-lats_ref(1)))
+
+if ((indx0.ge.1 .and. indx0.le.nx) .and. (indy0.ge.1 .and. indy0.le.ny)) then
+   if (indx0.eq.nx) indx0 = nx-1
+   if (indy0.eq.ny) indy0 = ny-1
+else
+   ! This is to catch any out-of-range or nonsense lat/long input (including
+   ! NaN, +Inf, -Inf etc). Note: NaNs will not satisfy any "if" conditional
+   ! so will be trapped by the "else".
    gsw_deltasa_atlas = gsw_error_code(2,func_name)
    return
 end if
-
-long_tmp = long
-if (long_tmp.lt.0.0_r8) long_tmp = long_tmp + 360.0_r8
-
-dlong = longs_ref(2) - longs_ref(1)
-dlat = lats_ref(2) - lats_ref(1)
-
-indx0 = floor(1.0_r8 + (nx-1)*(long_tmp-longs_ref(1))/(longs_ref(nx)-longs_ref(1)))
-if (indx0.eq.nx) indx0 = nx - 1
-
-indy0 = floor(1.0_r8 + (ny-1.0_r8)*(lat-lats_ref(1))/(lats_ref(ny)-lats_ref(1)))
-if (indy0.eq.ny) indy0 = ny - 1
 
 ! Look for the maximum valid "ndepth_ref" value around our point.
 ! Note: invalid "ndepth_ref" values are NaNs (a hangover from the codes
@@ -73,18 +75,21 @@ p_tmp = p
 if (p_tmp.gt.p_ref(int(ndepth_max))) p_tmp = p_ref(int(ndepth_max))
 call gsw_util_indx(p_ref,nz,p_tmp,indz0)
     
-r1 = (long_tmp-longs_ref(indx0))/(longs_ref(indx0+1)-longs_ref(indx0))
-s1 = (lat-lats_ref(indy0))/(lats_ref(indy0+1)-lats_ref(indy0))
-t1 = (p_tmp-p_ref(indz0))/(p_ref(indz0+1)-p_ref(indz0))
+dlong = longs_ref(indx0+1) - longs_ref(indx0)
+dlat = lats_ref(indy0+1) - lats_ref(indy0)
+
+r1 = (long360-longs_ref(indx0)) / dlong
+s1 = (lat-lats_ref(indy0)) / dlat
+t1 = (p_tmp-p_ref(indz0)) / (p_ref(indz0+1)-p_ref(indz0))
 
 do k = 1, 4
    dsar(k) = delta_sa_ref(indz0,indy0+delj(k),indx0+deli(k))
 end do
 
-if ( longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and. &
-   lats_pan(npan).le.lat      .and.      lat.le.lats_pan(1)) then
+if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
+    lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
    dsar_old = dsar
-   call gsw_add_barrier(dsar_old,long_tmp,lat,longs_ref(indx0), &
+   call gsw_add_barrier(dsar_old,long360,lat,longs_ref(indx0), &
    			lats_ref(indy0),dlong,dlat,dsar)
 else if (abs(sum(dsar)).ge.1e10_r8) then 
    dsar_old = dsar
@@ -98,10 +103,10 @@ do k = 1,4
    dsar(k) = delta_sa_ref(indz0+1,indy0+delj(k),indx0+deli(k))
 end do
 
-if ( longs_pan(1).le.long_tmp .and. long_tmp.le.longs_pan(npan)-0.001_r8 .and. &
-   lats_pan(npan).le.lat      .and.      lat.le.lats_pan(1)) then
+if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
+    lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
    dsar_old = dsar
-   call gsw_add_barrier(dsar_old,long_tmp,lat,longs_ref(indx0), &
+   call gsw_add_barrier(dsar_old,long360,lat,longs_ref(indx0), &
    			lats_ref(indy0),dlong,dlat,dsar)
 else if (abs(sum(dsar)).ge.1e10_r8) then 
    dsar_old = dsar
