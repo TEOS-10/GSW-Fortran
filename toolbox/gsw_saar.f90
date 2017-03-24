@@ -33,11 +33,6 @@ real (r8) :: r1, s1, t1, saar_mean, ndepth_max, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_saar"
 
-if (.not. saar_loaded) then
-   gsw_saar = gsw_error_code(1,func_name)
-   return
-end if
-
 long360 = long
 if (long360.lt.0.0_r8) long360 = long360 + 360.0_r8
 

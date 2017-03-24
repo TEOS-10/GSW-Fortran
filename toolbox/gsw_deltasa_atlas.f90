@@ -34,11 +34,6 @@ real (r8) :: r1, s1, t1, dsar_mean, ndepth_max, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_deltasa_atlas"
 
-if (.not. delta_loaded) then
-   gsw_deltasa_atlas = gsw_error_code(1,func_name)
-   return
-end if
-
 long360 = long
 if (long360.lt.0.0_r8) long360 = long360 + 360.0_r8
 
