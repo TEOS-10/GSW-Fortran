@@ -54,11 +54,13 @@ end if
 
 ! Look for the maximum valid "ndepth_ref" value around our point.
 ! Note: invalid "ndepth_ref" values are NaNs (a hangover from the codes
-! Matlab origins). These Nans will not satisfy the ".gt. 0.0" test below,
-! so will not be recognised as valid values.
+! Matlab origins), but we have replaced the NaNs with a value of "9e90",
+! hence we need an additional upper-limit check in the code below so they
+! will not be recognised as valid values.
 ndepth_max = -1.0_r8
 do k = 1,4
-   if (ndepth_ref(indy0+delj(k),indx0+deli(k)).gt.0.0_r8) &
+   if ((ndepth_ref(indy0+delj(k),indx0+deli(k)).gt.0.0_r8) .and. &
+       (ndepth_ref(indy0+delj(k),indx0+deli(k)).lt.1e90_r8)) &
       ndepth_max = max(ndepth_max,ndepth_ref(indy0+delj(k),indx0+deli(k)))
 end do
 
