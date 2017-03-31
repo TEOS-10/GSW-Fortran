@@ -25,11 +25,11 @@ real (r8), intent(in) :: p, long, lat
 
 real (r8) :: gsw_saar
 
-integer :: indx0, indy0, indz0, k
+integer :: indx0, indy0, indz0, k, ndepth_max
 
 real (r8), dimension(4) :: saar, saar_old
 real (r8) :: p0_original, sa_upper, sa_lower, dlong, dlat
-real (r8) :: r1, s1, t1, ndepth_max, p_tmp, long360
+real (r8) :: r1, s1, t1, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_saar"
 
@@ -57,23 +57,23 @@ end if
 ! Matlab origins), but we have replaced the NaNs with a value of "9e90",
 ! hence we need an additional upper-limit check in the code below so they
 ! will not be recognised as valid values.
-ndepth_max = -1.0_r8
+ndepth_max = -1
 do k = 1,4
-   if ((ndepth_ref(indy0+delj(k),indx0+deli(k)).gt.0.0_r8) .and. &
-       (ndepth_ref(indy0+delj(k),indx0+deli(k)).lt.1e90_r8)) &
+   if ((ndepth_ref(indy0+delj(k),indx0+deli(k)).gt.0) .and. &
+       (ndepth_ref(indy0+delj(k),indx0+deli(k)).lt.99)) &
       ndepth_max = max(ndepth_max,ndepth_ref(indy0+delj(k),indx0+deli(k)))
 end do
 
 ! If we are a long way from the ocean then there will be no valid "ndepth_ref"
 ! values near the point (ie. surrounded by NaNs) - so just return SAAR = 0.0
-if (ndepth_max.eq.-1.0_r8) then
+if (ndepth_max.eq.-1) then
    gsw_saar = 0.0_r8 
    return
 end if 
 
 p0_original = p
 p_tmp = p
-if (p_tmp.gt.p_ref(int(ndepth_max))) p_tmp = p_ref(int(ndepth_max))
+if (p_tmp.gt.p_ref(ndepth_max)) p_tmp = p_ref(ndepth_max)
 call gsw_util_indx(p_ref,nz,p_tmp,indz0)
 
 dlong = longs_ref(indx0+1) - longs_ref(indx0)

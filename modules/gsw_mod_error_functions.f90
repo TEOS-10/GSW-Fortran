@@ -11,9 +11,11 @@ logical, public :: gsw_abort_on_error = .true.
 
 real (r8), parameter, public :: gsw_error_limit = 1e10_r8
 
-integer, parameter, private :: nfuncs = 41
+integer, private :: nfuncs = 41
+
 integer, parameter, private :: maxlen = 40
-character (len=maxlen), dimension(nfuncs), private :: func_list
+integer, parameter, private :: maxfuncs = 50
+character (len=maxlen), dimension(maxfuncs), private :: func_list
 
 data func_list / &
                 "gsw_ct_from_enthalpy_exact", &
@@ -56,10 +58,20 @@ data func_list / &
                 "gsw_sp_from_sstar", &
                 "gsw_sstar_from_sa", &
                 "gsw_sstar_from_sp", &
-                "gsw_turner_rsubrho" /
+                "gsw_turner_rsubrho", &
+                "", &
+                "", &
+                "", &
+                "", &
+                "", &
+                "", &
+                "", &
+                "", &
+                "" /
 
 public :: gsw_error_code
 public :: gsw_error_handler
+public :: gsw_error_addname
 
 private :: gsw_error_fnum
 
@@ -162,5 +174,21 @@ contains
     if (gsw_abort_on_error) stop
 
     end subroutine gsw_error_handler
+
+    !==========================================================================
+
+    subroutine gsw_error_addname (func_name)
+
+    implicit none
+
+    character (*), intent(in) :: func_name
+
+    if (nfuncs.ge.maxfuncs) return
+
+    nfuncs = nfuncs + 1
+    func_list(nfuncs) = func_name
+    return
+
+    end subroutine gsw_error_addname
 
 end module gsw_mod_error_functions

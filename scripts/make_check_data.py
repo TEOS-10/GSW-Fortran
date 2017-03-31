@@ -1,41 +1,37 @@
 #!/usr/bin/env python
 #  $Id$
 """
-Make gsw_check_data.c from the current gsw_data_v3_0.nc.  This is a developer
-utility and not a part of the public distribution, but its end-product is.
-Note that it generates gsw_check_data.c but will not overwrite it if it exists.
+Make gsw_mod_check_data.c from the current gsw_data_v3_0.nc. This is a developer
+utility and not a part of the public distribution, but its end-product is. Note
+that it generates gsw_mod_check_data.c but will not overwrite it if it exists.
 General concept: we don't want end-users of this distribution to require having
 netcdf installed, nor do we want to incur the I/O overhead every time this
-library is used.  So we simply generate static data from the netcdf file that
-the Fortran-gsw library uses directly.
+library is used. So we simply generate static data from the netcdf file.
 """
 import math, os, sys
 from netCDF4 import Dataset
 
-nan = 9e90
-
-def write_variable_ca(var_name, v):
-    val = v.computation_accuracy
-    if math.isnan(val):
-        val = nan
-    out.write("real (r8) :: %s\n" % (var_name+'_ca'))
-    out.write("data %s / %.17g_r8 /\n\n"% (var_name+'_ca', val))
-
+nan = "9e90_r8"
 
 def write_variable(var_name, dims, v):
-    length = dims[0]
-    for d in dims[1:]:
-        length *= d
     ndims = len(dims)
     if ndims == 1:
-        fortran_dims = "(%d)" % dims[0]
+        if dims[0] == 1:
+            fortran_dims = ""
+        else:
+            fortran_dims = ", dimension(cast_n)"
     else:
-        # list dimension in reverse order
-        fortran_dims = tuple(dims[::-1])
-    out.write("real (r8), dimension %s :: %s\n" % (fortran_dims, var_name))
+        if v.dimensions[1] == "test_cast_length":
+            fortran_dims = "(cast_m,cast_n)"
+        elif v.dimensions[1] == "Arctic_test_cast_length":
+            fortran_dims = "(cast_ice_m,cast_ice_n)"
+        elif v.dimensions[1] == "test_cast_midpressure_length":
+            fortran_dims = "(cast_mpres_m,cast_mpres_n)"
+        fortran_dims = ", dimension" + fortran_dims
+    out.write("real (r8)%s :: %s\n" % (fortran_dims, var_name))
     out.write("data %s / &\n" % var_name)
-    buf = ""
-    maxlen = 89
+    buf = "  "
+    maxlen = 78
     if ndims == 1:
         lastx = dims[0]-1
 #
@@ -46,13 +42,14 @@ def write_variable(var_name, dims, v):
         vv = v[:]
         for val, x in [(vv[cx],cx) for cx in range(dims[0])]:
             if math.isnan(val):
-                val = nan
-            sval = "%.17g_r8" % val
+                sval = nan
+            else:
+                sval = "%.16e_r8" % val
             if x != lastx:
                 sval += ", "
             if len(buf)+len(sval) > maxlen:
                 out.write(buf+" &\n")
-                buf = ""
+                buf = "  "
             buf += sval
     elif ndims == 2:
         lastx = dims[0]-1
@@ -61,13 +58,14 @@ def write_variable(var_name, dims, v):
         for x in range(dims[0]):
             for val,y in [(vv[x][cy],cy) for cy in range(dims[1])]:
                 if math.isnan(val):
-                    val = nan
-                sval = "%.17g_r8" % val
+                    sval = nan
+                else:
+                    sval = "%.16e_r8" % val
                 if x != lastx or y != lasty:
                     sval += ", "
                 if len(buf)+len(sval) > maxlen:
                     out.write(buf+" &\n")
-                    buf = ""
+                    buf = "  "
                 buf += sval
     else:
         lastx = dims[0]-1
@@ -78,17 +76,99 @@ def write_variable(var_name, dims, v):
             for y in range(dims[1]):
                 for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
                     if math.isnan(val):
-                        val = nan
-                    sval = "%.17g_r8" % val
+                        sval = nan
+                    else:
+                        sval = "%.16e_r8" % val
                     if x != lastx or y != lasty or z != lastz:
                         sval += ", "
                     if len(buf)+len(sval) > maxlen:
                         out.write(buf+" &\n")
-                        buf = ""
+                        buf = "  "
+                    buf += sval
+    if buf:
+        out.write(buf+" /\n\n")
+
+def write_structure(var_name, dims, v):
+
+    ndims = len(dims)
+    if ndims == 1:
+        out.write("type(gsw_result_cast) :: %s\n\n" % var_name.lower())
+        out.write("data %s / gsw_result_cast( &\n" % var_name.lower())
+    else:
+        if v.dimensions[1] == "test_cast_length":
+            out.write("type(gsw_result) :: %s\n\n" % var_name.lower())
+            out.write("data %s / gsw_result( &\n" % var_name.lower())
+        elif v.dimensions[1] == "Arctic_test_cast_length":
+            out.write("type(gsw_result_ice) :: %s\n\n" % var_name.lower())
+            out.write("data %s / gsw_result_ice( &\n" % var_name.lower())
+        elif v.dimensions[1] == "test_cast_midpressure_length":
+            out.write("type(gsw_result_mpres) :: %s\n\n" % var_name.lower())
+            out.write("data %s / gsw_result_mpres( &\n" % var_name.lower())
+    out.write("  \"%s\", &\n" % var_name)
+
+    if math.isnan(v.computation_accuracy):
+        out.write("  %s, (/ &\n" % nan)
+    else:
+        out.write("  %.16e_r8, (/ &\n" % v.computation_accuracy)
+
+    buf = "  "
+    maxlen = 78
+    if ndims == 1:
+        lastx = dims[0]-1
+#
+#       The following construct (and variations below) transfer the
+#       netcdf variable into a memory-resident buffer all at once.
+#       Anything else is not advised.
+#
+        vv = v[:]
+        for val, x in [(vv[cx],cx) for cx in range(dims[0])]:
+            if math.isnan(val):
+                sval = nan
+            else:
+                sval = "%.16e_r8" % val
+            if x != lastx:
+                sval += ", "
+            if len(buf)+len(sval) > maxlen:
+                out.write(buf+" &\n")
+                buf = "  "
+            buf += sval
+    elif ndims == 2:
+        lastx = dims[0]-1
+        lasty = dims[1]-1
+        vv = v[:][:]
+        for x in range(dims[0]):
+            for val,y in [(vv[x][cy],cy) for cy in range(dims[1])]:
+                if math.isnan(val):
+                    sval = nan
+                else:
+                    sval = "%.16e_r8" % val
+                if x != lastx or y != lasty:
+                    sval += ", "
+                if len(buf)+len(sval) > maxlen:
+                    out.write(buf+" &\n")
+                    buf = "  "
+                buf += sval
+    else:
+        lastx = dims[0]-1
+        lasty = dims[1]-1
+        lastz = dims[2]-1
+        vv = v[:][:][:]
+        for x in range(dims[0]):
+            for y in range(dims[1]):
+                for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
+                    if math.isnan(val):
+                        sval = nan
+                    else:
+                        sval = "%.16e_r8" % val
+                    if x != lastx or y != lasty or z != lastz:
+                        sval += ", "
+                    if len(buf)+len(sval) > maxlen:
+                        out.write(buf+" &\n")
+                        buf = "  "
                     buf += sval
     if buf:
         out.write(buf+" &\n")
-    out.write(" /\n\n")
+    out.write("  /) ) /\n\n")
 
 work_dims = [
     ["cast_m", "test_cast_length"],
@@ -351,8 +431,8 @@ vars = [
     ['seaice_fraction_to_freeze_seawater_w_Ih', ""]
 ]
 rootgrp = Dataset('gsw_data_v3_0.nc', 'r')
-v=rootgrp.variables
-d=rootgrp.dimensions
+v = rootgrp.variables
+d = rootgrp.dimensions
 
 version_date = rootgrp.version_date
 version_number = rootgrp.version_number
@@ -360,7 +440,7 @@ try:
     fd = os.open("gsw_mod_check_data.f90", os.O_CREAT|os.O_EXCL|os.O_RDWR, 0644)
 except:
     print str(sys.exc_info()[1])
-    print "Will not overwrite gsw_mod_check_data.90. Exiting."
+    print "Will not overwrite gsw_mod_check_data.f90 - exiting."
     sys.exit(1)
 out = os.fdopen(fd, "w")
 out.write("""
@@ -381,9 +461,33 @@ implicit none
 for dim_label, dim_name in [dim for dim in work_dims]:
     if not dim_name:
         dim_name = dim_label
-    out.write("integer :: %s\n" % dim_label)
-    out.write("data %s / %d /\n" % (dim_label, len(d[dim_name])))
-out.write("\n")
+    out.write("integer, parameter :: %s = %d\n" % (dim_label, len(d[dim_name])))
+out.write("""
+type gsw_result
+    character (50) :: variable_name
+    real (r8) :: computation_accuracy
+    real (r8), dimension(cast_m,cast_n) :: values
+end type gsw_result
+
+type gsw_result_ice
+    character (50) :: variable_name
+    real (r8) :: computation_accuracy
+    real (r8), dimension(cast_ice_m,cast_ice_n) :: values
+end type gsw_result_ice
+
+type gsw_result_mpres
+    character (50) :: variable_name
+    real (r8) :: computation_accuracy
+    real (r8), dimension(cast_mpres_m,cast_mpres_n) :: values
+end type gsw_result_mpres
+
+type gsw_result_cast
+    character (50) :: variable_name
+    real (r8) :: computation_accuracy
+    real (r8), dimension(cast_n) :: values
+end type gsw_result_cast
+
+""")
 
 for var_label, var_name in [var for var in work_vars]:
     if not var_name:
@@ -395,8 +499,7 @@ for var_label, var_name in [var for var in vars]:
     if not var_name:
         var_name = var_label
     dims = [len(d[dname]) for dname in v[var_name].dimensions]
-    write_variable(var_label.lower(), dims, v[var_name])
-    write_variable_ca(var_label.lower(), v[var_name])
+    write_structure(var_label, dims, v[var_name])
 
 out.write("""
 end module
