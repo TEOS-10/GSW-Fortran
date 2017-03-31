@@ -24,8 +24,8 @@ real (r8), intent(in) :: sa, t, p, p_ref
 
 real (r8) :: gsw_pt_from_t
 
-integer n, no_iter
-real (r8) :: s1, pt, pt_old, de_dt, dentropy, dentropy_dt
+integer no_iter
+real (r8) :: s1, pt, pt_old, dentropy, dentropy_dt
 real (r8) :: true_entropy_part, ptm
 
 integer, parameter :: n0=0, n2=2

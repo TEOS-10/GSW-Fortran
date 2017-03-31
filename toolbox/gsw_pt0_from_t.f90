@@ -24,9 +24,9 @@ real (r8), intent(in) :: sa, t, p
 
 real (r8) :: gsw_pt0_from_t
 
-integer n, no_iter
+integer no_iter
 real (r8) :: s1, true_entropy_part, pt0m
-real (r8) :: pt0, pt0_old, de_dt, dentropy, dentropy_dt
+real (r8) :: pt0, pt0_old, dentropy, dentropy_dt
 
 s1 = sa/gsw_ups
 

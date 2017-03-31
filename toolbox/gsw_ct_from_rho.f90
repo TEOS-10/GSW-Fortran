@@ -114,9 +114,9 @@ else
             ct = gsw_error_code(3,func_name)
             if (present(ct_multiple)) ct_multiple = ct
             return
-	end if
+        end if
 
-	ct = ct_a
+        ct = ct_a
         if (.not. present(ct_multiple)) return
 
         ! Set the initial value of the quadratic solution roots.
@@ -135,10 +135,10 @@ else
             ct = gsw_error_code(4,func_name)
             if (present(ct_multiple)) ct_multiple = ct
             return
-	end if
+        end if
 
-	ct_multiple = ct_b
-	return
+        ct_multiple = ct_b
+        return
 
     end if
 

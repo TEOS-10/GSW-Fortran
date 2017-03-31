@@ -249,9 +249,9 @@ do iterations = 1, max_iterations
 
     if (w_ih .gt. 0.9_r8) then
         sa_final = gsw_error_code(1+iterations,func_name)
-	ct_final = sa_final
-	w_ih_final = sa_final
-	return
+        ct_final = sa_final
+        w_ih_final = sa_final
+        return
     end if
 
     sa = sa_bulk/(1.0_r8 - w_ih)

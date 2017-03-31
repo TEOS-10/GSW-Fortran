@@ -117,9 +117,9 @@ if (present(v_ct_p) .and. flags(5)) then
    v_ct_p_part = a001 + xs*(a101 + xs*(a201 + xs*(a301 + a401*xs))) + ys*(a011 &
         + xs*(a111 + xs*(a211 + a311*xs)) + ys*(a021 + xs*(a121 + a221*xs) &
         + ys*(a031 + a131*xs + a041*ys))) + z*(2.0_r8*(a002 + xs*(a102 &
-	+ xs*(a202 + a302*xs)) + ys*(a012 + xs*(a112 + a212*xs) + ys*(a022 &
-	+ a122*xs + a032*ys))) + z*(3.0_r8*(a003 + a103*xs + a013*ys) &
-	+ 4.0_r8*a004*z))
+        + xs*(a202 + a302*xs)) + ys*(a012 + xs*(a112 + a212*xs) + ys*(a022 &
+        + a122*xs + a032*ys))) + z*(3.0_r8*(a003 + a103*xs + a013*ys) &
+        + 4.0_r8*a004*z))
 
    v_ct_p = 1e-8_r8*0.025_r8*v_ct_p_part
 

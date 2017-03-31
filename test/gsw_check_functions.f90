@@ -10,7 +10,7 @@ implicit none
 
 integer :: gsw_error_flag = 0
 
-integer :: i, m, n
+integer :: i, n
 
 real (r8) :: saturation_fraction
 
@@ -497,7 +497,7 @@ call check_accuracy('Nsquared',val2,p_mid_n2,p_mid_n2_ca,'p_mid_n2')
 
 do i = 1, cast_mpres_n
     call gsw_nsquared_min(sa(:,i),ct(:,i),p(:,i),lat(:,i),val1(:,i),val2(:,i), &
-    		val3(:,i),val4(:,i),val5(:,i),val6(:,i),val7(:,i),val8(:,i))
+                val3(:,i),val4(:,i),val5(:,i),val6(:,i),val7(:,i),val8(:,i))
 end do
 call check_accuracy('Nsquared_min',val1,n2min,n2min_ca,'n2min')
 call check_accuracy('Nsquared_min',val2,n2min_pmid,n2min_pmid_ca,'n2min_pmid')
@@ -789,7 +789,7 @@ contains
     character (*), intent(in), optional :: var_name
     logical, intent(in), optional :: vprint
 
-    integer :: ndots, i, j, k, ik, jk
+    integer :: ndots, i, j, k, ik=1, jk=1
     real (r8) :: dmax, drel
     real (r8) :: diff(size(fvalue,1),size(fvalue,2))
     character (80) :: message
@@ -801,16 +801,16 @@ contains
 
     if (present(var_name)) then
 
-	if (len(func_name)+len(var_name).gt.55) then
-	    k = len(func_name) + len(var_name) - 55
-	    message = func_name // ' (..' // var_name(k:) // ')'
-	else
-	    message = func_name // ' (' // var_name // ')'
-	end if
+        if (len(func_name)+len(var_name).gt.55) then
+            k = len(func_name) + len(var_name) - 55
+            message = func_name // ' (..' // var_name(k:) // ')'
+        else
+            message = func_name // ' (' // var_name // ')'
+        end if
 
     else
 
-	message = func_name
+        message = func_name
 
     end if
 
@@ -819,39 +819,39 @@ contains
 
     if (present(vprint)) then
         if (vprint) then
-	    print *, "Limit =", check_limit
+            print *, "Limit =", check_limit
             print '(i3,3ES24.15)', ((i,fvalue(i,j),check_value(i,j),diff(i,j), &
-	            i=1,size(fvalue,1)), j=1,size(fvalue,2))
+                    i=1,size(fvalue,1)), j=1,size(fvalue,2))
             print *
-	end if
+        end if
     end if
 
     if (any(fvalue .gt. gsw_error_limit)) then
         where (fvalue .gt. gsw_error_limit) diff = 0.0_r8
-	errflg = ' (*)'
+        errflg = ' (*)'
     else
-	errflg = '    '
+        errflg = '    '
     end if
     ndots = 65 - len(trim(message))
 
     if (any(diff .gt. check_limit)) then
         gsw_error_flag = 1
-	dmax = 0.0_r8
-	do i = 1, size(fvalue,1)
-	    do j = 1, size(fvalue,2)
-	         if (diff(i,j) .gt. dmax) then
-		     dmax = diff(i,j)
-		     ik = i
-		     jk = j
-		 end if
-	    end do
-	end do
-	drel = dmax*100.0_r8/abs(fvalue(ik,jk))
+        dmax = 0.0_r8
+        do i = 1, size(fvalue,1)
+            do j = 1, size(fvalue,2)
+                 if (diff(i,j) .gt. dmax) then
+                     dmax = diff(i,j)
+                     ik = i
+                     jk = j
+                 end if
+            end do
+        end do
+        drel = dmax*100.0_r8/abs(fvalue(ik,jk))
         print *, trim(message), dots(:ndots-3), ' << failed >>'
-	print *
-	print *, "  Max. difference =", dmax, ", limit =", check_limit
-	print *, "  Max. diff (rel) =", drel, ", limit =", check_limit*100.0_r8/abs(fvalue(ik,jk))
-	print *
+        print *
+        print *, "  Max. difference =", dmax, ", limit =", check_limit
+        print *, "  Max. diff (rel) =", drel, ", limit =", check_limit*100.0_r8/abs(fvalue(ik,jk))
+        print *
     else
         print *, trim(message), dots(:ndots), ' passed', errflg
     endif

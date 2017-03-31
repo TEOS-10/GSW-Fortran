@@ -29,7 +29,7 @@ character (*), parameter :: func_name = "gsw_deltasa_from_sp"
 gsw_deltasa_from_sp = gsw_sa_from_sp(sp,p,long,lat) - gsw_sr_from_sp(sp)
 
 if (gsw_deltasa_from_sp.gt.gsw_error_limit) &
-	gsw_deltasa_from_sp = gsw_error_code(1,func_name)
+        gsw_deltasa_from_sp = gsw_error_code(1,func_name)
 
 return
 end function

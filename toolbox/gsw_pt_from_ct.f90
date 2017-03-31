@@ -25,7 +25,7 @@ real (r8), intent(in) :: sa, ct
 real (r8) :: gsw_pt_from_ct
 
 real (r8) :: a5ct, b3ct, ct_factor, pt_num, pt_recden, ct_diff
-real (r8) :: ct0, pt, pt_old, ptm, dct, dpt_dct, s1
+real (r8) :: pt, pt_old, ptm, dpt_dct, s1
 
 real (r8), parameter :: a0 = -1.446013646344788e-2_r8
 real (r8), parameter :: a1 = -3.305308995852924e-3_r8

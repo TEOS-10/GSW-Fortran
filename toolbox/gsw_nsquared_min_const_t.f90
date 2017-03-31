@@ -84,7 +84,7 @@ do i = 1, mp-1
     n2_shallow =  grav2(ishallow)/(specvol(ishallow)*db2pa*dp(i))* &
                  (beta(ishallow)*dsa(i) - alpha(ishallow)*dct(i))
     n2_deep =  grav2(ideep)/(specvol(ideep)*db2pa*dp(i))* &
-	      (beta(ideep)*dsa(i) - alpha(ideep)*dct(i))
+              (beta(ideep)*dsa(i) - alpha(ideep)*dct(i))
     if (n2_shallow .lt. n2_deep) then
         n2(i) = n2_shallow
         n2_p(i) = p(ishallow)
@@ -93,7 +93,7 @@ do i = 1, mp-1
         n2_beta(i) = beta(ishallow)
         n2_beta_ratio(i) = beta_ratio(ishallow)
     else
-	n2(i) = n2_deep
+        n2(i) = n2_deep
         n2_p(i) = p(ideep)
         n2_specvol(i) = specvol(ideep)
         n2_alpha(i) = alpha(ideep)

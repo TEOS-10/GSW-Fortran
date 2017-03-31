@@ -16,6 +16,8 @@ elemental function gsw_gibbs (ns, nt, np, sa, t, p)
 
 use gsw_mod_teos10_constants, only : gsw_sfac
 
+use gsw_mod_error_functions, only : gsw_error_code
+
 use gsw_mod_kinds
 
 implicit none
@@ -27,12 +29,14 @@ real (r8) :: gsw_gibbs
 
 real (r8) :: x2, x, y, z, g03, g08
 
+character (*), parameter :: func_name = "gsw_gibbs"
+
 x2 = gsw_sfac*sa
 x = sqrt(x2)
 y = t*0.025_r8
 z = p*1e-4_r8
 
-if(ns.eq.0 .and. nt.eq.0 .and. np.eq.0) then
+if (ns.eq.0 .and. nt.eq.0 .and. np.eq.0) then
           
   g03 = 101.342743139674_r8 + z*(100015.695367145_r8 + &
       z*(-2544.5765420363_r8 + z*(284.517778446287_r8 + &
@@ -71,12 +75,12 @@ if(ns.eq.0 .and. nt.eq.0 .and. np.eq.0) then
         z*(-860.764303783977_r8 + z*(337.409530269367_r8 + &
         z*(-178.314556207638_r8 + (44.2040358308_r8 - 7.92001547211682_r8*z)*z))))))
         
-  if(sa.gt.0.0_r8) &
+  if (sa.gt.0.0_r8) &
         g08 = g08 + x2*(5812.81456626732_r8 + 851.226734946706_r8*y)*log(x)
 
   gsw_gibbs = g03 + g08
   
-elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.0) then
+elseif (ns.eq.1 .and. nt.eq.0 .and. np.eq.0) then
         
   g08 = 8645.36753595126_r8 + z*(-6620.98308089678_r8 + &
        z*(769.588305957198_r8 + z*(-193.0648640214916_r8 + (31.6816345533648_r8 - 5.24960313181984_r8*z)*z))) + &
@@ -99,7 +103,7 @@ elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.0) then
        z*(-1721.528607567954_r8 + z*(674.819060538734_r8 + &
        z*(-356.629112415276_r8 + (88.4080716616_r8 - 15.84003094423364_r8*z)*z)))))
   
-  if(sa.gt.0_r8) then
+  if (sa.gt.0_r8) then
     g08 = g08 + (11625.62913253464_r8 + 1702.453469893412_r8*y)*log(x)
   else
     g08 = 0.0_r8
@@ -107,7 +111,7 @@ elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.0) then
   
   gsw_gibbs = 0.5*gsw_sfac*g08
 
-elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.0) then
+elseif (ns.eq.0 .and. nt.eq.1 .and. np.eq.0) then
                
   g03 = 5.90578347909402_r8 + z*(-270.983805184062_r8 + &
        z*(776.153611613101_r8 + z*(-196.51255088122_r8 + (28.9796526294175_r8 - 2.13290083518327_r8*z)*z))) + &
@@ -136,11 +140,11 @@ elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.0) then
         z*(-1721.528607567954_r8 + z*(674.819060538734_r8 + &
         z*(-356.629112415276_r8 + (88.4080716616_r8 - 15.84003094423364_r8*z)*z)))))
       
-  if(sa.gt.0_r8) g08 = g08 + 851.226734946706_r8*x2*log(x)
+  if (sa.gt.0_r8) g08 = g08 + 851.226734946706_r8*x2*log(x)
   
   gsw_gibbs = (g03 + g08)*0.025_r8
 
-elseif(ns.eq.0 .and. nt.eq.0 .and. np.eq.1) then
+elseif (ns.eq.0 .and. nt.eq.0 .and. np.eq.1) then
     
   g03 = 100015.695367145_r8 + z*(-5089.1530840726_r8 + &
         z*(853.5533353388611_r8 + z*(-133.2587017014444_r8 + (21.0131554401542_r8 - 3.278571068826234_r8*z)*z))) + &
@@ -173,7 +177,7 @@ elseif(ns.eq.0 .and. nt.eq.0 .and. np.eq.1) then
      
   gsw_gibbs = (g03 + g08)*1e-8_r8
 
-elseif(ns.eq.0 .and. nt.eq.2 .and. np.eq.0) then
+elseif (ns.eq.0 .and. nt.eq.2 .and. np.eq.0) then
 
   g03 = -24715.571866078_r8 + z*(2910.0729080936_r8 + z* &
        (-1513.116771538718_r8 + z*(546.959324647056_r8 + z*(-111.1208127634436_r8 + 8.68841343834394_r8*z)))) + &
@@ -198,7 +202,7 @@ elseif(ns.eq.0 .and. nt.eq.2 .and. np.eq.0) then
      
   gsw_gibbs = (g03 + g08)*0.000625_r8  
 
-elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.1) then
+elseif (ns.eq.1 .and. nt.eq.0 .and. np.eq.1) then
 
   g08 = -6620.98308089678_r8 + z*(1539.176611914396_r8 + &
         z*(-579.1945920644748_r8 + (126.7265382134592_r8 - 26.2480156590992_r8*z)*z)) + &
@@ -217,7 +221,7 @@ elseif(ns.eq.1 .and. nt.eq.0 .and. np.eq.1) then
                                                           
   gsw_gibbs = g08*gsw_sfac*0.5e-8_r8
          
-elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.1) then
+elseif (ns.eq.0 .and. nt.eq.1 .and. np.eq.1) then
 
   g03 = -270.983805184062_r8 + z*(1552.307223226202_r8 + z*(-589.53765264366_r8 + &
           (115.91861051767_r8 - 10.664504175916349_r8*z)*z)) + &
@@ -241,7 +245,7 @@ elseif(ns.eq.0 .and. nt.eq.1 .and. np.eq.1) then
     
   gsw_gibbs = (g03 + g08)*2.5e-10_r8
 
-elseif(ns.eq.1 .and. nt.eq.1 .and. np.eq.0) then
+elseif (ns.eq.1 .and. nt.eq.1 .and. np.eq.0) then
 
     g08 = 1187.3715515697959_r8 + z*(1458.233059470092_r8 + &
         z*(-687.913805923122_r8 + z*(249.375342232496_r8 + z*(-63.313928772146_r8 + 14.09317606630898_r8*z)))) + &
@@ -257,11 +261,11 @@ elseif(ns.eq.1 .and. nt.eq.1 .and. np.eq.0) then
         z*(-3443.057215135908_r8 + z*(1349.638121077468_r8 + &
         z*(-713.258224830552_r8 + (176.8161433232_r8 - 31.68006188846728_r8*z)*z))))
 
-    if(sa.gt.0_r8) g08 = g08 + 1702.453469893412_r8*log(x)
+    if (sa.gt.0_r8) g08 = g08 + 1702.453469893412_r8*log(x)
 
     gsw_gibbs = 0.5_r8*gsw_sfac*0.025_r8*g08
 
-elseif(ns.eq.2 .and. nt.eq.0 .and. np.eq.0) then
+elseif (ns.eq.2 .and. nt.eq.0 .and. np.eq.0) then
 
     g08 = 2.0_r8*(8103.20462414788_r8 + &
         y*(2175.341332000392_r8 + y*(-274.2290036817964_r8 + &
@@ -287,7 +291,7 @@ elseif(ns.eq.2 .and. nt.eq.0 .and. np.eq.0) then
 
     gsw_gibbs = 0.25_r8*gsw_sfac*gsw_sfac*g08
 
-elseif(ns.eq.0 .and. nt.eq.0 .and. np.eq.2) then
+elseif (ns.eq.0 .and. nt.eq.0 .and. np.eq.2) then
            
   g03 = -5089.1530840726_r8 + z*(1707.1066706777221_r8 + &
       z*(-399.7761051043332_r8 + (84.0526217606168_r8 - 16.39285534413117_r8*z)*z)) + &
@@ -308,6 +312,10 @@ elseif(ns.eq.0 .and. nt.eq.0 .and. np.eq.2) then
           (681.370187043564_r8 - 133.5392811916956_r8*z)*z))))
     
   gsw_gibbs = (g03 + g08)*1e-16_r8 
+
+else
+
+  gsw_gibbs = gsw_error_code(1,func_name)
 
 end if
 

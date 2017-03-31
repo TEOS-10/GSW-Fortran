@@ -46,16 +46,16 @@ p_r = p*1e-4_r8
 if (present(ctfreezing_sa)) ctfreezing_sa = &
     (c1 + x*(1.5_r8*c2 + x*(2.0_r8*c3 + x*(2.5_r8*c4 + x*(3.0_r8*c5 &
         + 3.5_r8*c6*x)))) + p_r*(c10 + x*(1.5_r8*c11 + x*(2.0_r8*c13 &
-	+ x*(2.5_r8*c16 + x*(3.0_r8*c19 + 3.5_r8*c22*x)))) & 
+        + x*(2.5_r8*c16 + x*(3.0_r8*c19 + 3.5_r8*c22*x)))) & 
         + p_r*(c12 + x*(1.5_r8*c14 + x*(2.0_r8*c17 + 2.5_r8*c20*x)) &
         + p_r*(c15 + x*(1.5_r8*c18 + 2.0_r8*c21*x)))))*1e-2_r8 &
-	- saturation_fraction*1e-3_r8*(d - sa*e)
+        - saturation_fraction*1e-3_r8*(d - sa*e)
 
 if (present(ctfreezing_p)) ctfreezing_p = &
     (c7 + sa_r*(c10 + x*(c11 + x*(c13 + x*(c16 + x*(c19 + c22*x))))) &
         + p_r*(2.0_r8*c8 + sa_r*(2.0_r8*c12 + x*(2.0_r8*c14 + x*(2.0_r8*c17 &
-	+ 2.0_r8*c20*x))) + p_r*(3.0_r8*c9 + sa_r*(3.0_r8*c15 + x*(3.0_r8*c18 &
-	+ 3.0_r8*c21*x)))))*1e-8_r8
+        + 2.0_r8*c20*x))) + p_r*(3.0_r8*c9 + sa_r*(3.0_r8*c15 + x*(3.0_r8*c18 &
+        + 3.0_r8*c21*x)))))*1e-8_r8
 
 return
 end subroutine

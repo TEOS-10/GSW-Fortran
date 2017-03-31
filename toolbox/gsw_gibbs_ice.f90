@@ -23,6 +23,8 @@ elemental function gsw_gibbs_ice (nt, np, t, p)
 
 use gsw_mod_teos10_constants, only : gsw_t0, db2pa
 
+use gsw_mod_error_functions, only : gsw_error_code
+
 use gsw_mod_gibbs_ice_coefficients
 
 use gsw_mod_kinds
@@ -38,6 +40,8 @@ real (r8) :: dzi, g0, g0p, g0pp, sqrec_pt
 complex (r8) :: r2, r2p, r2pp, g, sqtau_t1, sqtau_t2, tau, tau_t1, tau_t2
 
 real (r8), parameter :: s0 = -3.32733756492168e3_r8
+
+character (*), parameter :: func_name = "gsw_gibbs_ice"
 
 tau = (t + gsw_t0)*rec_tt
 
@@ -56,10 +60,10 @@ if (nt.eq.0 .and. np.eq.0) then
          
     g = r1*(tau*log((1.0_r8 + tau_t1)/(1.0_r8 - tau_t1)) &
         + t1*(log(1.0_r8 - sqtau_t1) - sqtau_t1)) &
-	+ r2*(tau*log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) &
-	+ t2*(log(1.0_r8 - sqtau_t2) - sqtau_t2))
+        + r2*(tau*log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) &
+        + t2*(log(1.0_r8 - sqtau_t2) - sqtau_t2))
    
-    gsw_gibbs_ice = g0 - tt*(s0*tau - real(g))
+    gsw_gibbs_ice = real(g0 - tt*(s0*tau - real(g,r8)), r8)
     
 elseif (nt.eq.1 .and. np.eq.0) then
     
@@ -122,6 +126,10 @@ elseif (nt.eq.0 .and. np.eq.2) then
 
    gsw_gibbs_ice = g0pp + tt*real(g)
     
+else
+
+   gsw_gibbs_ice = gsw_error_code(1,func_name)
+
 end if
     
 return

@@ -25,12 +25,12 @@ real (r8), intent(in) :: p, long, lat
 
 real (r8) :: gsw_deltasa_atlas
 
-integer :: indx0, indy0, indz0, i, j, k, nmean
+integer :: indx0, indy0, indz0, k
 
 real (r8), dimension(4) :: dsar, dsar_old
 real (r8) :: dlong, dlat
-real (r8) :: p0_original, lon0_in, sa_upper, sa_lower 
-real (r8) :: r1, s1, t1, dsar_mean, ndepth_max, p_tmp, long360
+real (r8) :: p0_original, sa_upper, sa_lower 
+real (r8) :: r1, s1, t1, ndepth_max, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_deltasa_atlas"
 
@@ -92,14 +92,14 @@ if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
     lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
    dsar_old = dsar
    call gsw_add_barrier(dsar_old,long360,lat,longs_ref(indx0), &
-   			lats_ref(indy0),dlong,dlat,dsar)
+                        lats_ref(indy0),dlong,dlat,dsar)
 else if (abs(sum(dsar)).ge.1e10_r8) then 
    dsar_old = dsar
    call gsw_add_mean(dsar_old,dsar)
 end if
 
 sa_upper = (1.0_r8-s1)*(dsar(1) + r1*(dsar(2)-dsar(1))) + s1*(dsar(4) + &
-		r1*(dsar(3)-dsar(4)))
+                r1*(dsar(3)-dsar(4)))
 
 do k = 1,4
    dsar(k) = delta_sa_ref(indz0+1,indy0+delj(k),indx0+deli(k))
@@ -109,19 +109,19 @@ if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
     lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
    dsar_old = dsar
    call gsw_add_barrier(dsar_old,long360,lat,longs_ref(indx0), &
-   			lats_ref(indy0),dlong,dlat,dsar)
+                        lats_ref(indy0),dlong,dlat,dsar)
 else if (abs(sum(dsar)).ge.1e10_r8) then 
    dsar_old = dsar
    call gsw_add_mean(dsar_old,dsar)
 end if
 
 sa_lower = (1.0_r8-s1)*(dsar(1) + r1*(dsar(2)-dsar(1))) + s1*(dsar(4) + &
-		r1*(dsar(3)-dsar(4)))
+                r1*(dsar(3)-dsar(4)))
 if (abs(sa_lower).ge.1e10_r8) sa_lower = sa_upper
 gsw_deltasa_atlas = sa_upper + t1*(sa_lower-sa_upper)
 
 if (abs(gsw_deltasa_atlas).ge.1e10_r8) &
-	gsw_deltasa_atlas = gsw_error_code(3,func_name)
+        gsw_deltasa_atlas = gsw_error_code(3,func_name)
   
 return
 end function

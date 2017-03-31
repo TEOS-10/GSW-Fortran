@@ -26,7 +26,7 @@ real (r8) :: gsw_enthalpy_t_exact
 integer, parameter :: n0=0, n1=1
 
 gsw_enthalpy_t_exact = gsw_gibbs(n0,n0,n0,sa,t,p) - &
-				(t+gsw_t0)*gsw_gibbs(n0,n1,n0,sa,t,p)
+                                (t+gsw_t0)*gsw_gibbs(n0,n1,n0,sa,t,p)
 
 return
 end function

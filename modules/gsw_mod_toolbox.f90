@@ -307,7 +307,7 @@ interface
     end subroutine gsw_ct_first_derivatives
     
     elemental subroutine gsw_ct_first_derivatives_wrt_t_exact (sa, t, p, &
-    				       ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t)
+                                           ct_sa_wrt_t, ct_t_wrt_t, ct_p_wrt_t)
     use gsw_mod_kinds
     implicit none
     real (r8), intent(in) :: sa, t, p

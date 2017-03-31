@@ -25,11 +25,11 @@ real (r8), intent(in) :: p, long, lat
 
 real (r8) :: gsw_saar
 
-integer :: indx0, indy0, indz0, i, j, k, nmean
+integer :: indx0, indy0, indz0, k
 
 real (r8), dimension(4) :: saar, saar_old
-real (r8) :: p0_original, lon0_in, sa_upper, sa_lower, dlong, dlat
-real (r8) :: r1, s1, t1, saar_mean, ndepth_max, p_tmp, long360
+real (r8) :: p0_original, sa_upper, sa_lower, dlong, dlat
+real (r8) :: r1, s1, t1, ndepth_max, p_tmp, long360
 
 character (*), parameter :: func_name = "gsw_saar"
 
@@ -37,7 +37,7 @@ long360 = long
 if (long360.lt.0.0_r8) long360 = long360 + 360.0_r8
 
 indx0 = floor(1.0_r8 + (nx-1)*(long360-longs_ref(1)) / &
-		(longs_ref(nx)-longs_ref(1)))
+              (longs_ref(nx)-longs_ref(1)))
 
 indy0 = floor(1.0_r8 + (ny-1)*(lat-lats_ref(1)) / (lats_ref(ny)-lats_ref(1)))
 
@@ -91,14 +91,14 @@ if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
     lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
   saar_old = saar
   call gsw_add_barrier(saar_old,long360,lat,longs_ref(indx0), &
-  		       lats_ref(indy0),dlong,dlat,saar)
+                       lats_ref(indy0),dlong,dlat,saar)
 else if (abs(sum(saar)).ge.1e10_r8) then
   saar_old = saar
   call gsw_add_mean(saar_old,saar)
 end if
 
 sa_upper = (1.0_r8-s1)*(saar(1) + r1*(saar(2)-saar(1))) + s1*(saar(4) + &
-		r1*(saar(3)-saar(4)))
+              r1*(saar(3)-saar(4)))
 
 do k = 1,4
    saar(k) = saar_ref(indz0+1,indy0+delj(k),indx0+deli(k))
@@ -108,14 +108,14 @@ if (  longs_pan(1).le.long360 .and. long360.le.longs_pan(npan)-0.001_r8 .and. &
     lats_pan(npan).le.lat     .and.     lat.le.lats_pan(1)) then
    saar_old = saar
    call gsw_add_barrier(saar_old,long360,lat,longs_ref(indx0), &
-   			lats_ref(indy0),dlong,dlat,saar)
+                        lats_ref(indy0),dlong,dlat,saar)
 else if (abs(sum(saar)).ge.1e10_r8) then 
    saar_old = saar
    call gsw_add_mean(saar_old,saar)
 end if
 
 sa_lower = (1.0_r8-s1)*(saar(1) + r1*(saar(2)-saar(1))) + s1*(saar(4) + &
-		r1*(saar(3)-saar(4)))
+              r1*(saar(3)-saar(4)))
 if (abs(sa_lower).ge.1e10_r8) sa_lower = sa_upper
 gsw_saar = sa_upper + t1*(sa_lower-sa_upper)
 

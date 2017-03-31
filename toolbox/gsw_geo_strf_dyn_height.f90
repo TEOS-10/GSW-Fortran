@@ -104,7 +104,7 @@ ipref = -1
 do ibottle = 1, nz
     if (p(ibottle) .eq. p_ref) then
         ipref = ibottle
-	exit
+        exit
     end if
 end do
 
@@ -127,8 +127,8 @@ if ((dp_max .le. max_dp_i) .and. (p(1) .eq. 0.0_r8) .and. (ipref .gt. 0)) then
 
     geo_strf_dyn_height0 = (/ 0.0_r8, b_av*dp*db2pa /)
     do i = 2, nz   ! cumulative sum
-    	geo_strf_dyn_height0(i) = geo_strf_dyn_height0(i-1) &
-	                          - geo_strf_dyn_height0(i)
+        geo_strf_dyn_height0(i) = geo_strf_dyn_height0(i-1) &
+                                  - geo_strf_dyn_height0(i)
     end do
     gsw_geo_strf_dyn_height = geo_strf_dyn_height0 - geo_strf_dyn_height0(ipref)
 
@@ -140,6 +140,7 @@ else
 
     allocate (iidata(nz))
 
+    ibpr = 0
     if ((dp_max .le. max_dp_i) .and. (ipref .gt. 0)) then
 
         ! Vertical resolution is already good (no larger than max_dp_i), and
@@ -152,8 +153,8 @@ else
             sa_i = (/ sa(1), sa /)
             ct_i = (/ ct(1), ct /)
             p_i = (/ 0.0_r8, p /)
-	    ibpr = ipref + 1
-	    iidata = (/ (i, i=2,nz+1) /)
+            ibpr = ipref + 1
+            iidata = (/ (i, i=2,nz+1) /)
         else
             ! resolution is fine, there is a bottle at p_ref, and
             ! there is a bottle at p = 0
@@ -161,8 +162,8 @@ else
             sa_i = sa
             ct_i = ct
             p_i = p
-	    ibpr = ipref
-	    iidata = (/ (i, i=1,nz) /)
+            ibpr = ipref
+            iidata = (/ (i, i=1,nz) /)
         end if
         p_cnt = size(p_i)
 
@@ -170,21 +171,21 @@ else
 
         ! interpolation is needed.
         np_max = 2*nint(maxval(p/max_dp_i)+0.5_r8)
-	if (np_max.gt.np_max_limit) then
+        if (np_max.gt.np_max_limit) then
             gsw_geo_strf_dyn_height = gsw_error_code(3,func_name)
             return
-	end if
+        end if
         allocate (p_i(np_max))
 
         if (p_min .gt. 0.0_r8) then
             ! there is not a bottle at p = 0.
             if (p_ref .lt. p_min) then
                 ! p_ref is shallower than the minimum bottle pressure.
-		p_i(1) = 0.0_r8
-		call p_sequence(p_i(1),p_ref,p_i(2:),np)
+                p_i(1) = 0.0_r8
+                call p_sequence(p_i(1),p_ref,p_i(2:),np)
                 p_cnt = np + 1
-		ibpr = p_cnt
-		call p_sequence(p_ref,p_min,p_i(p_cnt+1:),np)
+                ibpr = p_cnt
+                call p_sequence(p_ref,p_min,p_i(p_cnt+1:),np)
                 p_cnt = p_cnt + np
                 top_pad = p_cnt  
             else
@@ -202,7 +203,7 @@ else
 
         do ibottle = 1, nz-1
 
-	    iidata(ibottle) = p_cnt
+            iidata(ibottle) = p_cnt
             if (p(ibottle) .eq. p_ref) ibpr = p_cnt
 
             if (p(ibottle) .lt. p_ref .and. p(ibottle+1) .gt. p_ref) then
@@ -220,15 +221,15 @@ else
 
         end do
 
-	iidata(nz) = p_cnt
+        iidata(nz) = p_cnt
         if (p(nz) .eq. p_ref) ibpr = p_cnt
 
-	allocate (sa_i(p_cnt), ct_i(p_cnt))
+        allocate (sa_i(p_cnt), ct_i(p_cnt))
 
-	if (top_pad .gt. 1) &
+        if (top_pad .gt. 1) &
             call gsw_linear_interp_sa_ct(sa,ct,p,p_i(1:top_pad-1),sa_i,ct_i)
         call gsw_rr68_interp_sa_ct(sa,ct,p,p_i(top_pad:p_cnt), &
-	                           sa_i(top_pad:),ct_i(top_pad:))
+                                   sa_i(top_pad:),ct_i(top_pad:))
     end if
             
     allocate (b(p_cnt), b_av(p_cnt-1), dp_i(p_cnt-1))
@@ -240,8 +241,8 @@ else
 
     geo_strf_dyn_height0 = (/ 0.0_r8, b_av*dp_i /)
     do i = 2, p_cnt   ! cumulative sum
-    	geo_strf_dyn_height0(i) = geo_strf_dyn_height0(i-1) &
-	                          - geo_strf_dyn_height0(i)
+        geo_strf_dyn_height0(i) = geo_strf_dyn_height0(i-1) &
+                                  - geo_strf_dyn_height0(i)
     end do
     gsw_geo_strf_dyn_height = (geo_strf_dyn_height0(iidata) &
                                - geo_strf_dyn_height0(ibpr))*db2pa

@@ -167,7 +167,7 @@ else if (sp.ge.0.003_r8.and.sp.lt.0.25_r8) then
         + t68*(s2+ t68*(s5 + x*x*(s12 + x*s17) + s8*x  &
         + t68*(s9 + x*(s13 + x*s18)+ t68*(s14 + s19*x + s20*t68))))
 
-else if (sp.lt.0.003_r8) then
+else
 
     rtx = u0 + x*(u1 + u4*t68 + x*(u3 + u7*t68 + x*(u6  &
         + u11*t68 + x*(u10 + u16*t68 + x*u15))))  &

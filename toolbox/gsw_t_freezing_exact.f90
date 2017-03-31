@@ -37,28 +37,28 @@ real (r8), intent(in) :: sa, p, saturation_fraction
 
 real (r8) :: gsw_t_freezing_exact
 
-real (r8) :: df_dt, p_r, sa_r, tf, tfm, tf_old, x, f
+real (r8) :: df_dt, tf, tfm, tf_old, f
 
 ! The initial value of t_freezing_exact (for air-free seawater)
 tf = gsw_t_freezing_poly(sa,p,polynomial=.true.)
 
 df_dt = 1e3_r8*gsw_t_deriv_chem_potential_water_t_exact(sa,tf,p) - &
-		gsw_gibbs_ice(1,0,tf,p)
+                gsw_gibbs_ice(1,0,tf,p)
 ! df_dt here is the initial value of the derivative of the function f whose
 ! zero (f = 0) we are finding (see Eqn. (3.33.2) of IOC et al (2010)).  
 
 tf_old = tf
 f = 1e3_r8*gsw_chem_potential_water_t_exact(sa,tf_old,p) - &
-		gsw_gibbs_ice(0,0,tf_old,p)
+                gsw_gibbs_ice(0,0,tf_old,p)
 tf = tf_old - f/df_dt
 tfm = 0.5_r8*(tf + tf_old)
 df_dt = 1e3_r8*gsw_t_deriv_chem_potential_water_t_exact(sa,tfm,p) - &
-		gsw_gibbs_ice(1,0,tfm,p)
+                gsw_gibbs_ice(1,0,tfm,p)
 tf = tf_old - f/df_dt
 
 tf_old = tf
 f = 1e3_r8*gsw_chem_potential_water_t_exact(sa,tf_old,p) - &
-		gsw_gibbs_ice(0,0,tf_old,p)
+                gsw_gibbs_ice(0,0,tf_old,p)
 tf = tf_old - f/df_dt
 
 ! Adjust for the effects of dissolved air

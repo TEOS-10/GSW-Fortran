@@ -143,7 +143,7 @@ call section_title('Thermodynamic interaction between seaice and seawater')
 val1 = gsw_melting_seaice_sa_ct_ratio(sa_arctic,ct_arctic,p_arctic, &
                                       sa_seaice,t_seaice)
 val2 = gsw_melting_seaice_sa_ct_ratio_poly(sa_arctic,ct_arctic,p_arctic, &
-					   sa_seaice,t_seaice)
+                                           sa_seaice,t_seaice)
 call check_accuracy('melting_seaice_SA_CT_ratio',val1,val2)
 
 val1 = gsw_melting_seaice_equilibrium_sa_ct_ratio(sa_arctic,p_arctic)
@@ -221,16 +221,16 @@ contains
     if (present(vprint)) then
         if (vprint) then
             print '(i3,3ES24.15)', ((i,fvalue1(i,j),fvalue2(i,j),diff(i,j),&
-	            i=1,size(fvalue1,1)), j=1,size(fvalue1,2))
+                    i=1,size(fvalue1,1)), j=1,size(fvalue1,2))
             print *
-	end if
+        end if
     end if
 
     if (any(fvalue1 .gt. gsw_error_limit)) then
         where (fvalue1 .gt. gsw_error_limit) diff = 0.0_r8
-	errflg = ' (*)'
+        errflg = ' (*)'
     else
-	errflg = '    '
+        errflg = '    '
     end if
     ndots = 52 - len(trim(message))
 

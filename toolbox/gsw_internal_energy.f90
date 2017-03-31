@@ -24,7 +24,7 @@ real (r8), intent(in) :: sa, ct, p
 real (r8) :: gsw_internal_energy
 
 gsw_internal_energy = gsw_enthalpy(sa,ct,p) - &
-				(gsw_p0 + db2pa*p)*gsw_specvol(sa,ct,p)
+                                (gsw_p0 + db2pa*p)*gsw_specvol(sa,ct,p)
 return
 end function
 

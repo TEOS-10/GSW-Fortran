@@ -29,7 +29,6 @@ real (r8) :: gsw_sa_from_rho
 integer no_iter
 
 real (r8) :: sa, v_lab, v_0, v_50, v_sa, sa_old, delta_v, sa_mean
-real (r8) :: beta_mean, rho_mean
 
 character (*), parameter :: func_name = "gsw_sa_from_rho"
 

@@ -196,16 +196,16 @@ pp =  p/zu
 
 rz3 =    r013*tt+r103*ss+r003
 rz2 =   (r022*tt+r112*ss+r012)*tt+(r202*ss+r102)*ss+r002
-rz1 =      (((r041*tt+r131*ss+r031)*tt &
-	+    (r221*ss+r121)*ss+r021)*tt &
-	+   ((r311*ss+r211)*ss+r111)*ss+r011)*tt &
-	+  (((r401*ss+r301)*ss+r201)*ss+r101)*ss+r001
-rz0 =    (((((r060*tt+r150*ss+r050)*tt &
-	+    (r240*ss+r140)*ss+r040)*tt &
-	+   ((r330*ss+r230)*ss+r130)*ss+r030)*tt &
-	+  (((r420*ss+r320)*ss+r220)*ss+r120)*ss+r020)*tt &
-	+ ((((r510*ss+r410)*ss+r310)*ss+r210)*ss+r110)*ss+r010)*tt &
-	+(((((r600*ss+r500)*ss+r400)*ss+r300)*ss+r200)*ss+r100)*ss+r000
+rz1 =      (((r041*tt+r131*ss+r031)*tt                                       &
+        +    (r221*ss+r121)*ss+r021)*tt                                      &
+        +   ((r311*ss+r211)*ss+r111)*ss+r011)*tt                             &
+        +  (((r401*ss+r301)*ss+r201)*ss+r101)*ss+r001
+rz0 =    (((((r060*tt+r150*ss+r050)*tt                                       &
+        +    (r240*ss+r140)*ss+r040)*tt                                      &
+        +   ((r330*ss+r230)*ss+r130)*ss+r030)*tt                             &
+        +  (((r420*ss+r320)*ss+r220)*ss+r120)*ss+r020)*tt                    &
+        + ((((r510*ss+r410)*ss+r310)*ss+r210)*ss+r110)*ss+r010)*tt           &
+        +(((((r600*ss+r500)*ss+r400)*ss+r300)*ss+r200)*ss+r100)*ss+r000
 
 ! stiffened density (rdot)
 rho = ((rz3*pp + rz2)*pp + rz1)*pp + rz0
@@ -220,37 +220,37 @@ if (present(alpha) .or. present(beta) .or. .not. do_stiffened) then
 
    ! thermal expansion alpha
    if (present(alpha)) then
-      alpha = ((alp003*pp	&
-		+ alp012*tt + alp102*ss+alp002)*pp	&
-		+ ((alp031*tt	&
-		+ alp121*ss+alp021)*tt	&
-		+ (alp211*ss+alp111)*ss+alp011)*tt	&
-		+ ((alp301*ss+alp201)*ss+alp101)*ss+alp001)*pp	&
-		+ ((((alp050*tt	&
-		+ alp140*ss+alp040)*tt	&
-		+ (alp230*ss+alp130)*ss+alp030)*tt	&
-		+ ((alp320*ss+alp220)*ss+alp120)*ss+alp020)*tt	&
-		+ (((alp410*ss+alp310)*ss+alp210)*ss+alp110)*ss+alp010)*tt  &
-		+ ((((alp500*ss+alp400)*ss+alp300)*ss+alp200)*ss+alp100)*ss  &
-		+ alp000
+      alpha = ((alp003*pp                                                    &
+                + alp012*tt + alp102*ss+alp002)*pp                           &
+                + ((alp031*tt                                                &
+                + alp121*ss+alp021)*tt                                       &
+                + (alp211*ss+alp111)*ss+alp011)*tt                           &
+                + ((alp301*ss+alp201)*ss+alp101)*ss+alp001)*pp               &
+                + ((((alp050*tt                                              &
+                + alp140*ss+alp040)*tt                                       &
+                + (alp230*ss+alp130)*ss+alp030)*tt                           &
+                + ((alp320*ss+alp220)*ss+alp120)*ss+alp020)*tt               &
+                + (((alp410*ss+alp310)*ss+alp210)*ss+alp110)*ss+alp010)*tt   &
+                + ((((alp500*ss+alp400)*ss+alp300)*ss+alp200)*ss+alp100)*ss  &
+                + alp000
       alpha = alpha * r1
    end if
 
    ! haline contraction beta
    if (present(beta)) then
-      beta = ((bet003*pp	&
-		+ bet012*tt + bet102*ss+bet002)*pp	&
-		+ ((bet031*tt	&
-		+ bet121*ss+bet021)*tt	&
-		+ (bet211*ss+bet111)*ss+bet011)*tt	&
-		+ ((bet301*ss+bet201)*ss+bet101)*ss+bet001)*pp	&
-		+ ((((bet050*tt	&
-		+ bet140*ss+bet040)*tt	&
-		+ (bet230*ss+bet130)*ss+bet030)*tt	&
-		+ ((bet320*ss+bet220)*ss+bet120)*ss+bet020)*tt	&
-		+ (((bet410*ss+bet310)*ss+bet210)*ss+bet110)*ss+bet010)*tt  &
-		+ ((((bet500*ss+bet400)*ss+bet300)*ss+bet200)*ss+bet100)*ss  &
-		+ bet000
+      beta = ((bet003*pp                                                     &
+                + bet012*tt + bet102*ss+bet002)*pp                           &
+                + ((bet031*tt                                                &
+                + bet121*ss+bet021)*tt                                       &
+                + (bet211*ss+bet111)*ss+bet011)*tt                           &
+                + ((bet301*ss+bet201)*ss+bet101)*ss+bet001)*pp               &
+                + ((((bet050*tt                                              &
+                + bet140*ss+bet040)*tt                                       &
+                + (bet230*ss+bet130)*ss+bet030)*tt                           &
+                + ((bet320*ss+bet220)*ss+bet120)*ss+bet020)*tt               &
+                + (((bet410*ss+bet310)*ss+bet210)*ss+bet110)*ss+bet010)*tt   &
+                + ((((bet500*ss+bet400)*ss+bet300)*ss+bet200)*ss+bet100)*ss  &
+                + bet000
       beta = beta * r1 / ss 
    end if
 end if

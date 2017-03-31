@@ -65,7 +65,7 @@ contains
             return
         end if
 
-	mid = lo + (hi-lo)/2		   ! avoids potential overflow
+        mid = lo + (hi-lo)/2                   ! avoids potential overflow
         pivot = medianof3(indx,lo,mid,hi)
         call partition(indx,lo,hi,pivot,p)
 
@@ -130,7 +130,7 @@ contains
 
     if (rarray(indx(mid)) .lt. rarray(indx(lo))) then
         if (rarray(indx(hi)) .lt. rarray(indx(mid))) then
-	      medianof3 = rarray(indx(mid))
+              medianof3 = rarray(indx(mid))
         else
             if (rarray(indx(hi)) .lt. rarray(indx(lo))) then
                 medianof3 = rarray(indx(hi))

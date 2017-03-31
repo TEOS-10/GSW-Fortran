@@ -30,7 +30,7 @@ pt0 = gsw_pt_from_ct(sa,ct)
 t = gsw_pt_from_t(sa,pt0,pr0,p)
 
 gsw_adiabatic_lapse_rate_from_ct = -gsw_gibbs(n0,n1,n1,sa,t,p) / &
-					gsw_gibbs(n0,n2,n0,sa,t,p)
+                                        gsw_gibbs(n0,n2,n0,sa,t,p)
 
 return
 end function

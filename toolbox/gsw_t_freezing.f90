@@ -28,15 +28,15 @@ real (r8) :: gsw_t_freezing
 logical :: do_poly
 
 if (present(poly)) then
-	do_poly = poly
+    do_poly = poly
 else
-	do_poly = .false.
+    do_poly = .false.
 end if
 
 if (do_poly) then
-	gsw_t_freezing = gsw_t_freezing_poly(sa,p,saturation_fraction)
+    gsw_t_freezing = gsw_t_freezing_poly(sa,p,saturation_fraction)
 else
-	gsw_t_freezing = gsw_t_freezing_exact(sa,p,saturation_fraction)
+    gsw_t_freezing = gsw_t_freezing_exact(sa,p,saturation_fraction)
 end if
 
 return

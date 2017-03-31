@@ -23,7 +23,7 @@ def write_variable(var_name, dims, v):
         # list dimension in this order: nz, ny, nx (reverse order)
         fortran_dims = repr(tuple(dims[::-1]))
     out.write("real (r8), dimension %s :: %s\n" % (fortran_dims, var_name))
-    out.write("data	%s / &\n" % var_name)
+    out.write("data %s / &\n" % var_name)
     buf = ""
     maxlen = 89
     nan = 9e90
@@ -140,8 +140,8 @@ contains
 subroutine gsw_get_version(version_date, version_number)
 implicit none
 character(*), intent(out) :: version_date, version_number
-	version_date = gsw_version_date
-	version_number = gsw_version_number
+version_date = gsw_version_date
+version_number = gsw_version_number
 end subroutine
 
 end module
