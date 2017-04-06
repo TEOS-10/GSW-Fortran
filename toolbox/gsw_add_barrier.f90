@@ -81,7 +81,7 @@ nmean = 0
 data_mean = 0.0_r8
 
 do kk = 1,4
-   if ((abs(input_data(kk)).le.100_r8).and.above_line0.eq.above_line(kk)) then
+   if ((abs(input_data(kk)).le.100._r8).and.above_line0.eq.above_line(kk)) then
       nmean = nmean + 1
       data_mean = data_mean + input_data(kk)
    end if

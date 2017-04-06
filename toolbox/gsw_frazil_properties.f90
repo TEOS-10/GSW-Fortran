@@ -66,7 +66,7 @@ real (r8), parameter :: saturation_fraction = 0.0_r8
 
 real (r8), parameter :: num_f = 5.0e-2_r8
 real (r8), parameter :: num_f2 = 6.9e-7_r8
-real (r8), parameter :: num_p = 2.21
+real (r8), parameter :: num_p = 2.21_r8
 
 character (*), parameter :: func_name = "gsw_frazil_properties"
 

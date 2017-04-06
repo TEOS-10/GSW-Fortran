@@ -1,6 +1,6 @@
 
 FC := gfortran
-FFLAGS := -O -Wall
+FFLAGS := -O -Wall -Wconversion-extra
 LDFLAGS := 
 
 SCRIPTS_DIR ?= ../scripts

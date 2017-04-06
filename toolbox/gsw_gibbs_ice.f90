@@ -43,7 +43,7 @@ real (r8), parameter :: s0 = -3.32733756492168e3_r8
 
 character (*), parameter :: func_name = "gsw_gibbs_ice"
 
-tau = (t + gsw_t0)*rec_tt
+tau = cmplx((t + gsw_t0)*rec_tt,0.0_r8,r8)
 
 dzi = db2pa*p*rec_pt
 
@@ -63,7 +63,7 @@ if (nt.eq.0 .and. np.eq.0) then
         + r2*(tau*log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) &
         + t2*(log(1.0_r8 - sqtau_t2) - sqtau_t2))
    
-    gsw_gibbs_ice = real(g0 - tt*(s0*tau - real(g,r8)), r8)
+    gsw_gibbs_ice = real(g0 - tt*(s0*tau - g),r8)
     
 elseif (nt.eq.1 .and. np.eq.0) then
     
@@ -75,7 +75,7 @@ elseif (nt.eq.1 .and. np.eq.0) then
     g = r1*(log((1.0_r8 + tau_t1)/(1.0_r8 - tau_t1)) - 2.0_r8*tau_t1) &
         + r2*(log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) - 2.0_r8*tau_t2)
     
-    gsw_gibbs_ice = -s0 + real(g)
+    gsw_gibbs_ice = -s0 + real(g,r8)
         
 elseif (nt.eq.0 .and. np.eq.1) then
     
@@ -89,7 +89,7 @@ elseif (nt.eq.0 .and. np.eq.1) then
     g = r2p*(tau*log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) &
         + t2*(log(1.0_r8 - sqtau_t2) - sqtau_t2))
     
-    gsw_gibbs_ice = g0p + tt*real(g)
+    gsw_gibbs_ice = g0p + tt*real(g,r8)
 
 elseif (nt.eq.1 .and. np.eq.1) then
     
@@ -99,7 +99,7 @@ elseif (nt.eq.1 .and. np.eq.1) then
     
     g = r2p*(log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) - 2.0_r8*tau_t2)
     
-    gsw_gibbs_ice = real(g)
+    gsw_gibbs_ice = real(g,r8)
     
 elseif (nt.eq.2 .and. np.eq.0) then
     
@@ -108,7 +108,7 @@ elseif (nt.eq.2 .and. np.eq.0) then
     g = r1*(1.0_r8/(t1 - tau) + 1.0_r8/(t1 + tau) - 2.0_r8/t1) &
         + r2*(1.0_r8/(t2 - tau) + 1.0_r8/(t2 + tau) - 2.0_r8/t2)
     
-    gsw_gibbs_ice = rec_tt*real(g)
+    gsw_gibbs_ice = rec_tt*real(g,r8)
     
 elseif (nt.eq.0 .and. np.eq.2) then
    
@@ -124,7 +124,7 @@ elseif (nt.eq.0 .and. np.eq.2) then
     g = r2pp*(tau*log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) &
         + t2*(log(1.0_r8 - sqtau_t2) - sqtau_t2))
 
-   gsw_gibbs_ice = g0pp + tt*real(g)
+   gsw_gibbs_ice = g0pp + tt*real(g,r8)
     
 else
 

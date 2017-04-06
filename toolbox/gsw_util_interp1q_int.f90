@@ -27,8 +27,8 @@ real (r8) :: max_x, min_x
 min_x = minval(x); imin_x = minloc(x)
 max_x = maxval(x); imax_x = maxloc(x)
 
-where (x_i .le. min_x) y_i = iy(imin_x(1))
-where (x_i .ge. max_x) y_i = iy(imax_x(1))
+where (x_i .le. min_x) y_i = real(iy(imin_x(1)),r8)
+where (x_i .ge. max_x) y_i = real(iy(imax_x(1)),r8)
 
 nx = size(x)
 nxi = size(x_i)
