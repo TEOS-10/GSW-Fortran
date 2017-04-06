@@ -27,12 +27,12 @@ real (r8) :: gsw_gibbs_ice_pt0_pt0
 real (r8) :: tau
 complex (r8) :: g
 
-tau = (pt0 + gsw_t0)*rec_tt
+tau = (pt0 + gsw_t0)*rec_t3p
 
 g = r1*(1.0_r8/(t1 - tau) + 1.0_r8/(t1 + tau) - 2.0_r8/t1) &
     + r20*(1.0_r8/(t2 - tau) + 1.0_r8/(t2 + tau) - 2.0_r8/t2)
 
-gsw_gibbs_ice_pt0_pt0 = rec_tt*real(g)
+gsw_gibbs_ice_pt0_pt0 = rec_t3p*real(g,r8)
 
 return
 end function

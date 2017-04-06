@@ -16,8 +16,10 @@ complex(r8), parameter :: r22=(2.34801409215913e-11_r8,-2.85651142904972e-11_r8)
 
 ! 1./Pt, where Pt = 611.657;  Experimental triple-point pressure in Pa.
 real (r8), parameter :: rec_pt = 1.634903221903779e-3_r8
-real (r8), parameter :: tt = 273.16_r8 ! Triple-point temperature, kelvin (K).
-real (r8), parameter :: rec_tt = 3.660858105139845e-3_r8   ! = 1/tt
+
+! Triple-point temperature, kelvin (K).
+real (r8), parameter :: t3p = 273.16_r8
+real (r8), parameter :: rec_t3p = 3.660858105139845e-3_r8   ! = 1/t3p
 
 real (r8), parameter :: g00 = -6.32020233335886e5_r8
 real (r8), parameter :: g01 =  6.55022213658955e-1_r8

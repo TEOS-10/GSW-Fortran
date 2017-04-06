@@ -25,7 +25,7 @@ real (r8) :: gsw_pot_enthalpy_from_pt_ice
 real (r8) :: tau
 complex (r8) :: h0_part, sqtau_t1, sqtau_t2
 
-tau = (pt0_ice + gsw_t0)*rec_tt
+tau = (pt0_ice + gsw_t0)*rec_t3p
 
 sqtau_t1 = (tau/t1)**2
 sqtau_t2 = (tau/t2)**2
@@ -33,7 +33,7 @@ sqtau_t2 = (tau/t2)**2
 h0_part = r1*t1*(log(1.0_r8 - sqtau_t1) + sqtau_t1) &
           + r20*t2*(log(1.0_r8 - sqtau_t2) + sqtau_t2)
 
-gsw_pot_enthalpy_from_pt_ice = g00 + tt*real(h0_part) 
+gsw_pot_enthalpy_from_pt_ice = g00 + t3p*real(h0_part,r8) 
               
 return
 end function

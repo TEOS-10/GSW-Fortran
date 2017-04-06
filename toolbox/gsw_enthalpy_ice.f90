@@ -26,7 +26,7 @@ real (r8) :: gsw_enthalpy_ice
 real (r8) :: tau, dzi, g0
 complex (r8) :: r2, sqtau_t1, sqtau_t2, g
 
-tau = (t + gsw_t0)*rec_tt
+tau = (t + gsw_t0)*rec_t3p
 
 dzi = db2pa*p*rec_pt
 
@@ -40,7 +40,7 @@ sqtau_t2 = (tau/t2)**2
 g = r1*t1*(log(1.0_r8 - sqtau_t1) + sqtau_t1) &
     + r2*t2*(log(1.0_r8 - sqtau_t2) + sqtau_t2)
 
-gsw_enthalpy_ice = g0 + tt*real(g) 
+gsw_enthalpy_ice = g0 + t3p*real(g,r8)
 
 return
 end function

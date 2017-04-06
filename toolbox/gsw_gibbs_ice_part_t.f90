@@ -26,7 +26,7 @@ real (r8) :: gsw_gibbs_ice_part_t
 real (r8) :: dzi, tau
 complex (r8) :: g, tau_t1, tau_t2, r2
 
-tau = (t + gsw_t0)*rec_tt
+tau = (t + gsw_t0)*rec_t3p
 
 dzi = db2pa*p*rec_pt
 
@@ -38,7 +38,7 @@ r2 = r20 + dzi*(r21 + r22*dzi)
 g = r1*(log((1.0_r8 + tau_t1)/(1.0_r8 - tau_t1)) - 2.0_r8*tau_t1) &
     + r2*(log((1.0_r8 + tau_t2)/(1.0_r8 - tau_t2)) - 2.0_r8*tau_t2)
 
-gsw_gibbs_ice_part_t = real(g)
+gsw_gibbs_ice_part_t = real(g,r8)
 
 return
 end function
