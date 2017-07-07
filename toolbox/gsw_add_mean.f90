@@ -37,10 +37,10 @@ else
 endif
 
 do k = 1,4
-   if(abs(data_in(k)).ge.100.0_r8) then
-      data_out(k) = data_mean
-   else
+   if(abs(data_in(k)).le.100.0_r8) then
       data_out(k) = data_in(k)
+   else
+      data_out(k) = data_mean
    end if
 end do
 

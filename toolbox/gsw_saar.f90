@@ -54,7 +54,7 @@ end if
 
 ! Look for the maximum valid "ndepth_ref" value around our point.
 ! Note: invalid "ndepth_ref" values are NaNs (a hangover from the codes
-! Matlab origins), but we have replaced the NaNs with a value of "9e90",
+! Matlab origins), but we have replaced the NaNs with a value of 999,
 ! hence we need an additional upper-limit check in the code below so they
 ! will not be recognised as valid values.
 ndepth_max = -1
