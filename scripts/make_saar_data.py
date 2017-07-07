@@ -1,32 +1,44 @@
 #!/usr/bin/env python
 #  $id$
 """
-Make gsw_mod_saar_data.f from the current gsw_data_v3_0.nc.  This is a developer
+Make gsw_mod_saar_data.f from the current gsw_data_v3_0.nc. This is a developer
 utility and not a part of the public distribution, but its end-product is.
 Note that it generates gsw_saar_data.c but will not overwrite it if it exists.
 General concept: we don't want end-users of this distribution to require having
 netcdf installed, nor do we want to incur the I/O overhead every time this
-library is used.  So we simply generate static data from the netcdf file that
-the Fortran-gsw library uses directly.
+library is used. So we simply generate static data from the netcdf file.
 """
 import math, os, sys
 from netCDF4 import Dataset
 
+def float2string(val, sformat, addcomma):
+    if math.isnan(val):
+        str_val = "9e90_r8"
+    else:
+        str_val = sformat % val
+        if str_val.find(".") < 0 and str_val.find("e") < 0 :
+            str_val += "."
+        str_val += "_r8"
+    if addcomma:
+        str_val += ", "
+    return str_val;
 
 def write_variable_real(var_name, dims, v):
     ndims = len(dims)
+    # list dimensions in reverse order (nz,ny,nx)
     if ndims == 1:
         fortran_dims = "(%s)" % v.dimensions[0]
     elif ndims == 2:
         fortran_dims = "(%s,%s)" % v.dimensions[::-1]
     elif ndims == 3:
-        # list dimensions in reverse order (nz,ny,nx)
         fortran_dims = "(%s,%s,%s)" % v.dimensions[::-1]
+
     out.write("real (r8), dimension%s :: %s\n" % (fortran_dims, var_name))
     out.write("data %s / &\n" % var_name)
-    buf = ""
+
+    buf = "  "
     maxlen = 78
-    nan = "9e90_r8"
+    numformat = "%.17g"
     if ndims == 1:
         lastx = dims[0]-1
 #
@@ -36,15 +48,10 @@ def write_variable_real(var_name, dims, v):
 #
         vv = v[:]
         for val, x in [(vv[cx],cx) for cx in range(dims[0])]:
-            if math.isnan(val):
-                sval = nan
-            else:
-                sval = "%.17g_r8" % val
-            if x != lastx:
-                sval += ", "
+            sval = float2string(val,numformat,(x != lastx))
             if len(buf)+len(sval) > maxlen:
-                out.write(buf+" &\n")
-                buf = ""
+                out.write(buf+"&\n")
+                buf = "  "
             buf += sval
     elif ndims == 2:
         lastx = dims[0]-1
@@ -52,15 +59,10 @@ def write_variable_real(var_name, dims, v):
         vv = v[:][:]
         for x in range(dims[0]):
             for val,y in [(vv[x][cy],cy) for cy in range(dims[1])]:
-                if math.isnan(val):
-                    sval = nan
-                else:
-                    sval = "%.17g_r8" % val
-                if x != lastx or y != lasty:
-                    sval += ", "
+                sval = float2string(val,numformat,(x != lastx or y != lasty))
                 if len(buf)+len(sval) > maxlen:
-                    out.write(buf+" &\n")
-                    buf = ""
+                    out.write(buf+"&\n")
+                    buf = "  "
                 buf += sval
     else:
         lastx = dims[0]-1
@@ -70,32 +72,30 @@ def write_variable_real(var_name, dims, v):
         for x in range(dims[0]):
             for y in range(dims[1]):
                 for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
-                    if math.isnan(val):
-                        sval = nan
-                    else:
-                        sval = "%.17g_r8" % val
-                    if x != lastx or y != lasty or z != lastz:
-                        sval += ", "
+                    sval = float2string(val,numformat,
+                                (x != lastx or y != lasty or z != lastz))
                     if len(buf)+len(sval) > maxlen:
-                        out.write(buf+" &\n")
-                        buf = ""
+                        out.write(buf+"&\n")
+                        buf = "  "
                     buf += sval
     if buf:
         out.write(buf+" &\n")
-    out.write(" /\n\n")
+    out.write("  /\n\n")
 
 def write_variable_int(var_name, dims, v):
     ndims = len(dims)
+    # list dimensions in reverse order (nz,ny,nx)
     if ndims == 1:
         fortran_dims = "(%s)" % v.dimensions[0]
     elif ndims == 2:
         fortran_dims = "(%s,%s)" % v.dimensions[::-1]
     elif ndims == 3:
-        # list dimensions in reverse order (nz,ny,nx)
         fortran_dims = "(%s,%s,%s)" % v.dimensions[::-1]
+
     out.write("integer, dimension%s :: %s\n" % (fortran_dims, var_name))
     out.write("data %s / &\n" % var_name)
-    buf = ""
+
+    buf = "  "
     maxlen = 78
     nan = "999"
     if ndims == 1:
@@ -114,8 +114,8 @@ def write_variable_int(var_name, dims, v):
             if x != lastx:
                 sval += ", "
             if len(buf)+len(sval) > maxlen:
-                out.write(buf+" &\n")
-                buf = ""
+                out.write(buf+"&\n")
+                buf = "  "
             buf += sval
     elif ndims == 2:
         lastx = dims[0]-1
@@ -130,8 +130,8 @@ def write_variable_int(var_name, dims, v):
                 if x != lastx or y != lasty:
                     sval += ", "
                 if len(buf)+len(sval) > maxlen:
-                    out.write(buf+" &\n")
-                    buf = ""
+                    out.write(buf+"&\n")
+                    buf = "  "
                 buf += sval
     else:
         lastx = dims[0]-1
@@ -148,26 +148,30 @@ def write_variable_int(var_name, dims, v):
                     if x != lastx or y != lasty or z != lastz:
                         sval += ", "
                     if len(buf)+len(sval) > maxlen:
-                        out.write(buf+" &\n")
-                        buf = ""
+                        out.write(buf+"&\n")
+                        buf = "  "
                     buf += sval
     if buf:
         out.write(buf+" &\n")
-    out.write(" /\n\n")
+    out.write("  /\n\n")
 
 rootgrp = Dataset('gsw_data_v3_0.nc', 'r')
-v=rootgrp.variables
-d=rootgrp.dimensions
+v = rootgrp.variables
+d = rootgrp.dimensions
 
 nx = len(d['nx'])
 ny = len(d['ny'])
 nz = len(d['nz'])
+
 version_date = rootgrp.version_date
 version_number = rootgrp.version_number
+
 vars_real = [["p_ref", "", [nz]], ["lats_ref", "", [ny]],
         ["longs_ref", "", [nx]], ["saar_ref", "SAAR_ref", [nx,ny,nz]],
         ["delta_sa_ref", "deltaSA_ref", [nx,ny,nz]]]
+
 vars_int = [["ndepth_ref", "", [nx,ny]]]
+
 try:
     fd = os.open("gsw_mod_saar_data.f90", os.O_CREAT|os.O_EXCL|os.O_RDWR, 0644)
 except:

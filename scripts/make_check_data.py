@@ -8,10 +8,45 @@ General concept: we don't want end-users of this distribution to require having
 netcdf installed, nor do we want to incur the I/O overhead every time this
 library is used. So we simply generate static data from the netcdf file.
 """
-import math, os, sys
+import math, os, sys, numpy, re
 from netCDF4 import Dataset
 
 nan = "9e90_r8"
+
+pzeros = re.compile("0{7,}[1-9]*")
+pnines = re.compile("9{7,}[0-8]*")
+
+def float2string(val, sformat, addcomma):
+    if math.isnan(val):
+        str_val = nan
+    else:
+        str_val = sformat % val
+#
+#       Need to ensure all floats contain a decimal point because gFortran
+#       versions prior to 6.3.1 could give an internal compiler error or
+#       generate the wrong result internally (see
+#       https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80388).
+#
+        if str_val.find(".") < 0 and str_val.find("e") < 0 :
+            str_val += "."
+#
+#       Prettify the result by rounding down long sequences of zeros and
+#       rounding up long sequences of nines (this is just a machine
+#       precision issue that won't affect any GSW results), eg.
+#       35.784000000000002 = 35.784  (this is easy - just truncate)
+#       34.456999999999995 = 34.457  (a bit harder - truncate and add +1
+#                                     to last digit)
+#
+        (str_val, nsubs) = pnines.subn("",str_val)
+        if nsubs > 0 :
+            last_digit = "%d" % (int(str_val[-1]) + 1)
+            str_val = str_val[:-1] + last_digit
+        else:
+            str_val = pzeros.sub("",str_val)
+        str_val += "_r8"
+    if addcomma:
+        str_val += ", "
+    return str_val
 
 def write_variable(var_name, dims, v):
     ndims = len(dims)
@@ -19,19 +54,17 @@ def write_variable(var_name, dims, v):
         if dims[0] == 1:
             fortran_dims = ""
         else:
-            fortran_dims = ", dimension(cast_n)"
+            fortran_dims = (", dimension(" + work_dims[""][2] + ")")
     else:
-        if v.dimensions[1] == "test_cast_length":
-            fortran_dims = "(cast_m,cast_n)"
-        elif v.dimensions[1] == "Arctic_test_cast_length":
-            fortran_dims = "(cast_ice_m,cast_ice_n)"
-        elif v.dimensions[1] == "test_cast_midpressure_length":
-            fortran_dims = "(cast_mpres_m,cast_mpres_n)"
-        fortran_dims = ", dimension" + fortran_dims
+        fortran_dims = (", dimension(" + work_dims[v.dimensions[1]][1] + ","
+                        + work_dims[v.dimensions[1]][2] + ")")
+
     out.write("real (r8)%s :: %s\n" % (fortran_dims, var_name))
     out.write("data %s / &\n" % var_name)
+
     buf = "  "
     maxlen = 78
+    num_format = "%.17g"
     if ndims == 1:
         lastx = dims[0]-1
 #
@@ -41,14 +74,9 @@ def write_variable(var_name, dims, v):
 #
         vv = v[:]
         for val, x in [(vv[cx],cx) for cx in range(dims[0])]:
-            if math.isnan(val):
-                sval = nan
-            else:
-                sval = "%.16e_r8" % val
-            if x != lastx:
-                sval += ", "
+            sval = float2string(val,num_format,(x != lastx))
             if len(buf)+len(sval) > maxlen:
-                out.write(buf+" &\n")
+                out.write(buf+"&\n")
                 buf = "  "
             buf += sval
     elif ndims == 2:
@@ -57,14 +85,9 @@ def write_variable(var_name, dims, v):
         vv = v[:][:]
         for x in range(dims[0]):
             for val,y in [(vv[x][cy],cy) for cy in range(dims[1])]:
-                if math.isnan(val):
-                    sval = nan
-                else:
-                    sval = "%.16e_r8" % val
-                if x != lastx or y != lasty:
-                    sval += ", "
+                sval = float2string(val,num_format,(x != lastx or y != lasty))
                 if len(buf)+len(sval) > maxlen:
-                    out.write(buf+" &\n")
+                    out.write(buf+"&\n")
                     buf = "  "
                 buf += sval
     else:
@@ -75,41 +98,44 @@ def write_variable(var_name, dims, v):
         for x in range(dims[0]):
             for y in range(dims[1]):
                 for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
-                    if math.isnan(val):
-                        sval = nan
-                    else:
-                        sval = "%.16e_r8" % val
-                    if x != lastx or y != lasty or z != lastz:
-                        sval += ", "
+                    sval = float2string(val,num_format, 
+                                (x != lastx or y != lasty or z != lastz))
                     if len(buf)+len(sval) > maxlen:
-                        out.write(buf+" &\n")
+                        out.write(buf+"&\n")
                         buf = "  "
                     buf += sval
     if buf:
         out.write(buf+" /\n\n")
 
 def write_structure(var_name, dims, v):
-
     ndims = len(dims)
     if ndims == 1:
-        out.write("type(gsw_result_cast) :: %s\n\n" % var_name.lower())
-        out.write("data %s / gsw_result_cast( &\n" % var_name.lower())
+        gsw_type = work_dims[""][3]
     else:
-        if v.dimensions[1] == "test_cast_length":
-            out.write("type(gsw_result) :: %s\n\n" % var_name.lower())
-            out.write("data %s / gsw_result( &\n" % var_name.lower())
-        elif v.dimensions[1] == "Arctic_test_cast_length":
-            out.write("type(gsw_result_ice) :: %s\n\n" % var_name.lower())
-            out.write("data %s / gsw_result_ice( &\n" % var_name.lower())
-        elif v.dimensions[1] == "test_cast_midpressure_length":
-            out.write("type(gsw_result_mpres) :: %s\n\n" % var_name.lower())
-            out.write("data %s / gsw_result_mpres( &\n" % var_name.lower())
-    out.write("  \"%s\", &\n" % var_name)
+        gsw_type = work_dims[v.dimensions[1]][3]
+
+    out.write("type(%s) :: %s\n\n" % (gsw_type, var_name.lower()))
+    out.write("data %s / %s( &\n" % (var_name.lower(), gsw_type))
 
     if math.isnan(v.computation_accuracy):
-        out.write("  %s, (/ &\n" % nan)
+        str_ca = nan
     else:
-        out.write("  %.16e_r8, (/ &\n" % v.computation_accuracy)
+        str_ca = "%.5g_r8" % v.computation_accuracy
+
+    out.write("  \"%s\", %s, (/ &\n" % (var_name, str_ca))
+
+    vmax = numpy.nanmax(v)
+    if vmax != 0.:
+        precision = v.computation_accuracy/abs(vmax)
+    else:
+        precision = v.computation_accuracy
+
+    if precision < 1e-12:
+        num_format = "%.16g"
+    elif precision < 1e-10:
+        num_format = "%.14g"
+    else:
+        num_format = "%.12g"
 
     buf = "  "
     maxlen = 78
@@ -122,14 +148,9 @@ def write_structure(var_name, dims, v):
 #
         vv = v[:]
         for val, x in [(vv[cx],cx) for cx in range(dims[0])]:
-            if math.isnan(val):
-                sval = nan
-            else:
-                sval = "%.16e_r8" % val
-            if x != lastx:
-                sval += ", "
+            sval = float2string(val,num_format,(x != lastx))
             if len(buf)+len(sval) > maxlen:
-                out.write(buf+" &\n")
+                out.write(buf+"&\n")
                 buf = "  "
             buf += sval
     elif ndims == 2:
@@ -138,14 +159,9 @@ def write_structure(var_name, dims, v):
         vv = v[:][:]
         for x in range(dims[0]):
             for val,y in [(vv[x][cy],cy) for cy in range(dims[1])]:
-                if math.isnan(val):
-                    sval = nan
-                else:
-                    sval = "%.16e_r8" % val
-                if x != lastx or y != lasty:
-                    sval += ", "
+                sval = float2string(val,num_format,(x != lastx or y != lasty))
                 if len(buf)+len(sval) > maxlen:
-                    out.write(buf+" &\n")
+                    out.write(buf+"&\n")
                     buf = "  "
                 buf += sval
     else:
@@ -156,28 +172,25 @@ def write_structure(var_name, dims, v):
         for x in range(dims[0]):
             for y in range(dims[1]):
                 for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
-                    if math.isnan(val):
-                        sval = nan
-                    else:
-                        sval = "%.16e_r8" % val
-                    if x != lastx or y != lasty or z != lastz:
-                        sval += ", "
+                    sval = float2string(val,num_format, 
+                                (x != lastx or y != lasty or z != lastz))
                     if len(buf)+len(sval) > maxlen:
-                        out.write(buf+" &\n")
+                        out.write(buf+"&\n")
                         buf = "  "
                     buf += sval
     if buf:
         out.write(buf+" &\n")
     out.write("  /) ) /\n\n")
 
-work_dims = [
-    ["cast_m", "test_cast_length"],
-    ["cast_n", "test_cast_number"],
-    ["cast_ice_m", "Arctic_test_cast_length"],
-    ["cast_ice_n", "Arctic_test_cast_number"],
-    ["cast_mpres_m", "test_cast_midpressure_length"],
-    ["cast_mpres_n", "test_cast_midpressure_number"]
-]
+work_dims = {
+     "test_cast_length":             ["test_cast_number",
+              "cast_m",       "cast_n",       "gsw_result"],
+     "Arctic_test_cast_length":      ["Arctic_test_cast_number",
+              "cast_ice_m",   "cast_ice_n",   "gsw_result_ice"],
+     "test_cast_midpressure_length": ["test_cast_midpressure_number",
+              "cast_mpres_m", "cast_mpres_n", "gsw_result_mpres"],
+     "":     ["",     "",     "cast_n",       "gsw_result_cast"]
+}
 work_vars = [
     ["ct", "CT_chck_cast"],
     ["rt", "Rt_chck_cast"],
@@ -458,10 +471,12 @@ implicit none
 
 """)
 
-for dim_label, dim_name in [dim for dim in work_dims]:
-    if not dim_name:
-        dim_name = dim_label
-    out.write("integer, parameter :: %s = %d\n" % (dim_label, len(d[dim_name])))
+dim_format = "integer, parameter :: %s = %d\n"
+for key, value in work_dims.items():
+    if key != "":
+        out.write(dim_format % (value[1], len(d[key])))
+        out.write(dim_format % (value[2], len(d[value[0]])))
+
 out.write("""
 type gsw_result
     character (50) :: variable_name
