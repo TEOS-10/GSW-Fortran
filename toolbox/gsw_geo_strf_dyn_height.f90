@@ -1,5 +1,5 @@
 !==========================================================================
-pure function gsw_geo_strf_dyn_height (sa, ct, p, p_ref)
+function gsw_geo_strf_dyn_height (sa, ct, p, p_ref)
 !==========================================================================
 !
 !  Calculates dynamic height anomaly as the integral of specific volume
@@ -211,6 +211,7 @@ else
                 ! need to include p_ref as an interpolated pressure.
                 call p_sequence(p(ibottle),p_ref,p_i(p_cnt+1:),np)
                 p_cnt = p_cnt + np
+                ibpr = p_cnt
                 call p_sequence(p_ref,p(ibottle+1),p_i(p_cnt+1:),np)
                 p_cnt = p_cnt + np
             else
@@ -231,7 +232,7 @@ else
         call gsw_rr68_interp_sa_ct(sa,ct,p,p_i(top_pad:p_cnt), &
                                    sa_i(top_pad:),ct_i(top_pad:))
     end if
-            
+
     allocate (b(p_cnt), b_av(p_cnt-1), dp_i(p_cnt-1))
     allocate (geo_strf_dyn_height0(p_cnt))
 
@@ -270,7 +271,10 @@ contains
 
     if (present(nps)) nps = n
 
-    pseq = (/ (p1+pstep*i, i=1,n) /)
+    ! Generate the sequence ensuring that the value of p2 is exact to
+    ! avoid round-off issues, ie. don't do "pseq = (p1+pstep*i, i=1,n)".
+
+    pseq = (/ (p2-pstep*i, i=n-1,0,-1) /)
 
     return
     end subroutine p_sequence
