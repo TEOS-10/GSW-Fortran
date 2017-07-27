@@ -1,5 +1,5 @@
 !==========================================================================
-function gsw_geo_strf_dyn_height (sa, ct, p, p_ref)
+pure function gsw_geo_strf_dyn_height (sa, ct, p, p_ref)
 !==========================================================================
 !
 !  Calculates dynamic height anomaly as the integral of specific volume
