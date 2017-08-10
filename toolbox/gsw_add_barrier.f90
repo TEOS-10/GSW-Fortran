@@ -35,7 +35,7 @@ integer, dimension(4) :: above_line
 integer :: k, nmean, above_line0, kk
 real (r8) :: r, lats_line, data_mean
 
-call gsw_util_indx(longs_pan,npan,long,k)                !   the long/lat point
+k = gsw_util_indx(longs_pan,long)                !   the long/lat point
 r = (long-longs_pan(k))/(longs_pan(k+1)-longs_pan(k))
 lats_line = lats_pan(k) + r*(lats_pan(k+1)-lats_pan(k))
 
@@ -45,7 +45,7 @@ else
    above_line0 = 0
 end if
 
-call gsw_util_indx(longs_pan,npan,long_grid,k)       ! the 1 and 4 long/lat pts
+k = gsw_util_indx(longs_pan,long_grid)       ! the 1 and 4 long/lat pts
 r = (long_grid-longs_pan(k))/(longs_pan(k+1)-longs_pan(k))
 lats_line = lats_pan(k) + r*(lats_pan(k+1)-lats_pan(k))
 
@@ -61,7 +61,7 @@ else
    above_line(4) = 0
 end if
 
-call gsw_util_indx(longs_pan,npan,long_grid+dlong_grid,k)    ! the 2 & 3 points 
+k = gsw_util_indx(longs_pan,long_grid+dlong_grid)    ! the 2 & 3 points 
 r = (long_grid+dlong_grid-longs_pan(k))/(longs_pan(k+1)-longs_pan(k))
 lats_line = lats_pan(k) + r*(lats_pan(k+1)-lats_pan(k))
 

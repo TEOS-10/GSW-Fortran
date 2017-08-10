@@ -74,7 +74,7 @@ end if
 p0_original = p
 p_tmp = p
 if (p_tmp.gt.p_ref(ndepth_max)) p_tmp = p_ref(ndepth_max)
-call gsw_util_indx(p_ref,nz,p_tmp,indz0)
+indz0 = gsw_util_indx(p_ref,p_tmp)
 
 dlong = longs_ref(indx0+1) - longs_ref(indx0)
 dlat = lats_ref(indy0+1) - lats_ref(indy0)

@@ -1508,13 +1508,13 @@ interface
     real (r8), intent(out) :: tu(:), rsubrho(:), p_mid(:)
     end subroutine gsw_turner_rsubrho
     
-    pure subroutine gsw_util_indx (x, n, z, k)
+    pure function gsw_util_indx (x, z, kstart) result(ki)
     use gsw_mod_kinds
-    integer, intent(in) :: n
-    integer, intent(out) :: k
-    real (r8), intent(in), dimension(n) :: x
-    real (r8), intent(in) :: z
-    end subroutine gsw_util_indx
+    implicit none
+    real (r8), intent(in) :: x(:), z
+    integer, intent(in), optional :: kstart
+    integer :: ki
+    end function gsw_util_indx
     
     pure function gsw_util_interp1q_int (x, iy, x_i) result(y_i)
     use gsw_mod_kinds
@@ -1531,12 +1531,11 @@ interface
     integer :: iarray(size(rarray))       ! Sorted ids
     end function gsw_util_sort_real
     
-    pure function gsw_util_xinterp1 (x, y, n, x0)
+    pure function gsw_util_xinterp1 (x, y, x0)
     use gsw_mod_kinds
     implicit none
-    integer, intent(in) :: n
     real (r8), intent(in) :: x0
-    real (r8), dimension(n), intent(in) :: x, y
+    real (r8), intent(in) :: x(:), y(:)
     real (r8) :: gsw_util_xinterp1
     end function gsw_util_xinterp1
     
