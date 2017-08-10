@@ -151,24 +151,24 @@ contains
     if (sectnum .lt. 0) then       !  shallow
         ip_1 = floor(ip_sect)
         ip_2 = ceiling(ip_sect)
-!        where (ip_1 .eq. ip_2) ip_2 = ip_1 + 1
+        where (ip_1 .eq. ip_2) ip_2 = ip_1 + 1
         ip_3 = ip_2 + 1
         ip_4 = ip_3 + 1
     else if (sectnum .eq. 0) then  !  central
         ip_2 = floor(ip_sect)
         ip_3 = ceiling(ip_sect)
-!        where (ip_2 .eq. ip_3) ip_2 = ip_3 - 1
+        where (ip_2 .eq. ip_3) ip_2 = ip_3 - 1
         ip_1 = ip_2 - 1
-!        where (ip_1 .lt. 1)
-!            ip_1 = 1
-!            ip_2 = 2
-!            ip_3 = 3
-!        end where
+        where (ip_1 .lt. 1)
+            ip_1 = 1
+            ip_2 = 2
+            ip_3 = 3
+        end where
         ip_4 = ip_3 + 1
     else if (sectnum .gt. 0) then  !  deep
         ip_1 = ceiling(ip_sect)
         ip_2 = floor(ip_sect)
-!        where (ip_1 .eq. ip_2) ip_2 = ip_1 - 1
+        where (ip_1 .eq. ip_2) ip_2 = ip_1 - 1
         ip_3 = ip_2 - 1
         ip_4 = ip_3 - 1
     end if
