@@ -34,12 +34,12 @@ def write_variable_real(var_name, dims, v):
         fortran_dims = "(%s,%s,%s)" % v.dimensions[::-1]
 
     out.write("real (r8), dimension%s :: %s\n" % (fortran_dims, var_name))
-    out.write("data %s / &\n" % var_name)
 
     buf = "  "
     maxlen = 78
     numformat = "%.17g"
     if ndims == 1:
+        out.write("data %s / &\n" % var_name)
         lastx = dims[0]-1
 #
 #       The following construct (and variations below) transfer the
@@ -53,7 +53,11 @@ def write_variable_real(var_name, dims, v):
                 out.write(buf+"&\n")
                 buf = "  "
             buf += sval
+        if buf:
+            out.write(buf+" &\n")
+        out.write("  /\n\n")
     elif ndims == 2:
+        out.write("data %s / &\n" % var_name)
         lastx = dims[0]-1
         lasty = dims[1]-1
         vv = v[:][:]
@@ -64,23 +68,31 @@ def write_variable_real(var_name, dims, v):
                     out.write(buf+"&\n")
                     buf = "  "
                 buf += sval
+        if buf:
+            out.write(buf+" &\n")
+        out.write("  /\n\n")
     else:
-        lastx = dims[0]-1
-        lasty = dims[1]-1
+#
+#       For 3d real arrays we construct separate data statements for short
+#       array sections (one row per statement) to avoid continuation line
+#       limits (gFortran is unlimited, but iFort has a 511 line limit).
+#
         lastz = dims[2]-1
         vv = v[:][:][:]
         for x in range(dims[0]):
             for y in range(dims[1]):
+                out.write("data %s(:,%d,%d) / &\n" % (var_name, y+1, x+1))
                 for val,z in [(vv[x][y][cz],cz) for cz in range(dims[2])]:
-                    sval = float2string(val,numformat,
-                                (x != lastx or y != lasty or z != lastz))
+                    sval = float2string(val,numformat,(z != lastz))
                     if len(buf)+len(sval) > maxlen:
                         out.write(buf+"&\n")
                         buf = "  "
                     buf += sval
-    if buf:
-        out.write(buf+" &\n")
-    out.write("  /\n\n")
+                if buf:
+                    out.write(buf+" &\n")
+                    buf = "  "
+                out.write("  /\n")
+        out.write("\n")
 
 def write_variable_int(var_name, dims, v):
     ndims = len(dims)
