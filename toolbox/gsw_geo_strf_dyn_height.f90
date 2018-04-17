@@ -274,7 +274,7 @@ contains
     ! Generate the sequence ensuring that the value of p2 is exact to
     ! avoid round-off issues, ie. don't do "pseq = (p1+pstep*i, i=1,n)".
 
-    pseq = (/ (p2-pstep*i, i=n-1,0,-1) /)
+    pseq(1:n) = (/ (p2-pstep*i, i=n-1,0,-1) /)
 
     return
     end subroutine p_sequence
