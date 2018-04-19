@@ -69,8 +69,12 @@ set( GSW_LINKER_LANGUAGE Fortran )
 include( gsw_compiler_flags )
 include_directories( ${GSW_INCLUDE_DIRS} )
 
-file( GLOB gsw_src_files ${CMAKE_CURRENT_SOURCE_DIR}/modules/*.f90
-                         ${CMAKE_CURRENT_SOURCE_DIR}/toolbox/*.f90
+add_subdirectory(modules)
+add_subdirectory(toolbox)
+
+list ( APPEND gsw_src_files
+	${gsw_modules_files}
+	${gsw_toolbox_files}
 )
 
 ################################################################################
