@@ -71,6 +71,7 @@ include_directories( ${GSW_INCLUDE_DIRS} )
 
 add_subdirectory(modules)
 add_subdirectory(toolbox)
+add_subdirectory(test)
 
 list ( APPEND gsw_src_files
 	${gsw_modules_files}

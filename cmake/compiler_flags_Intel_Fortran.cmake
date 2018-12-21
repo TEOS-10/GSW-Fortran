@@ -7,7 +7,7 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback" )
+set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -traceback" )
 
 ####################################################################
 # RELEASE FLAGS
@@ -19,7 +19,7 @@ set( CMAKE_Fortran_FLAGS_RELEASE "-O3" )
 # DEBUG FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -debug -warn all" )
+set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -debug -warn all" )
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
