@@ -18,7 +18,7 @@ list( APPEND gsw_test_files
 # Create test executables and add tests
 foreach( test_file ${gsw_test_files} )
     string( REPLACE ".f90" "" test_name ${test_file} )
-    add_executable( ${test_name} ${test_file} )
-    target_link_libraries( ${test_name} gsw)
-    add_test( NAME ${test_name} COMMAND ${test_name} )
+    ecbuild_add_test(TARGET ${test_name}
+                     SOURCES ${test_file}
+                     LIBS gsw)
 endforeach( test_file ${gsw_test_files} )
