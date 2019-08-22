@@ -1,18 +1,6 @@
-# (C) Copyright 2017 UCAR.
-#
-# This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-
-################################################################################
-# Gibbs-SeaWater (GSW) Oceanographic Toolbox in Fortran
-# https://github.com/aerorahul/GSW-Fortran -b jedi-marine
-# branch jedi-marine forked from
-# https://github.com/TEOS-10/GSW-Fortran
-################################################################################
-
 cmake_minimum_required( VERSION 3.3.2 FATAL_ERROR )
 
-project( gsw Fortran )
+project( gsw VERSION 3.0.5 LANGUAGES Fortran )
 
 set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH} )
 
