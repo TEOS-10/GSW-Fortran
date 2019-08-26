@@ -16,9 +16,12 @@ ecbuild_requires_macro_version( 2.7 )
 # Project
 ################################################################################
 
+set( INSTALL_INCLUDE_DIR "include" )
 ecbuild_declare_project()
 
-ecbuild_enable_fortran( REQUIRED )
+ecbuild_enable_fortran(
+    MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDE_DIR}/gsw
+    REQUIRED )
 
 ################################################################################
 # Dependencies
@@ -36,7 +39,7 @@ ecbuild_enable_fortran( REQUIRED )
 
 list( APPEND GSW_TPLS )
 
-set( GSW_INCLUDE_DIRS ${CMAKE_Fortran_MODULE_DIRECTORY})
+set( GSW_INCLUDE_DIRS ${CMAKE_Fortran_MODULE_DIRECTORY} )
 set( GSW_LIBRARIES gsw )
 
 get_directory_property( GSW_DEFINITIONS COMPILE_DEFINITIONS )
@@ -62,8 +65,8 @@ add_subdirectory(toolbox)
 add_subdirectory(test)
 
 list ( APPEND gsw_src_files
-	${gsw_modules_files}
-	${gsw_toolbox_files}
+    ${gsw_modules_files}
+    ${gsw_toolbox_files}
 )
 
 ################################################################################
@@ -76,7 +79,7 @@ ecbuild_add_library( TARGET   gsw
                     )
 
 if(ECBUILD_INSTALL_FORTRAN_MODULES)
-  install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
+    install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY} DESTINATION ${INSTALL_INCLUDE_DIR} )
 endif()
 
 ################################################################################
