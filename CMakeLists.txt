@@ -78,6 +78,12 @@ ecbuild_add_library( TARGET   gsw
                      LINKER_LANGUAGE ${GSW_LINKER_LANGUAGE}
                     )
 
+target_include_directories( gsw PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_Fortran_MODULE_DIRECTORY}>
+)
+
 if(ECBUILD_INSTALL_FORTRAN_MODULES)
     install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY} DESTINATION ${INSTALL_INCLUDE_DIR} )
 endif()
