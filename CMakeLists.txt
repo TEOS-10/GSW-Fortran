@@ -38,16 +38,11 @@ set( INCLUDE_DIR ${PROJECT_NAME} ) # path relative to <prefix>/include/ to insta
 set( CMAKE_Fortran_MODULE_DIRECTORY ${INCLUDE_DIR} )
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
-# Enable ctest framework
-enable_testing()
-
 ### Define Library Targets
-add_subdirectory( modules )
-add_subdirectory( toolbox )
-add_subdirectory( test )
+file( GLOB SRCS modules/*.f90 toolbox/*.f90 )
 
 # Use a common object library for building shared and static targets
-add_library( ${PROJECT_NAME}_objects OBJECT ${modules_srcs} ${toolbox_srcs} )
+add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )
 target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
 
@@ -68,6 +63,10 @@ set_target_properties( ${LIB_TARGETS} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} )
 foreach( _tgt IN LISTS LIB_TARGETS )
     target_compile_definitions( ${_tgt} PUBLIC "${PUBLIC_FLAGS}" )
 endforeach()
+
+# Enable ctest framework and add tests
+enable_testing()
+add_subdirectory( test )
 
 ### Install
 install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
