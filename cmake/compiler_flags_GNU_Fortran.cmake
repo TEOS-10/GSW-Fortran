@@ -19,7 +19,7 @@ set( CMAKE_Fortran_FLAGS_RELEASE "-O3" )
 # DEBUG FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -Wall -Wconversion-extra" )
+set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -Wall" )
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
