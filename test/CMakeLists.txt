@@ -20,9 +20,10 @@ foreach( src ${test_srcs} )
 
     string( REPLACE ".f90" ".x" exec_name ${src} )
     add_executable( ${exec_name} ${src} )
-    add_dependencies( ${exec_name} ${PROJECT_NAME}_static )
-    target_link_libraries( ${exec_name} ${PROJECT_NAME}_static )
-    target_include_directories( ${exec_name} PUBLIC ${CMAKE_BINARY_DIR}/${INCLUDE_DIR} )
+    add_dependencies( ${exec_name} ${LIB_TARGETS} )
+    target_link_libraries( ${exec_name} ${LIB_TARGETS} )
+    target_include_directories( ${exec_name}
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${INCLUDE_DIR}> )
 
     string( REPLACE ".f90" ""   test_name ${src} )
     add_test( ${test_name} COMMAND ${exec_name} )

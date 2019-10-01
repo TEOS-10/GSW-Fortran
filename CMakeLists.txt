@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.9 )
 
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 project( gsw VERSION 3.05 LANGUAGES Fortran )
 
@@ -45,6 +45,10 @@ file( GLOB SRCS modules/*.f90 toolbox/*.f90 )
 add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )
 target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
+target_include_directories( ${PROJECT_NAME}_objects
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
 
 # Add static lib target
 if( BUILD_STATIC_LIBS )
@@ -73,7 +77,6 @@ install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
-install( FILES ${C_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
 install( DIRECTORY ${CMAKE_BINARY_DIR}/${INCLUDE_DIR}/
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
 
