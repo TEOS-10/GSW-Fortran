@@ -5,3 +5,5 @@
 *.swp
 
 new/
+build/
+install/
