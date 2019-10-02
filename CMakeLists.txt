@@ -39,7 +39,9 @@ set( CMAKE_Fortran_MODULE_DIRECTORY ${INCLUDE_DIR} )
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
 ### Define Library Targets
-file( GLOB SRCS modules/*.f90 toolbox/*.f90 )
+add_subdirectory(modules)
+add_subdirectory(toolbox)
+list( APPEND SRCS ${modules_srcs} ${toolbox_srcs} )
 
 # Use a common object library for building shared and static targets
 add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )

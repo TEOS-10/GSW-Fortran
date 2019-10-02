@@ -32,6 +32,6 @@ foreach( src ${test_srcs} )
         PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
 
     string( REPLACE ".f90" ""   test_name ${src} )
-    add_test( ${test_name} COMMAND ${exec_name} )
+    add_test( NAME ${test_name} COMMAND ${exec_name} )
 
 endforeach()
