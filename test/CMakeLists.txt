@@ -15,15 +15,21 @@ list( APPEND test_srcs
     gsw_check_functions.f90
 )
 
+# If both static and shared libraries are built,
+# use the 1st one to link the tests
+list( GET LIB_TARGETS 0 _LIB_TARGET )
+
 # Create executable for each test program, and add test
 foreach( src ${test_srcs} )
 
     string( REPLACE ".f90" ".x" exec_name ${src} )
     add_executable( ${exec_name} ${src} )
     add_dependencies( ${exec_name} ${LIB_TARGETS} )
-    target_link_libraries( ${exec_name} ${LIB_TARGETS} )
+    target_link_libraries( ${exec_name} PUBLIC ${_LIB_TARGET} )
+    set_target_properties( ${exec_name} PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE )
+    set_target_properties( ${exec_name} PROPERTIES SKIP_BUILD_RPATH         FALSE )
     target_include_directories( ${exec_name}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${INCLUDE_DIR}> )
+        PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
 
     string( REPLACE ".f90" ""   test_name ${src} )
     add_test( ${test_name} COMMAND ${exec_name} )

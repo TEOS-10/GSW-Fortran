@@ -47,7 +47,7 @@ target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
 target_include_directories( ${PROJECT_NAME}_objects
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
 
 # Add static lib target
@@ -77,7 +77,7 @@ install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
-install( DIRECTORY ${CMAKE_BINARY_DIR}/${INCLUDE_DIR}/
+install( DIRECTORY ${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
 
 ### Package config
@@ -90,7 +90,7 @@ set( CONFIG_INSTALL_DESTINATION share/${PROJECT_NAME}/cmake )
 # gsw-config.cmake
 configure_package_config_file( cmake/PackageConfig.cmake.in ${PROJECT_NAME}-config.cmake
                                INSTALL_DESTINATION ${CONFIG_INSTALL_DESTINATION} )
-install( FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+install( FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
          DESTINATION ${CONFIG_INSTALL_DESTINATION} )
 
 # gsw-config-version.cmake
@@ -98,7 +98,7 @@ write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion )
-install( FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+install( FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
          DESTINATION ${CONFIG_INSTALL_DESTINATION} )
 
 # gsw-targets.cmake and gsw-targets-<build-type>.cmake
