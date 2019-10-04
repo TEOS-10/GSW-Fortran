@@ -70,8 +70,7 @@ foreach( _tgt IN LISTS LIB_TARGETS )
     target_compile_definitions( ${_tgt} PUBLIC "${PUBLIC_FLAGS}" )
     target_include_directories( ${_tgt}
         PUBLIC
-            $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
+            $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
 endforeach()
 
 # Enable ctest framework and add tests
