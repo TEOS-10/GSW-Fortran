@@ -68,7 +68,7 @@ endif()
 set_target_properties( ${LIB_TARGETS} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} )
 foreach( _tgt IN LISTS LIB_TARGETS )
     target_compile_definitions( ${_tgt} PUBLIC "${PUBLIC_FLAGS}" )
-    target_include_directories( ${PROJECT_NAME}_objects
+    target_include_directories( ${_tgt}
         PUBLIC
             $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
