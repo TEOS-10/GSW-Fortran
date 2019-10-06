@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.9 )
 
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 project( gsw VERSION 3.05 LANGUAGES Fortran )
 
@@ -39,12 +39,18 @@ set( CMAKE_Fortran_MODULE_DIRECTORY ${INCLUDE_DIR} )
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
 ### Define Library Targets
-file( GLOB SRCS modules/*.f90 toolbox/*.f90 )
+add_subdirectory(modules)
+add_subdirectory(toolbox)
+list( APPEND SRCS ${modules_srcs} ${toolbox_srcs} )
 
 # Use a common object library for building shared and static targets
 add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )
 target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
+target_include_directories( ${PROJECT_NAME}_objects
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
 
 # Add static lib target
 if( BUILD_STATIC_LIBS )
@@ -62,6 +68,9 @@ endif()
 set_target_properties( ${LIB_TARGETS} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} )
 foreach( _tgt IN LISTS LIB_TARGETS )
     target_compile_definitions( ${_tgt} PUBLIC "${PUBLIC_FLAGS}" )
+    target_include_directories( ${_tgt}
+        PUBLIC
+            $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
 endforeach()
 
 # Enable ctest framework and add tests
@@ -73,8 +82,7 @@ install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
-install( FILES ${C_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
-install( DIRECTORY ${CMAKE_BINARY_DIR}/${INCLUDE_DIR}/
+install( DIRECTORY ${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/
          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR} )
 
 ### Package config
@@ -87,7 +95,7 @@ set( CONFIG_INSTALL_DESTINATION share/${PROJECT_NAME}/cmake )
 # gsw-config.cmake
 configure_package_config_file( cmake/PackageConfig.cmake.in ${PROJECT_NAME}-config.cmake
                                INSTALL_DESTINATION ${CONFIG_INSTALL_DESTINATION} )
-install( FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+install( FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
          DESTINATION ${CONFIG_INSTALL_DESTINATION} )
 
 # gsw-config-version.cmake
@@ -95,7 +103,7 @@ write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion )
-install( FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+install( FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
          DESTINATION ${CONFIG_INSTALL_DESTINATION} )
 
 # gsw-targets.cmake and gsw-targets-<build-type>.cmake
