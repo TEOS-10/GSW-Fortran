@@ -75,7 +75,11 @@ endforeach()
 
 # Enable ctest framework and add tests
 enable_testing()
-add_subdirectory( test EXCLUDE_FROM_ALL )
+if ( NOT WIN32 )
+    add_subdirectory( test EXCLUDE_FROM_ALL )
+else()
+    add_subdirectory( test )
+endif()
 
 ### Install
 install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
