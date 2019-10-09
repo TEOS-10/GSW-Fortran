@@ -28,12 +28,41 @@
  been tested to compile and run with gfortran.
 
 ==========================================================================
- GSW uses CMake to build the library and provides a package configuration
 
- mkdir build; cd build
- cmake ..
+ Build using Make:
+ cd test
  make
- ctest
+ ./gsw_check
+ ./poly_check
+
+==========================================================================
+
+ Build using CMake:
+   static and shared libraries
+   build 'gsw_check_functions' and 'gsw_poly_check' on demand
+   provides a package configuration
+   Git submodules support
+   Window (Visual Studio), Mac and Linux support
+
+ Windows (using a terminal):
+   mkdir build; cd build
+   cmake ..
+   Open gsw.sln in Visual Studio
+
+ Mac, Linux:
+   mkdir build; cd build
+   cmake ..
+   make
+   ctest
+
+ Use a Git submodule (using extern/gsw as target folder):
+   git submodule add https://github.com/TEOS-10/GSW-Fortran extern/gsw
+   git submodule init
+   git submodule update
+    ... add e.g. target_link_libraries(my_target STATIC gsw_static)
+    ... in your CMakeLists.txt. It is not necessary to compile and install
+    ... the TEOS-10/GSW library - the compilation and linking will be done
+    ... due to the target_link_libraries() statement.
 
  Note that gfortran is the name of the GNU Fortran project, developing a
  free Fortran 95/2003/2008 compiler for GCC, the GNU Compiler Collection.
