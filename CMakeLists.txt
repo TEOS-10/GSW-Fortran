@@ -4,6 +4,9 @@ list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 project( gsw VERSION 3.05 LANGUAGES Fortran )
 
+# Use solution folders in IDEs
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 ### Use standard GNU installation directories
 if ( NOT WIN32 )
     include( GNUInstallDirs )
@@ -51,6 +54,7 @@ list( APPEND SRCS ${modules_srcs} ${toolbox_srcs} )
 add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )
 target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
+set_property(TARGET ${PROJECT_NAME}_objects PROPERTY FOLDER gsw)
 
 # Add static lib target
 if( GSW_BUILD_STATIC_LIBS )
@@ -71,6 +75,7 @@ foreach( _tgt IN LISTS LIB_TARGETS )
     target_include_directories( ${_tgt}
         PUBLIC
             $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
+    set_property(TARGET ${_tgt} PROPERTY FOLDER gsw)
 endforeach()
 
 # Enable ctest framework and add tests

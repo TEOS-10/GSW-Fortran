@@ -36,6 +36,8 @@ foreach( src ${test_srcs} )
     set_target_properties( ${exec_name} PROPERTIES SKIP_BUILD_RPATH         FALSE )
     target_include_directories( ${exec_name}
         PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
+    set_property(TARGET ${exec_name} PROPERTY FOLDER gsw)
+
 
     string( REPLACE ".f90" ""   test_name ${src} )
     add_test( NAME ${test_name} COMMAND ${exec_name} )
