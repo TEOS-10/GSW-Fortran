@@ -4,22 +4,29 @@ list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 project( gsw VERSION 3.05 LANGUAGES Fortran )
 
+# Use solution folders in IDEs
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 ### Use standard GNU installation directories
-include( GNUInstallDirs )
-
-### Configuration options
-option( BUILD_STATIC_LIBS "Build static library" ON )
-option( BUILD_SHARED_LIBS "Build shared library" OFF )
-
-# Ensure at least one of BUILD_SHARED_LIBS and BUILD_STATIC_LIBS is set
-if( NOT ( BUILD_STATIC_LIBS OR BUILD_SHARED_LIBS ) )
-    message( STATUS "Niether BUILD_STATIC_LIBS nor BUILD_SHARED_LIBS is set.  Defaulting to BUILD_STATIC_LIBS=ON" )
-    set( BUILD_STATIC_LIBS ON CACHE BOOL "Build static library" FORCE )
-    set( BUILD_STATIC_LIBS ON )
+if ( NOT WIN32 )
+    include( GNUInstallDirs )
 endif()
 
-message( STATUS "Option: BUILD_STATIC_LIBS: ${BUILD_STATIC_LIBS}" )
-message( STATUS "Option: BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}" )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gsw_version.f90.in ${CMAKE_CURRENT_BINARY_DIR}/gsw_version.f90)
+
+### Configuration options
+option( GSW_BUILD_STATIC_LIBS "Build static library" ON )
+option( GSW_BUILD_SHARED_LIBS "Build shared library" OFF )
+
+# Ensure at least one of GSW_BUILD_SHARED_LIBS and GSW_BUILD_STATIC_LIBS is set
+if( NOT ( GSW_BUILD_STATIC_LIBS OR GSW_BUILD_SHARED_LIBS ) )
+    message( STATUS "Niether GSW_BUILD_STATIC_LIBS nor GSW_BUILD_SHARED_LIBS is set.  Defaulting to GSW_BUILD_STATIC_LIBS=ON" )
+    set( GSW_BUILD_STATIC_LIBS ON CACHE BOOL "Build static library" FORCE )
+    set( GSW_BUILD_STATIC_LIBS ON )
+endif()
+
+message( STATUS "Option: GSW_BUILD_STATIC_LIBS: ${GSW_BUILD_STATIC_LIBS}" )
+message( STATUS "Option: GSW_BUILD_SHARED_LIBS: ${GSW_BUILD_SHARED_LIBS}" )
 
 # Set default build type to Release if not specified
 if( NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE )
@@ -47,20 +54,17 @@ list( APPEND SRCS ${modules_srcs} ${toolbox_srcs} )
 add_library( ${PROJECT_NAME}_objects OBJECT ${SRCS} )
 target_compile_definitions( ${PROJECT_NAME}_objects PUBLIC ${PUBLIC_FLAGS}
                                                     PRIVATE ${PRIVATE_FLAGS} )
-target_include_directories( ${PROJECT_NAME}_objects
-    PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${INCLUDE_DIR}> )
+set_property(TARGET ${PROJECT_NAME}_objects PROPERTY FOLDER gsw)
 
 # Add static lib target
-if( BUILD_STATIC_LIBS )
-    add_library( ${PROJECT_NAME}_static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_objects> )
+if( GSW_BUILD_STATIC_LIBS )
+    add_library( ${PROJECT_NAME}_static STATIC ${CMAKE_CURRENT_BINARY_DIR}/gsw_version.f90 $<TARGET_OBJECTS:${PROJECT_NAME}_objects> )
     list( APPEND LIB_TARGETS ${PROJECT_NAME}_static )
 endif()
 
 # Add shared lib target
-if( BUILD_SHARED_LIBS )
-    add_library( ${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_objects> )
+if( GSW_BUILD_SHARED_LIBS )
+    add_library( ${PROJECT_NAME}_shared SHARED ${CMAKE_CURRENT_BINARY_DIR}/gsw_version.f90 $<TARGET_OBJECTS:${PROJECT_NAME}_objects> )
     list( APPEND LIB_TARGETS ${PROJECT_NAME}_shared )
 endif()
 
@@ -71,11 +75,16 @@ foreach( _tgt IN LISTS LIB_TARGETS )
     target_include_directories( ${_tgt}
         PUBLIC
             $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${INCLUDE_DIR}> )
+    set_property(TARGET ${_tgt} PROPERTY FOLDER gsw)
 endforeach()
 
 # Enable ctest framework and add tests
 enable_testing()
-add_subdirectory( test )
+if ( NOT WIN32 )
+    add_subdirectory( test EXCLUDE_FROM_ALL )
+else()
+    add_subdirectory( test )
+endif()
 
 ### Install
 install( TARGETS ${LIB_TARGETS} EXPORT ${PROJECT_NAME}Exports
