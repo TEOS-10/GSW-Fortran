@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.12 )
 
-project( gsw VERSION 3.0.6-jedi LANGUAGES Fortran )
+project( gsw VERSION 3.0.6 LANGUAGES Fortran )
 
 ## Ecbuild integration
 find_package( ecbuild QUIET )
