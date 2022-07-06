@@ -3,6 +3,12 @@
 !**  $Id$
 !**  Extracted from gsw_data_v3_0.nc
 !
+!**  The explicit initialization of module variables is moved to routine
+!    "gsw_mod_check_data_initialize" for portability issues and avoid
+!    internal compiler errors in various versions of gfortran and ifort.
+!    The initialization call is done somewhere else in the GSW package.
+!    (Hernan G. Arango, Rutgers University, July 6, 2022).
+
 !==========================================================================
 module gsw_mod_check_data
 !==========================================================================
@@ -10,6 +16,9 @@ module gsw_mod_check_data
 use gsw_mod_kinds
 
 implicit none
+
+logical, save :: gsw_data_initialize = .false.
+
 
 integer, parameter :: cast_mpres_m = 44
 integer, parameter :: cast_mpres_n = 3
@@ -42,7 +51,271 @@ type gsw_result_cast
     real (r8), dimension(cast_n) :: values
 end type gsw_result_cast
 
-real (r8), dimension(cast_m,cast_n) :: ct = (/ &
+real (r8), dimension(cast_m,cast_n) :: ct
+real (r8), dimension(cast_m,cast_n) :: rt
+real (r8), dimension(cast_m,cast_n) :: sa
+real (r8), dimension(cast_m,cast_n) :: sk
+real (r8), dimension(cast_m,cast_n) :: sp
+real (r8), dimension(cast_m,cast_n) :: t
+real (r8), dimension(cast_m,cast_n) :: p
+real (r8), dimension(cast_m,cast_n) :: delta_p
+real (r8), dimension(cast_m,cast_n) :: p_shallow
+real (r8), dimension(cast_m,cast_n) :: p_deep
+
+real (r8), dimension(cast_n) :: lat_cast
+real (r8), dimension(cast_n) :: long_cast
+
+real (r8), dimension(cast_ice_m,cast_ice_n) :: ct_arctic
+real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_arctic
+real (r8), dimension(cast_ice_m,cast_ice_n) :: t_arctic
+real (r8), dimension(cast_ice_m,cast_ice_n) :: p_arctic
+real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_seaice
+real (r8), dimension(cast_ice_m,cast_ice_n) :: t_seaice
+real (r8), dimension(cast_ice_m,cast_ice_n) :: w_seaice
+real (r8), dimension(cast_ice_m,cast_ice_n) :: t_ice
+real (r8), dimension(cast_ice_m,cast_ice_n) :: w_ice
+real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_bulk
+real (r8), dimension(cast_ice_m,cast_ice_n) :: h_pot_bulk
+real (r8), dimension(cast_ice_m,cast_ice_n) :: h_bulk
+
+real (r8) :: pref
+
+type(gsw_result) :: c_from_sp
+type(gsw_result) :: sp_from_c
+type(gsw_result) :: sp_from_sk
+type(gsw_result) :: sa_from_sp
+type(gsw_result) :: sstar_from_sp
+type(gsw_result) :: ct_from_t
+type(gsw_result) :: deltasa_from_sp
+type(gsw_result) :: sr_from_sp
+type(gsw_result) :: sp_from_sr
+type(gsw_result) :: sp_from_sa
+type(gsw_result) :: sstar_from_sa
+type(gsw_result) :: sa_from_sstar
+type(gsw_result) :: sp_from_sstar
+type(gsw_result) :: pt_from_ct
+type(gsw_result) :: t_from_ct
+type(gsw_result) :: ct_from_pt
+type(gsw_result) :: pt0_from_t
+type(gsw_result) :: pt_from_t
+type(gsw_result) :: z_from_p
+type(gsw_result) :: p_from_z
+type(gsw_result) :: entropy_from_pt
+type(gsw_result) :: pt_from_entropy
+type(gsw_result) :: ct_from_entropy
+type(gsw_result) :: entropy_from_t
+type(gsw_result) :: adiabatic_lapse_rate_from_ct
+type(gsw_result) :: specvol
+type(gsw_result) :: alpha
+type(gsw_result) :: beta
+type(gsw_result) :: alpha_on_beta
+type(gsw_result) :: v_vab
+type(gsw_result) :: alpha_vab
+type(gsw_result) :: beta_vab
+type(gsw_result) :: v_sa
+type(gsw_result) :: v_ct
+type(gsw_result) :: v_p
+type(gsw_result) :: v_sa_sa
+type(gsw_result) :: v_sa_ct
+type(gsw_result) :: v_ct_ct
+type(gsw_result) :: v_sa_p
+type(gsw_result) :: v_ct_p
+type(gsw_result) :: v_sa_wrt_h
+type(gsw_result) :: v_h
+type(gsw_result) :: v_sa_sa_wrt_h
+type(gsw_result) :: v_sa_h
+type(gsw_result) :: v_h_h
+type(gsw_result) :: specvol_anom_standard
+type(gsw_result) :: rho
+type(gsw_result) :: rho_rab
+type(gsw_result) :: alpha_rab
+type(gsw_result) :: beta_rab
+type(gsw_result) :: rho_sa
+type(gsw_result) :: rho_ct
+type(gsw_result) :: rho_p
+type(gsw_result) :: rho_sa_sa
+type(gsw_result) :: rho_sa_ct
+type(gsw_result) :: rho_ct_ct
+type(gsw_result) :: rho_sa_p
+type(gsw_result) :: rho_ct_p
+type(gsw_result) :: rho_sa_wrt_h
+type(gsw_result) :: rho_h
+type(gsw_result) :: rho_sa_sa_wrt_h
+type(gsw_result) :: rho_sa_h
+type(gsw_result) :: rho_h_h
+type(gsw_result) :: sigma0
+type(gsw_result) :: sigma1
+type(gsw_result) :: sigma2
+type(gsw_result) :: sigma3
+type(gsw_result) :: sigma4
+type(gsw_result) :: sound_speed
+type(gsw_result) :: kappa
+type(gsw_result) :: cabbeling
+type(gsw_result) :: thermobaric
+type(gsw_result) :: sa_from_rho
+type(gsw_result) :: ct_from_rho
+type(gsw_result) :: ct_maxdensity
+type(gsw_result) :: internal_energy
+type(gsw_result) :: enthalpy
+type(gsw_result) :: enthalpy_diff
+type(gsw_result) :: ct_from_enthalpy
+type(gsw_result) :: dynamic_enthalpy
+type(gsw_result) :: h_sa
+type(gsw_result) :: h_ct
+type(gsw_result) :: h_sa_sa
+type(gsw_result) :: h_sa_ct
+type(gsw_result) :: h_ct_ct
+type(gsw_result) :: ct_sa
+type(gsw_result) :: ct_pt
+type(gsw_result) :: ct_sa_sa
+type(gsw_result) :: ct_sa_pt
+type(gsw_result) :: ct_pt_pt
+type(gsw_result) :: eta_sa
+type(gsw_result) :: eta_ct
+type(gsw_result) :: eta_sa_sa
+type(gsw_result) :: eta_sa_ct
+type(gsw_result) :: eta_ct_ct
+type(gsw_result) :: pt_sa
+type(gsw_result) :: pt_ct
+type(gsw_result) :: pt_sa_sa
+type(gsw_result) :: pt_sa_ct
+type(gsw_result) :: pt_ct_ct
+type(gsw_result) :: ct_freezing
+type(gsw_result) :: ct_freezing_poly
+type(gsw_result) :: t_freezing
+type(gsw_result) :: t_freezing_poly
+type(gsw_result) :: pot_enthalpy_ice_freezing
+type(gsw_result) :: pot_enthalpy_ice_freezing_poly
+type(gsw_result) :: sa_freezing_from_ct
+type(gsw_result) :: sa_freezing_from_ct_poly
+type(gsw_result) :: sa_freezing_from_t
+type(gsw_result) :: sa_freezing_from_t_poly
+type(gsw_result) :: ctfreezing_sa
+type(gsw_result) :: ctfreezing_p
+type(gsw_result) :: ctfreezing_sa_poly
+type(gsw_result) :: ctfreezing_p_poly
+type(gsw_result) :: tfreezing_sa
+type(gsw_result) :: tfreezing_p
+type(gsw_result) :: tfreezing_sa_poly
+type(gsw_result) :: tfreezing_p_poly
+type(gsw_result) :: pot_enthalpy_ice_freezing_sa
+type(gsw_result) :: pot_enthalpy_ice_freezing_p
+type(gsw_result) :: pot_enthalpy_ice_freezing_sa_poly
+type(gsw_result) :: pot_enthalpy_ice_freezing_p_poly
+type(gsw_result) :: latentheat_melting
+type(gsw_result) :: latentheat_evap_ct
+type(gsw_result) :: latentheat_evap_t
+type(gsw_result) :: grav
+type(gsw_result) :: enthalpy_ct_exact
+type(gsw_result) :: h_sa_ct_exact
+type(gsw_result) :: h_ct_ct_exact
+type(gsw_result) :: h_sa_sa_ct_exact
+type(gsw_result) :: h_sa_ct_ct_exact
+type(gsw_result) :: h_ct_ct_ct_exact
+type(gsw_result) :: rho_t_exact
+type(gsw_result) :: pot_rho_t_exact
+type(gsw_result) :: alpha_wrt_t_exact
+type(gsw_result) :: beta_const_t_exact
+type(gsw_result) :: specvol_t_exact
+type(gsw_result) :: sound_speed_t_exact
+type(gsw_result) :: kappa_t_exact
+type(gsw_result) :: enthalpy_t_exact
+type(gsw_result) :: ct_sa_wrt_t
+type(gsw_result) :: ct_t_wrt_t
+type(gsw_result) :: ct_p_wrt_t
+type(gsw_result) :: chem_potential_water_t_exact
+type(gsw_result) :: t_deriv_chem_potential_water_t_exact
+type(gsw_result) :: dilution_coefficient_t_exact
+type(gsw_result) :: deltasa_atlas
+type(gsw_result) :: fdelta
+
+type(gsw_result_mpres) :: n2
+type(gsw_result_mpres) :: p_mid_n2
+type(gsw_result_mpres) :: tu
+type(gsw_result_mpres) :: rsubrho
+type(gsw_result_mpres) :: p_mid_tursr
+type(gsw_result_mpres) :: n2min
+type(gsw_result_mpres) :: n2min_pmid
+type(gsw_result_mpres) :: n2min_specvol
+type(gsw_result_mpres) :: n2min_alpha
+type(gsw_result_mpres) :: n2min_beta
+type(gsw_result_mpres) :: n2min_dsa
+type(gsw_result_mpres) :: n2min_dct
+type(gsw_result_mpres) :: n2min_dp
+type(gsw_result_mpres) :: ipvfn2
+type(gsw_result_mpres) :: p_mid_ipvfn2
+
+type(gsw_result) :: n2_lowerlimit
+
+type(gsw_result_cast) :: mlp
+
+type(gsw_result) :: geo_strf_dyn_height
+type(gsw_result) :: geo_strf_dyn_height_pc
+type(gsw_result) :: geo_strf_dyn_height_pc_p_mid
+
+type(gsw_result_ice) :: rho_ice
+type(gsw_result_ice) :: alpha_wrt_t_ice
+type(gsw_result_ice) :: specvol_ice
+type(gsw_result_ice) :: pressure_coefficient_ice
+type(gsw_result_ice) :: sound_speed_ice
+type(gsw_result_ice) :: kappa_ice
+type(gsw_result_ice) :: kappa_const_t_ice
+type(gsw_result_ice) :: internal_energy_ice
+type(gsw_result_ice) :: enthalpy_ice
+type(gsw_result_ice) :: entropy_ice
+type(gsw_result_ice) :: cp_ice
+type(gsw_result_ice) :: chem_potential_water_ice
+type(gsw_result_ice) :: helmholtz_energy_ice
+type(gsw_result_ice) :: adiabatic_lapse_rate_ice
+type(gsw_result_ice) :: pt0_from_t_ice
+type(gsw_result_ice) :: pt_from_t_ice
+type(gsw_result_ice) :: t_from_pt0_ice
+type(gsw_result_ice) :: pot_enthalpy_from_pt_ice
+type(gsw_result_ice) :: pt_from_pot_enthalpy_ice
+type(gsw_result_ice) :: pot_enthalpy_from_pt_ice_poly
+type(gsw_result_ice) :: pt_from_pot_enthalpy_ice_poly
+type(gsw_result_ice) :: pressure_freezing_ct
+type(gsw_result_ice) :: melting_ice_sa_ct_ratio
+type(gsw_result_ice) :: melting_ice_sa_ct_ratio_poly
+type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio
+type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio_poly
+type(gsw_result_ice) :: melting_ice_into_seawater_sa_final
+type(gsw_result_ice) :: melting_ice_into_seawater_ct_final
+type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_sa_freeze
+type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_ct_freeze
+type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_w_ih
+type(gsw_result_ice) :: dsa_dct_frazil
+type(gsw_result_ice) :: dsa_dp_frazil
+type(gsw_result_ice) :: dct_dp_frazil
+type(gsw_result_ice) :: dsa_dct_frazil_poly
+type(gsw_result_ice) :: dsa_dp_frazil_poly
+type(gsw_result_ice) :: dct_dp_frazil_poly
+type(gsw_result_ice) :: frazil_properties_potential_sa_final
+type(gsw_result_ice) :: frazil_properties_potential_ct_final
+type(gsw_result_ice) :: frazil_properties_potential_w_ih_final
+type(gsw_result_ice) :: frazil_properties_potential_poly_sa_final
+type(gsw_result_ice) :: frazil_properties_potential_poly_ct_final
+type(gsw_result_ice) :: frazil_properties_potential_poly_w_ih_final
+type(gsw_result_ice) :: frazil_properties_sa_final
+type(gsw_result_ice) :: frazil_properties_ct_final
+type(gsw_result_ice) :: frazil_properties_w_ih_final
+type(gsw_result_ice) :: melting_seaice_sa_ct_ratio
+type(gsw_result_ice) :: melting_seaice_sa_ct_ratio_poly
+type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio
+type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio_poly
+type(gsw_result_ice) :: melting_seaice_into_seawater_sa_final
+type(gsw_result_ice) :: melting_seaice_into_seawater_ct_final
+type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_sa_freeze
+type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_ct_freeze
+type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_w_ih
+
+contains
+
+!--------------------------------------------------------------------------
+subroutine gsw_mod_check_data_initialize
+!--------------------------------------------------------------------------
+
+ct = reshape( (/ &
   27.994827331978655_r8, 27.993492458241032_r8, 27.944213680466301_r8, &
   27.949774879518014_r8, 27.884179948892477_r8, 27.793319825682374_r8, &
   26.94734608082809_r8, 25.464307276520451_r8, 23.379820676678719_r8, &
@@ -80,9 +353,10 @@ real (r8), dimension(cast_m,cast_n) :: ct = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: rt = (/ &
+rt = reshape( (/ &
   0.98337377909524537_r8, 0.98336175487016408_r8, 0.98323033377489477_r8, &
   0.98329579224819419_r8, 0.98395874690421548_r8, 0.98413121544391424_r8, &
   0.98915176646753356_r8, 0.9955451489106607_r8, 0.99886086717730027_r8, &
@@ -120,9 +394,10 @@ real (r8), dimension(cast_m,cast_n) :: rt = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: sa = (/ &
+sa = reshape( (/ &
   34.507499465692057_r8, 34.507024988454411_r8, 34.501848858511124_r8, &
   34.504435326018303_r8, 34.530643613166241_r8, 34.537484086977358_r8, &
   34.736078147785769_r8, 34.989090287230475_r8, 35.120394623392798_r8, &
@@ -160,9 +435,10 @@ real (r8), dimension(cast_m,cast_n) :: sa = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: sk = (/ &
+sk = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -187,9 +463,10 @@ real (r8), dimension(cast_m,cast_n) :: sk = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8 /)
+  9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: sp = (/ &
+sp = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -214,9 +491,10 @@ real (r8), dimension(cast_m,cast_n) :: sp = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8 /)
+  9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: t = (/ &
+t = reshape( (/ &
   27.962_r8, 27.963_r8, 27.916_r8, 27.924_r8, 27.862_r8, 27.774_r8, &
   26.944_r8, 25.479_r8, 23.407_r8, 20.672_r8, 18.178_r8, 15.892_r8, &
   12.037_r8, 10.301_r8, 9.2869_r8, 8.4331_r8, 7.2761_r8, 6.5238_r8, &
@@ -236,9 +514,10 @@ real (r8), dimension(cast_m,cast_n) :: t = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: p = (/ &
+p = reshape( (/ &
   0._r8, 10._r8, 20._r8, 30._r8, 40._r8, 50._r8, 76._r8, 101._r8, 126._r8, &
   151._r8, 176._r8, 202._r8, 252._r8, 303._r8, 353._r8, 404._r8, 505._r8, &
   606._r8, 707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, 1213._r8, 1314._r8, &
@@ -256,9 +535,10 @@ real (r8), dimension(cast_m,cast_n) :: p = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: delta_p = (/ &
+delta_p = reshape( (/ &
   0._r8, 10._r8, 10._r8, 10._r8, 10._r8, 10._r8, 26._r8, 25._r8, 25._r8, &
   25._r8, 25._r8, 26._r8, 50._r8, 51._r8, 50._r8, 51._r8, 101._r8, 101._r8, &
   101._r8, 101._r8, 101._r8, 101._r8, 101._r8, 102._r8, 101._r8, 102._r8, &
@@ -275,9 +555,10 @@ real (r8), dimension(cast_m,cast_n) :: delta_p = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: p_shallow = (/ &
+p_shallow = reshape( (/ &
   0._r8, 10._r8, 20._r8, 30._r8, 40._r8, 50._r8, 76._r8, 101._r8, 126._r8, &
   151._r8, 176._r8, 202._r8, 252._r8, 303._r8, 353._r8, 404._r8, 505._r8, &
   606._r8, 707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, 1213._r8, 1314._r8, &
@@ -295,9 +576,10 @@ real (r8), dimension(cast_m,cast_n) :: p_shallow = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_m,cast_n) :: p_deep = (/ &
+p_deep = reshape( (/ &
   10._r8, 20._r8, 30._r8, 40._r8, 50._r8, 60._r8, 86._r8, 111._r8, 136._r8, &
   161._r8, 186._r8, 212._r8, 262._r8, 313._r8, 363._r8, 414._r8, 515._r8, &
   616._r8, 717._r8, 818._r8, 919._r8, 1020._r8, 1121._r8, 1223._r8, 1324._r8, &
@@ -315,15 +597,14 @@ real (r8), dimension(cast_m,cast_n) :: p_deep = (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
-  9e90_r8, 9e90_r8 /)
+  9e90_r8, 9e90_r8 /) &
+  , (/cast_m,cast_n/) )
 
-real (r8), dimension(cast_n) :: lat_cast = (/ &
-  11._r8, 9.5_r8, 59._r8 /)
+lat_cast = (/ 11._r8, 9.5_r8, 59._r8 /)
 
-real (r8), dimension(cast_n) :: long_cast = (/ &
-  142._r8, 183._r8, 20._r8 /)
+long_cast = (/ 142._r8, 183._r8, 20._r8 /)
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: ct_arctic = (/ &
+ct_arctic = reshape( (/ &
   -1.3444686871020561_r8, -1.3502829858439536_r8, -1.3233466230979716_r8, &
   -1.3144289342376947_r8, -0.56849535559603381_r8, -0.051328114615178611_r8, &
   -1.0854443942224383_r8, -1.3587441544696428_r8, -1.4728463234749103_r8, &
@@ -359,9 +640,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: ct_arctic = (/ &
   -0.31865109281019355_r8, -0.34607701866780022_r8, -0.38649151695014311_r8, &
   -0.46348303249946182_r8, -0.50536189796337783_r8, -0.51848012088647877_r8, &
   -0.51921921113087155_r8, -0.51079427908650477_r8, -0.51057157055619506_r8, &
-  -0.51056769208460284_r8, -0.51053462546418416_r8, -0.51038007577510447_r8 /)
+  -0.51056769208460284_r8, -0.51053462546418416_r8, -0.51038007577510447_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_arctic = (/ &
+sa_arctic = reshape( (/ &
   27.669741776224416_r8, 28.137808236304476_r8, 28.172068809167129_r8, &
   28.262493050955896_r8, 30.289193129841056_r8, 31.439724347003612_r8, &
   32.230337840395201_r8, 32.637027056283351_r8, 32.877539064266905_r8, &
@@ -397,9 +679,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_arctic = (/ &
   35.071380151985217_r8, 35.080289451218164_r8, 35.086632141461735_r8, &
   35.100562125083393_r8, 35.112233114698917_r8, 35.119372614268535_r8, &
   35.123775616142758_r8, 35.126473028048913_r8, 35.126551556974341_r8, &
-  35.1272733370959_r8, 35.127059051321794_r8, 35.126767713128501_r8 /)
+  35.1272733370959_r8, 35.127059051321794_r8, 35.126767713128501_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: t_arctic = (/ &
+t_arctic = reshape( (/ &
   -1.3571_r8, -1.3625_r8, -1.3357_r8, -1.3267_r8, -0.5828_r8, -0.0644_r8, &
   -1.0924_r8, -1.3638_r8, -1.4768_r8, -1.5477_r8, -1.511_r8, -1.3068_r8, &
   -0.4946_r8, 0.2156_r8, 0.6734_r8, 0.7243_r8, 0.642_r8, 0.4715_r8, &
@@ -417,9 +700,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: t_arctic = (/ &
   0.4941_r8, 0.9122_r8, 1.0593_r8, 0.8828_r8, 0.6375_r8, 0.4597_r8, &
   0.2785_r8, 0.1168_r8, 0.0221_r8, -0.0679_r8, -0.1396_r8, -0.2094_r8, &
   -0.2605_r8, -0.2823_r8, -0.3172_r8, -0.3794_r8, -0.405_r8, -0.4003_r8, &
-  -0.3818_r8, -0.3528_r8, -0.331_r8, -0.3084_r8, -0.2846_r8, -0.2596_r8 /)
+  -0.3818_r8, -0.3528_r8, -0.331_r8, -0.3084_r8, -0.2846_r8, -0.2596_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: p_arctic = (/ &
+p_arctic = reshape( (/ &
   0._r8, 10._r8, 20._r8, 30._r8, 40._r8, 50._r8, 76._r8, 101._r8, 126._r8, &
   151._r8, 176._r8, 202._r8, 252._r8, 303._r8, 353._r8, 404._r8, 505._r8, &
   606._r8, 707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, 1213._r8, 1314._r8, &
@@ -433,9 +717,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: p_arctic = (/ &
   101._r8, 126._r8, 151._r8, 176._r8, 202._r8, 252._r8, 303._r8, 353._r8, &
   404._r8, 505._r8, 606._r8, 707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, &
   1213._r8, 1314._r8, 1416._r8, 1517._r8, 1771._r8, 2025._r8, 2279._r8, &
-  2534._r8, 2789._r8, 3045._r8, 3300._r8, 3556._r8, 3812._r8 /)
+  2534._r8, 2789._r8, 3045._r8, 3300._r8, 3556._r8, 3812._r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_seaice = (/ &
+sa_seaice = reshape( (/ &
   6.8921450314000774_r8, 7.4815159282370942_r8, 4.5054159850249773_r8, &
   0.83821377996932567_r8, 2.2897696871681883_r8, 9.133373615016696_r8, &
   1.5237801896922298_r8, 8.2581697748954745_r8, 5.3834243526005707_r8, &
@@ -471,9 +756,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_seaice = (/ &
   3.507271035768833_r8, 9.3900156199988682_r8, 8.7594281149298379_r8, &
   5.5015634289842215_r8, 6.224750860012275_r8, 5.8704470453141679_r8, &
   2.0774229273302849_r8, 3.0124633027949068_r8, 4.7092334851759068_r8, &
-  2.3048816021155849_r8, 8.4430879269538899_r8, 1.9476428956704928_r8 /)
+  2.3048816021155849_r8, 8.4430879269538899_r8, 1.9476428956704928_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: t_seaice = (/ &
+t_seaice = reshape( (/ &
   -2.4019464241572335_r8, -2.2146150665386957_r8, -2.4518198562213072_r8, &
   -3.29647047468662_r8, -2.9188487907238456_r8, -5.4400597133630759_r8, &
   -3.5313915811926861_r8, -2.5915406223671762_r8, -5.5041706048187775_r8, &
@@ -509,9 +795,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: t_seaice = (/ &
   -6.8170936182679558_r8, -5.6024063516103064_r8, -6.2883915056034159_r8, &
   -5.106328182967582_r8, -5.2266608811863637_r8, -7.0060600813317535_r8, &
   -4.2490716413117653_r8, -4.6601828203245264_r8, -5.0360644467038558_r8, &
-  -6.1224807696952501_r8, -8.1032764443768848_r8, -8.212253009122719_r8 /)
+  -6.1224807696952501_r8, -8.1032764443768848_r8, -8.212253009122719_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: w_seaice = (/ &
+w_seaice = reshape( (/ &
   0.0019930890132086316_r8, 0.0024718746230941494_r8, &
   0.0027143829025951887_r8, 0.0027174239400725927_r8, &
   0.013320072683218736_r8, 0.021272259483032276_r8, 0.008571196331480303_r8, &
@@ -551,9 +838,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: w_seaice = (/ &
   0.030784640643615562_r8, 0.0346474068740893_r8, 0.034327761287480628_r8, &
   0.035631567469771787_r8, 0.038289729114634546_r8, 0.039167908477555115_r8, &
   0.041776780611803323_r8, 0.045230623225634349_r8, 0.049516223673959407_r8, &
-  0.048823953368604733_r8, 0.054114155080366329_r8, 0.052850525280945963_r8 /)
+  0.048823953368604733_r8, 0.054114155080366329_r8, 0.052850525280945963_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: t_ice = (/ &
+t_ice = reshape( (/ &
   -2.4019464241572335_r8, -2.2146150665386957_r8, -2.4518198562213072_r8, &
   -3.29647047468662_r8, -2.9188487907238456_r8, -5.4400597133630759_r8, &
   -3.5313915811926861_r8, -2.5915406223671762_r8, -5.5041706048187775_r8, &
@@ -589,9 +877,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: t_ice = (/ &
   -6.8170936182679558_r8, -5.6024063516103064_r8, -6.2883915056034159_r8, &
   -5.106328182967582_r8, -5.2266608811863637_r8, -7.0060600813317535_r8, &
   -4.2490716413117653_r8, -4.6601828203245264_r8, -5.0360644467038558_r8, &
-  -6.1224807696952501_r8, -8.1032764443768848_r8, -8.212253009122719_r8 /)
+  -6.1224807696952501_r8, -8.1032764443768848_r8, -8.212253009122719_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: w_ice = (/ &
+w_ice = reshape( (/ &
   0.0019930890132086316_r8, 0.0024718746230941494_r8, &
   0.0027143829025951887_r8, 0.0027174239400725927_r8, &
   0.013320072683218736_r8, 0.021272259483032276_r8, 0.008571196331480303_r8, &
@@ -631,9 +920,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: w_ice = (/ &
   0.030784640643615562_r8, 0.0346474068740893_r8, 0.034327761287480628_r8, &
   0.035631567469771787_r8, 0.038289729114634546_r8, 0.039167908477555115_r8, &
   0.041776780611803323_r8, 0.045230623225634349_r8, 0.049516223673959407_r8, &
-  0.048823953368604733_r8, 0.054114155080366329_r8, 0.052850525280945963_r8 /)
+  0.048823953368604733_r8, 0.054114155080366329_r8, 0.052850525280945963_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_bulk = (/ &
+sa_bulk = reshape( (/ &
   27.614593517891905_r8, 28.068255102175666_r8, 28.095599027260793_r8, &
   28.185691875733095_r8, 29.885738875835521_r8, 30.770930372619144_r8, &
   31.954085286935236_r8, 32.40878240954347_r8, 32.713166969797946_r8, &
@@ -669,9 +959,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: sa_bulk = (/ &
   33.991720317130721_r8, 33.864848389340985_r8, 33.882186608927995_r8, &
   33.849874077496565_r8, 33.767795220127191_r8, 33.743820241923707_r8, &
   33.656417347968954_r8, 33.53768076127183_r8, 33.387217373184335_r8, &
-  33.412220981719294_r8, 33.226187930301379_r8, 33.270299588067886_r8 /)
+  33.412220981719294_r8, 33.226187930301379_r8, 33.270299588067886_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: h_pot_bulk = (/ &
+h_pot_bulk = reshape( (/ &
   -5979.8164238793197_r8, -6162.9193088330412_r8, -6136.8437763148377_r8, &
   -6107.177694389613_r8, -6698.3882145302468_r8, -7469.8051138012752_r8, &
   -7181.7832178354774_r8, -7727.7078576852045_r8, -7551.4997223218616_r8, &
@@ -707,9 +998,10 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: h_pot_bulk = (/ &
   -11729.986287897371_r8, -13017.255447524489_r8, -13100.907547115154_r8, &
   -13700.607933830701_r8, -14689.624311336378_r8, -15126.869917216525_r8, &
   -15692.434453117461_r8, -16735.726869938953_r8, -18054.007966107714_r8, &
-  -17901.278423738735_r8, -19695.028377710201_r8, -19263.075250379974_r8 /)
+  -17901.278423738735_r8, -19695.028377710201_r8, -19263.075250379974_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8), dimension(cast_ice_m,cast_ice_n) :: h_bulk = (/ &
+h_bulk = reshape( (/ &
   -6030.6562498951998_r8, -6114.4717456817798_r8, -5991.426368688637_r8, &
   -5863.919428665693_r8, -6369.7460326369401_r8, -7043.754016824244_r8, &
   -6474.9689872291701_r8, -6770.6143676763195_r8, -6346.0383448769453_r8, &
@@ -745,14 +1037,14 @@ real (r8), dimension(cast_ice_m,cast_ice_n) :: h_bulk = (/ &
   843.00410058058696_r8, 478.57734069180697_r8, 1362.44770906546_r8, &
   3163.3620898662339_r8, 4544.0856305161669_r8, 6506.3004208676357_r8, &
   8304.2014530701235_r8, 9590.0734591126311_r8, 10568.490442755725_r8, &
-  13150.516615716018_r8, 13589.730424383059_r8, 16476.222972316336_r8 /)
+  13150.516615716018_r8, 13589.730424383059_r8, 16476.222972316336_r8 /) &
+  , (/cast_ice_m,cast_ice_n/) )
 
-real (r8) :: pref = 0._r8
+pref = 0._r8
 
-type(gsw_result) :: c_from_sp = gsw_result( &
-  variable_name = "C_from_SP", &
-  computation_accuracy = 6.1638e-10_r8, &
-  values = (/ &
+c_from_sp % variable_name = "C_from_SP"
+c_from_sp % computation_accuracy = 6.1638e-10_r8
+c_from_sp % values = reshape( (/ &
   55.253405515471_r8, 55.25794746084_r8, 55.205775404914_r8, &
   55.221954702814_r8, 55.198738463981_r8, 55.120885611218_r8, &
   54.545560654633_r8, 53.376252431127_r8, 51.409509650121_r8, &
@@ -789,12 +1081,11 @@ type(gsw_result) :: c_from_sp = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sp_from_c = gsw_result( &
-  variable_name = "SP_from_C", &
-  computation_accuracy = 1.2971e-10_r8, &
-  values = (/ &
+sp_from_c % variable_name = "SP_from_C"
+sp_from_c % computation_accuracy = 1.2971e-10_r8
+sp_from_c % values = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -819,12 +1110,11 @@ type(gsw_result) :: sp_from_c = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sp_from_sk = gsw_result( &
-  variable_name = "SP_from_SK", &
-  computation_accuracy = 1.2982e-10_r8, &
-  values = (/ &
+sp_from_sk % variable_name = "SP_from_SK"
+sp_from_sk % computation_accuracy = 1.2982e-10_r8
+sp_from_sk % values = reshape( (/ &
   34.344834489668_r8, 34.34436108349_r8, 34.339203658476_r8, &
   34.34177686626_r8, 34.367880262687_r8, 34.374691106316_r8, &
   34.57249682144_r8, 34.824479019391_r8, 34.955172152659_r8, &
@@ -863,12 +1153,11 @@ type(gsw_result) :: sp_from_sk = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_from_sp = gsw_result( &
-  variable_name = "SA_from_SP", &
-  computation_accuracy = 1.3001e-10_r8, &
-  values = (/ &
+sa_from_sp % variable_name = "SA_from_SP"
+sa_from_sp % computation_accuracy = 1.3001e-10_r8
+sa_from_sp % values = reshape( (/ &
   34.507499465692_r8, 34.507024988454_r8, 34.501848858511_r8, &
   34.504435326018_r8, 34.530643613166_r8, 34.537484086977_r8, &
   34.736078147786_r8, 34.98909028723_r8, 35.120394623393_r8, &
@@ -906,12 +1195,11 @@ type(gsw_result) :: sa_from_sp = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sstar_from_sp = gsw_result( &
-  variable_name = "Sstar_from_SP", &
-  computation_accuracy = 1.3e-10_r8, &
-  values = (/ &
+sstar_from_sp % variable_name = "Sstar_from_SP"
+sstar_from_sp % computation_accuracy = 1.3e-10_r8
+sstar_from_sp % values = reshape( (/ &
   34.507257355553_r8, 34.506781861549_r8, 34.501604153914_r8, &
   34.504186106832_r8, 34.530388583505_r8, 34.537224487135_r8, &
   34.735783282747_r8, 34.988715833138_r8, 35.119874921742_r8, &
@@ -950,12 +1238,11 @@ type(gsw_result) :: sstar_from_sp = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_from_t = gsw_result( &
-  variable_name = "CT_from_t", &
-  computation_accuracy = 6.2611e-10_r8, &
-  values = (/ &
+ct_from_t % variable_name = "CT_from_t"
+ct_from_t % computation_accuracy = 6.2611e-10_r8
+ct_from_t % values = reshape( (/ &
   27.994827331979_r8, 27.993492458241_r8, 27.944213680466_r8, &
   27.949774879518_r8, 27.884179948892_r8, 27.793319825682_r8, &
   26.947346080828_r8, 25.46430727652_r8, 23.379820676679_r8, &
@@ -994,12 +1281,11 @@ type(gsw_result) :: ct_from_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: deltasa_from_sp = gsw_result( &
-  variable_name = "deltaSA_from_SP", &
-  computation_accuracy = 6.9633e-13_r8, &
-  values = (/ &
+deltasa_from_sp % variable_name = "deltaSA_from_SP"
+deltasa_from_sp % computation_accuracy = 6.9633e-13_r8
+deltasa_from_sp % values = reshape( (/ &
   0.00017934084403493_r8, 0.00018009400411501_r8, 0.00018126266425611_r8, &
   0.00018460680456656_r8, 0.00018891085993289_r8, 0.00019229617962679_r8, &
   0.00021841854688631_r8, 0.00027737340189304_r8, 0.00038496418591905_r8, &
@@ -1038,12 +1324,11 @@ type(gsw_result) :: deltasa_from_sp = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sr_from_sp = gsw_result( &
-  variable_name = "SR_from_SP", &
-  computation_accuracy = 1.3032e-10_r8, &
-  values = (/ &
+sr_from_sp % variable_name = "SR_from_SP"
+sr_from_sp % computation_accuracy = 1.3032e-10_r8
+sr_from_sp % values = reshape( (/ &
   34.507320124848_r8, 34.50684489445_r8, 34.501667595847_r8, &
   34.504250719214_r8, 34.530454702306_r8, 34.537291790798_r8, &
   34.735859729239_r8, 34.988812913829_r8, 35.120009659207_r8, &
@@ -1082,12 +1367,11 @@ type(gsw_result) :: sr_from_sp = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sp_from_sr = gsw_result( &
-  variable_name = "SP_from_SR", &
-  computation_accuracy = 1.2971e-10_r8, &
-  values = (/ &
+sp_from_sr % variable_name = "SP_from_SR"
+sp_from_sr % computation_accuracy = 1.2971e-10_r8
+sp_from_sr % values = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -1113,12 +1397,11 @@ type(gsw_result) :: sp_from_sr = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sp_from_sa = gsw_result( &
-  variable_name = "SP_from_SA", &
-  computation_accuracy = 1.2971e-10_r8, &
-  values = (/ &
+sp_from_sa % variable_name = "SP_from_SA"
+sp_from_sa % computation_accuracy = 1.2971e-10_r8
+sp_from_sa % values = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -1144,12 +1427,11 @@ type(gsw_result) :: sp_from_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sstar_from_sa = gsw_result( &
-  variable_name = "Sstar_from_SA", &
-  computation_accuracy = 1.3e-10_r8, &
-  values = (/ &
+sstar_from_sa % variable_name = "Sstar_from_SA"
+sstar_from_sa % computation_accuracy = 1.3e-10_r8
+sstar_from_sa % values = reshape( (/ &
   34.507257355553_r8, 34.506781861549_r8, 34.501604153914_r8, &
   34.504186106832_r8, 34.530388583505_r8, 34.537224487135_r8, &
   34.735783282747_r8, 34.988715833138_r8, 35.119874921742_r8, &
@@ -1188,12 +1470,11 @@ type(gsw_result) :: sstar_from_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_from_sstar = gsw_result( &
-  variable_name = "SA_from_Sstar", &
-  computation_accuracy = 1.3002e-10_r8, &
-  values = (/ &
+sa_from_sstar % variable_name = "SA_from_Sstar"
+sa_from_sstar % computation_accuracy = 1.3002e-10_r8
+sa_from_sstar % values = reshape( (/ &
   34.507499465692_r8, 34.507024988454_r8, 34.501848858511_r8, &
   34.504435326018_r8, 34.530643613166_r8, 34.537484086977_r8, &
   34.736078147786_r8, 34.98909028723_r8, 35.120394623393_r8, &
@@ -1231,12 +1512,11 @@ type(gsw_result) :: sa_from_sstar = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sp_from_sstar = gsw_result( &
-  variable_name = "SP_from_Sstar", &
-  computation_accuracy = 1.2971e-10_r8, &
-  values = (/ &
+sp_from_sstar % variable_name = "SP_from_Sstar"
+sp_from_sstar % computation_accuracy = 1.2971e-10_r8
+sp_from_sstar % values = reshape( (/ &
   34.345367_r8, 34.344894_r8, 34.339741_r8, 34.342312_r8, 34.368393_r8, &
   34.375198_r8, 34.572834_r8, 34.8246_r8, 34.955181_r8, 34.953842_r8, &
   34.821655_r8, 34.670124_r8, 34.442738_r8, 34.430153_r8, 34.455452_r8, &
@@ -1262,12 +1542,11 @@ type(gsw_result) :: sp_from_sstar = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_from_ct = gsw_result( &
-  variable_name = "pt_from_CT", &
-  computation_accuracy = 6.0541e-10_r8, &
-  values = (/ &
+pt_from_ct % variable_name = "pt_from_CT"
+pt_from_ct % computation_accuracy = 6.0541e-10_r8
+pt_from_ct % values = reshape( (/ &
   27.962_r8, 27.960649676263_r8, 27.911304936959_r8, 27.916955275736_r8, &
   27.852620974197_r8, 27.762302527944_r8, 26.926599738775_r8, &
   25.456784362366_r8, 23.380931414239_r8, 20.643430396515_r8, &
@@ -1305,12 +1584,11 @@ type(gsw_result) :: pt_from_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: t_from_ct = gsw_result( &
-  variable_name = "t_from_CT", &
-  computation_accuracy = 6.0001e-10_r8, &
-  values = (/ &
+t_from_ct % variable_name = "t_from_CT"
+t_from_ct % computation_accuracy = 6.0001e-10_r8
+t_from_ct % values = reshape( (/ &
   27.962_r8, 27.963_r8, 27.916_r8, 27.924_r8, 27.862_r8, 27.774_r8, &
   26.944_r8, 25.479_r8, 23.407_r8, 20.672_r8, 18.178_r8, 15.892_r8, &
   12.037_r8, 10.301_r8, 9.2869_r8, 8.4331_r8, 7.2761_r8, 6.5238_r8, &
@@ -1331,12 +1609,11 @@ type(gsw_result) :: t_from_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_from_pt = gsw_result( &
-  variable_name = "CT_from_pt", &
-  computation_accuracy = 6.2611e-10_r8, &
-  values = (/ &
+ct_from_pt % variable_name = "CT_from_pt"
+ct_from_pt % computation_accuracy = 6.2611e-10_r8
+ct_from_pt % values = reshape( (/ &
   27.994827331979_r8, 27.993492458241_r8, 27.944213680466_r8, &
   27.949774879518_r8, 27.884179948892_r8, 27.793319825682_r8, &
   26.947346080828_r8, 25.46430727652_r8, 23.379820676679_r8, &
@@ -1375,12 +1652,11 @@ type(gsw_result) :: ct_from_pt = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt0_from_t = gsw_result( &
-  variable_name = "pt0_from_t", &
-  computation_accuracy = 6.054e-10_r8, &
-  values = (/ &
+pt0_from_t % variable_name = "pt0_from_t"
+pt0_from_t % computation_accuracy = 6.054e-10_r8
+pt0_from_t % values = reshape( (/ &
   27.962_r8, 27.960649676263_r8, 27.911304936959_r8, 27.916955275736_r8, &
   27.852620974197_r8, 27.762302527944_r8, 26.926599738775_r8, &
   25.456784362366_r8, 23.380931414239_r8, 20.643430396515_r8, &
@@ -1418,12 +1694,11 @@ type(gsw_result) :: pt0_from_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_from_t = gsw_result( &
-  variable_name = "pt_from_t", &
-  computation_accuracy = 6.054e-10_r8, &
-  values = (/ &
+pt_from_t % variable_name = "pt_from_t"
+pt_from_t % computation_accuracy = 6.054e-10_r8
+pt_from_t % values = reshape( (/ &
   27.962_r8, 27.960649676263_r8, 27.911304936959_r8, 27.916955275736_r8, &
   27.852620974197_r8, 27.762302527944_r8, 26.926599738775_r8, &
   25.456784362366_r8, 23.380931414239_r8, 20.643430396515_r8, &
@@ -1461,12 +1736,11 @@ type(gsw_result) :: pt_from_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: z_from_p = gsw_result( &
-  variable_name = "z_from_p", &
-  computation_accuracy = 2.287e-08_r8, &
-  values = (/ &
+z_from_p % variable_name = "z_from_p"
+z_from_p % computation_accuracy = 2.287e-08_r8
+z_from_p % values = reshape( (/ &
   -0._r8, -9.94292752366_r8, -19.8853722291_r8, -29.8273342654_r8, &
   -39.7688137813_r8, -49.7098109259_r8, -75.5541470718_r8, -100.401398555_r8, &
   -125.245640887_r8, -150.086876391_r8, -174.925107385_r8, -200.753682928_r8, &
@@ -1497,12 +1771,11 @@ type(gsw_result) :: z_from_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: p_from_z = gsw_result( &
-  variable_name = "p_from_z", &
-  computation_accuracy = 2.3002e-08_r8, &
-  values = (/ &
+p_from_z % variable_name = "p_from_z"
+p_from_z % computation_accuracy = 2.3002e-08_r8
+p_from_z % values = reshape( (/ &
   0._r8, 10._r8, 20._r8, 30._r8, 40._r8, 50._r8, 76._r8, 101._r8, 126._r8, &
   151._r8, 176._r8, 202._r8, 252._r8, 303._r8, 353._r8, 404._r8, 505._r8, &
   606._r8, 707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, 1213._r8, 1314._r8, &
@@ -1521,12 +1794,11 @@ type(gsw_result) :: p_from_z = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: entropy_from_pt = gsw_result( &
-  variable_name = "entropy_from_pt", &
-  computation_accuracy = 9.0282e-09_r8, &
-  values = (/ &
+entropy_from_pt % variable_name = "entropy_from_pt"
+entropy_from_pt % computation_accuracy = 9.0282e-09_r8
+entropy_from_pt % values = reshape( (/ &
   389.65185887387_r8, 389.63428577583_r8, 388.98228296798_r8, &
   389.05534718372_r8, 388.17870752413_r8, 386.9717687749_r8, &
   375.68190926273_r8, 355.83909543977_r8, 327.84182401906_r8, &
@@ -1565,12 +1837,11 @@ type(gsw_result) :: entropy_from_pt = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_from_entropy = gsw_result( &
-  variable_name = "pt_from_entropy", &
-  computation_accuracy = 6.0541e-10_r8, &
-  values = (/ &
+pt_from_entropy % variable_name = "pt_from_entropy"
+pt_from_entropy % computation_accuracy = 6.0541e-10_r8
+pt_from_entropy % values = reshape( (/ &
   27.962_r8, 27.960649676263_r8, 27.911304936959_r8, 27.916955275736_r8, &
   27.852620974197_r8, 27.762302527944_r8, 26.926599738775_r8, &
   25.456784362366_r8, 23.380931414239_r8, 20.643430396515_r8, &
@@ -1608,12 +1879,11 @@ type(gsw_result) :: pt_from_entropy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_from_entropy = gsw_result( &
-  variable_name = "CT_from_entropy", &
-  computation_accuracy = 6.2611e-10_r8, &
-  values = (/ &
+ct_from_entropy % variable_name = "CT_from_entropy"
+ct_from_entropy % computation_accuracy = 6.2611e-10_r8
+ct_from_entropy % values = reshape( (/ &
   27.994827331979_r8, 27.993492458241_r8, 27.944213680466_r8, &
   27.949774879518_r8, 27.884179948892_r8, 27.793319825682_r8, &
   26.947346080828_r8, 25.46430727652_r8, 23.379820676679_r8, &
@@ -1652,12 +1922,11 @@ type(gsw_result) :: ct_from_entropy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: entropy_from_t = gsw_result( &
-  variable_name = "entropy_from_t", &
-  computation_accuracy = 9.0282e-09_r8, &
-  values = (/ &
+entropy_from_t % variable_name = "entropy_from_t"
+entropy_from_t % computation_accuracy = 9.0282e-09_r8
+entropy_from_t % values = reshape( (/ &
   389.65185887387_r8, 389.63428577583_r8, 388.98228296798_r8, &
   389.05534718372_r8, 388.17870752413_r8, 386.9717687749_r8, &
   375.68190926273_r8, 355.83909543977_r8, 327.84182401906_r8, &
@@ -1696,12 +1965,11 @@ type(gsw_result) :: entropy_from_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: adiabatic_lapse_rate_from_ct = gsw_result( &
-  variable_name = "adiabatic_lapse_rate_from_CT", &
-  computation_accuracy = 5.6997e-19_r8, &
-  values = (/ &
+adiabatic_lapse_rate_from_ct % variable_name = "adiabatic_lapse_rate_from_CT"
+adiabatic_lapse_rate_from_ct % computation_accuracy = 5.6997e-19_r8
+adiabatic_lapse_rate_from_ct % values = reshape( (/ &
   2.350076231702e-08_r8, 2.3506593895185e-08_r8, 2.3482041606441e-08_r8, &
   2.3492497567774e-08_r8, 2.3461041657227e-08_r8, 2.3411854306218e-08_r8, &
   2.2921721022123e-08_r8, 2.2033388669692e-08_r8, 2.074072990348e-08_r8, &
@@ -1740,12 +2008,11 @@ type(gsw_result) :: adiabatic_lapse_rate_from_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: specvol = gsw_result( &
-  variable_name = "specvol", &
-  computation_accuracy = 2.8211e-16_r8, &
-  values = (/ &
+specvol % variable_name = "specvol"
+specvol % computation_accuracy = 2.8211e-16_r8
+specvol % values = reshape( (/ &
   0.0009785543233027595_r8, 0.0009785138871230684_r8, &
   0.0009784618366719601_r8, 0.000978421415045363_r8, &
   0.0009783422466640218_r8, 0.0009782688824288848_r8, &
@@ -1798,12 +2065,11 @@ type(gsw_result) :: specvol = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: alpha = gsw_result( &
-  variable_name = "alpha", &
-  computation_accuracy = 8.2511e-15_r8, &
-  values = (/ &
+alpha % variable_name = "alpha"
+alpha % computation_accuracy = 8.2511e-15_r8
+alpha % values = reshape( (/ &
   0.00031831246465714_r8, 0.00031840612786134_r8, 0.00031814275657959_r8, &
   0.00031829167734161_r8, 0.00031795922055419_r8, 0.00031741177706767_r8, &
   0.00031179395602026_r8, 0.00030141362492837_r8, 0.00028596263812853_r8, &
@@ -1842,12 +2108,11 @@ type(gsw_result) :: alpha = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: beta = gsw_result( &
-  variable_name = "beta", &
-  computation_accuracy = 1.8397e-15_r8, &
-  values = (/ &
+beta % variable_name = "beta"
+beta % computation_accuracy = 1.8397e-15_r8
+beta % values = reshape( (/ &
   0.00071891860085091_r8, 0.00071883031010036_r8, 0.00071881933367617_r8, &
   0.00071871921576397_r8, 0.00071872418757004_r8, 0.00071877529859646_r8, &
   0.00071982423795744_r8, 0.00072192226059341_r8, 0.00072514590519558_r8, &
@@ -1886,12 +2151,11 @@ type(gsw_result) :: beta = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: alpha_on_beta = gsw_result( &
-  variable_name = "alpha_on_beta", &
-  computation_accuracy = 1.0514e-11_r8, &
-  values = (/ &
+alpha_on_beta % variable_name = "alpha_on_beta"
+alpha_on_beta % computation_accuracy = 1.0514e-11_r8
+alpha_on_beta % values = reshape( (/ &
   0.44276565424847_r8, 0.44295033666135_r8, 0.44259070628019_r8, &
   0.44285956234422_r8, 0.4423939336579_r8, 0.44160084199815_r8, &
   0.43315289980371_r8, 0.41751534947906_r8, 0.39435186226613_r8, &
@@ -1930,12 +2194,11 @@ type(gsw_result) :: alpha_on_beta = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_vab = gsw_result( &
-  variable_name = "v_vab", &
-  computation_accuracy = 2.8211e-16_r8, &
-  values = (/ &
+v_vab % variable_name = "v_vab"
+v_vab % computation_accuracy = 2.8211e-16_r8
+v_vab % values = reshape( (/ &
   0.0009785543233027595_r8, 0.0009785138871230684_r8, &
   0.0009784618366719601_r8, 0.000978421415045363_r8, &
   0.0009783422466640218_r8, 0.0009782688824288848_r8, &
@@ -1988,12 +2251,11 @@ type(gsw_result) :: v_vab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: alpha_vab = gsw_result( &
-  variable_name = "alpha_vab", &
-  computation_accuracy = 8.2511e-15_r8, &
-  values = (/ &
+alpha_vab % variable_name = "alpha_vab"
+alpha_vab % computation_accuracy = 8.2511e-15_r8
+alpha_vab % values = reshape( (/ &
   0.00031831246465714_r8, 0.00031840612786134_r8, 0.00031814275657959_r8, &
   0.00031829167734161_r8, 0.00031795922055419_r8, 0.00031741177706767_r8, &
   0.00031179395602026_r8, 0.00030141362492837_r8, 0.00028596263812853_r8, &
@@ -2032,12 +2294,11 @@ type(gsw_result) :: alpha_vab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: beta_vab = gsw_result( &
-  variable_name = "beta_vab", &
-  computation_accuracy = 1.8397e-15_r8, &
-  values = (/ &
+beta_vab % variable_name = "beta_vab"
+beta_vab % computation_accuracy = 1.8397e-15_r8
+beta_vab % values = reshape( (/ &
   0.00071891860085091_r8, 0.00071883031010036_r8, 0.00071881933367617_r8, &
   0.00071871921576397_r8, 0.00071872418757004_r8, 0.00071877529859646_r8, &
   0.00071982423795744_r8, 0.00072192226059341_r8, 0.00072514590519558_r8, &
@@ -2076,12 +2337,11 @@ type(gsw_result) :: beta_vab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa = gsw_result( &
-  variable_name = "v_SA", &
-  computation_accuracy = 1.7416e-18_r8, &
-  values = (/ &
+v_sa % variable_name = "v_SA"
+v_sa % computation_accuracy = 1.7416e-18_r8
+v_sa % values = reshape( (/ &
   -7.0350090496543e-07_r8, -7.0338544091818e-07_r8, -7.033372854641e-07_r8, &
   -7.0321027210807e-07_r8, -7.0315823639905e-07_r8, -7.0315550807545e-07_r8, &
   -7.0381825016283e-07_r8, -7.053471945702e-07_r8, -7.0792250710446e-07_r8, &
@@ -2120,12 +2380,11 @@ type(gsw_result) :: v_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_ct = gsw_result( &
-  variable_name = "v_CT", &
-  computation_accuracy = 8.2012e-18_r8, &
-  values = (/ &
+v_ct % variable_name = "v_CT"
+v_ct % computation_accuracy = 8.2012e-18_r8
+v_ct % values = reshape( (/ &
   3.1148603845141e-07_r8, 3.115648178574e-07_r8, 3.1129054592675e-07_r8, &
   3.1142339334174e-07_r8, 3.1107293818453e-07_r8, 3.1051406442176e-07_r8, &
   3.0486091599281e-07_r8, 2.9449328044505e-07_r8, 2.7917055901675e-07_r8, &
@@ -2164,12 +2423,11 @@ type(gsw_result) :: v_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_p = gsw_result( &
-  variable_name = "v_P", &
-  computation_accuracy = 1.6498e-24_r8, &
-  values = (/ &
+v_p % variable_name = "v_P"
+v_p % computation_accuracy = 1.6498e-24_r8
+v_p % values = reshape( (/ &
   -4.0360175735096e-13_r8, -4.0348025948621e-13_r8, -4.0340707765012e-13_r8, &
   -4.0327593314869e-13_r8, -4.0318060668652e-13_r8, -4.0313089243725e-13_r8, &
   -4.0335051227667e-13_r8, -4.0417070999173e-13_r8, -4.0587836313488e-13_r8, &
@@ -2208,12 +2466,11 @@ type(gsw_result) :: v_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_sa = gsw_result( &
-  variable_name = "v_SA_SA", &
-  computation_accuracy = 1.9904e-20_r8, &
-  values = (/ &
+v_sa_sa % variable_name = "v_SA_SA"
+v_sa_sa % computation_accuracy = 1.9904e-20_r8
+v_sa_sa % values = reshape( (/ &
   8.1412919788949e-10_r8, 8.1381381955419e-10_r8, 8.1378220039767e-10_r8, &
   8.134172498147e-10_r8, 8.1338638276558e-10_r8, 8.1355870308432e-10_r8, &
   8.1724659181481e-10_r8, 8.2576501487383e-10_r8, 8.4064999681862e-10_r8, &
@@ -2252,12 +2509,11 @@ type(gsw_result) :: v_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_ct = gsw_result( &
-  variable_name = "v_SA_CT", &
-  computation_accuracy = 6.3274e-20_r8, &
-  values = (/ &
+v_sa_ct % variable_name = "v_SA_CT"
+v_sa_ct % computation_accuracy = 6.3274e-20_r8
+v_sa_ct % values = reshape( (/ &
   1.3238829406898e-09_r8, 1.3231062189366e-09_r8, 1.323768839051e-09_r8, &
   1.3227696556965e-09_r8, 1.3237377549725e-09_r8, 1.3255743423394e-09_r8, &
   1.3483026097811e-09_r8, 1.3945080475859e-09_r8, 1.4709734467797e-09_r8, &
@@ -2296,12 +2552,11 @@ type(gsw_result) :: v_sa_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_ct_ct = gsw_result( &
-  variable_name = "v_CT_CT", &
-  computation_accuracy = 2.2094e-19_r8, &
-  values = (/ &
+v_ct_ct % variable_name = "v_CT_CT"
+v_ct_ct % computation_accuracy = 2.2094e-19_r8
+v_ct_ct % values = reshape( (/ &
   7.2390425622836e-09_r8, 7.2349222950512e-09_r8, 7.2362841226129e-09_r8, &
   7.2313008273788e-09_r8, 7.2335294971141e-09_r8, 7.2391121782991e-09_r8, &
   7.3151621308933e-09_r8, 7.4587383840231e-09_r8, 7.6742954425614e-09_r8, &
@@ -2340,12 +2595,11 @@ type(gsw_result) :: v_ct_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_p = gsw_result( &
-  variable_name = "v_SA_P", &
-  computation_accuracy = 1.3036e-26_r8, &
-  values = (/ &
+v_sa_p % variable_name = "v_SA_P"
+v_sa_p % computation_accuracy = 1.3036e-26_r8
+v_sa_p % values = reshape( (/ &
   1.4194515708872e-15_r8, 1.4188157294008e-15_r8, 1.4186156672177e-15_r8, &
   1.4179370276469e-15_r8, 1.4181566529851e-15_r8, 1.4184712825436e-15_r8, &
   1.4269921283193e-15_r8, 1.4432041247703e-15_r8, 1.4663725278715e-15_r8, &
@@ -2384,12 +2638,11 @@ type(gsw_result) :: v_sa_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_ct_p = gsw_result( &
-  variable_name = "v_CT_P", &
-  computation_accuracy = 6.6142e-26_r8, &
-  values = (/ &
+v_ct_p % variable_name = "v_CT_P"
+v_ct_p % computation_accuracy = 6.6142e-26_r8
+v_ct_p % values = reshape( (/ &
   8.908400568972e-16_r8, 8.9051649960549e-16_r8, 8.9228549949584e-16_r8, &
   8.9163973744734e-16_r8, 8.9385164457418e-16_r8, 8.973133793556e-16_r8, &
   9.315060288388e-16_r8, 9.9523832311009e-16_r8, 1.0923039158051e-15_r8, &
@@ -2428,12 +2681,11 @@ type(gsw_result) :: v_ct_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_wrt_h = gsw_result( &
-  variable_name = "v_SA_wrt_h", &
-  computation_accuracy = 1.7425e-18_r8, &
-  values = (/ &
+v_sa_wrt_h % variable_name = "v_SA_wrt_h"
+v_sa_wrt_h % computation_accuracy = 1.7425e-18_r8
+v_sa_wrt_h % values = reshape( (/ &
   -7.0350090496543e-07_r8, -7.0337995058708e-07_r8, -7.0332631438749e-07_r8, &
   -7.0319381019625e-07_r8, -7.0313631184252e-07_r8, -7.0312814964384e-07_r8, &
   -7.0377737574994e-07_r8, -7.0529459744142e-07_r8, -7.0786006472622e-07_r8, &
@@ -2472,12 +2724,11 @@ type(gsw_result) :: v_sa_wrt_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_h = gsw_result( &
-  variable_name = "v_h", &
-  computation_accuracy = 2.0545e-21_r8, &
-  values = (/ &
+v_h % variable_name = "v_h"
+v_h % computation_accuracy = 2.0545e-21_r8
+v_h % values = reshape( (/ &
   7.8030145735622e-11_r8, 7.8049271621969e-11_r8, 7.7979957197452e-11_r8, &
   7.8012627504545e-11_r8, 7.7924232728479e-11_r8, 7.7783634136147e-11_r8, &
   7.6366063770729e-11_r8, 7.3767814902939e-11_r8, 6.9928671239267e-11_r8, &
@@ -2516,12 +2767,11 @@ type(gsw_result) :: v_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_sa_wrt_h = gsw_result( &
-  variable_name = "v_SA_SA_wrt_h", &
-  computation_accuracy = 1.9904e-20_r8, &
-  values = (/ &
+v_sa_sa_wrt_h % variable_name = "v_SA_SA_wrt_h"
+v_sa_sa_wrt_h % computation_accuracy = 1.9904e-20_r8
+v_sa_sa_wrt_h % values = reshape( (/ &
   8.1412919788949e-10_r8, 8.1386680582943e-10_r8, 8.1388821556645e-10_r8, &
   8.1357616214863e-10_r8, 8.135983868891e-10_r8, 8.1382401563021e-10_r8, &
   8.1765577468428e-10_r8, 8.2632502420474e-10_r8, 8.4138266707933e-10_r8, &
@@ -2560,12 +2810,11 @@ type(gsw_result) :: v_sa_sa_wrt_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_sa_h = gsw_result( &
-  variable_name = "v_SA_h", &
-  computation_accuracy = 1.5896e-23_r8, &
-  values = (/ &
+v_sa_h % variable_name = "v_SA_h"
+v_sa_h % computation_accuracy = 1.5896e-23_r8
+v_sa_h % values = reshape( (/ &
   3.3164497295773e-13_r8, 3.3147716015111e-13_r8, 3.3166993053927e-13_r8, &
   3.3144632282805e-13_r8, 3.3171563099318e-13_r8, 3.3220261133056e-13_r8, &
   3.3796876451079e-13_r8, 3.4961878959215e-13_r8, 3.6885745036872e-13_r8, &
@@ -2604,12 +2853,11 @@ type(gsw_result) :: v_sa_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: v_h_h = gsw_result( &
-  variable_name = "v_h_h", &
-  computation_accuracy = 1.3867e-26_r8, &
-  values = (/ &
+v_h_h % variable_name = "v_h_h"
+v_h_h % computation_accuracy = 1.3867e-26_r8
+v_h_h % values = reshape( (/ &
   4.542854167654e-16_r8, 4.5401621890076e-16_r8, 4.5409106434954e-16_r8, &
   4.5376772347679e-16_r8, 4.5389699822474e-16_r8, 4.5423678237247e-16_r8, &
   4.5898236888969e-16_r8, 4.679678027577e-16_r8, 4.8147241690101e-16_r8, &
@@ -2648,12 +2896,11 @@ type(gsw_result) :: v_h_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: specvol_anom_standard = gsw_result( &
-  variable_name = "specvol_anom_standard", &
-  computation_accuracy = 2.8059e-16_r8, &
-  values = (/ &
+specvol_anom_standard % variable_name = "specvol_anom_standard"
+specvol_anom_standard % computation_accuracy = 2.8059e-16_r8
+specvol_anom_standard % values = reshape( (/ &
   5.8929378183726e-06_r8, 5.8975536407299e-06_r8, 5.8905409342067e-06_r8, &
   5.895142798727e-06_r8, 5.8609836590313e-06_r8, 5.8326144200652e-06_r8, &
   5.4446856278501e-06_r8, 4.8333577576099e-06_r8, 4.1535976592016e-06_r8, &
@@ -2692,12 +2939,11 @@ type(gsw_result) :: specvol_anom_standard = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho = gsw_result( &
-  variable_name = "rho", &
-  computation_accuracy = 2.9468e-10_r8, &
-  values = (/ &
+rho % variable_name = "rho"
+rho % computation_accuracy = 2.9468e-10_r8
+rho % values = reshape( (/ &
   1021.91567313796_r8, 1021.957902856242_r8, 1022.012267132766_r8, &
   1022.05448963281_r8, 1022.137195250259_r8, 1022.213849342893_r8, &
   1022.741649269399_r8, 1023.499159209548_r8, 1024.329496404296_r8, &
@@ -2736,12 +2982,11 @@ type(gsw_result) :: rho = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_rab = gsw_result( &
-  variable_name = "rho_rab", &
-  computation_accuracy = 2.9468e-10_r8, &
-  values = (/ &
+rho_rab % variable_name = "rho_rab"
+rho_rab % computation_accuracy = 2.9468e-10_r8
+rho_rab % values = reshape( (/ &
   1021.91567313796_r8, 1021.957902856242_r8, 1022.012267132766_r8, &
   1022.05448963281_r8, 1022.137195250259_r8, 1022.213849342893_r8, &
   1022.741649269399_r8, 1023.499159209548_r8, 1024.329496404296_r8, &
@@ -2780,12 +3025,11 @@ type(gsw_result) :: rho_rab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: alpha_rab = gsw_result( &
-  variable_name = "alpha_rab", &
-  computation_accuracy = 8.2511e-15_r8, &
-  values = (/ &
+alpha_rab % variable_name = "alpha_rab"
+alpha_rab % computation_accuracy = 8.2511e-15_r8
+alpha_rab % values = reshape( (/ &
   0.00031831246465714_r8, 0.00031840612786134_r8, 0.00031814275657959_r8, &
   0.00031829167734161_r8, 0.00031795922055419_r8, 0.00031741177706767_r8, &
   0.00031179395602026_r8, 0.00030141362492837_r8, 0.00028596263812853_r8, &
@@ -2824,12 +3068,11 @@ type(gsw_result) :: alpha_rab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: beta_rab = gsw_result( &
-  variable_name = "beta_rab", &
-  computation_accuracy = 1.8397e-15_r8, &
-  values = (/ &
+beta_rab % variable_name = "beta_rab"
+beta_rab % computation_accuracy = 1.8397e-15_r8
+beta_rab % values = reshape( (/ &
   0.00071891860085091_r8, 0.00071883031010036_r8, 0.00071881933367617_r8, &
   0.00071871921576397_r8, 0.00071872418757004_r8, 0.00071877529859646_r8, &
   0.00071982423795744_r8, 0.00072192226059341_r8, 0.00072514590519558_r8, &
@@ -2868,12 +3111,11 @@ type(gsw_result) :: beta_rab = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa = gsw_result( &
-  variable_name = "rho_SA", &
-  computation_accuracy = 1.9391e-12_r8, &
-  values = (/ &
+rho_sa % variable_name = "rho_SA"
+rho_sa % computation_accuracy = 1.9391e-12_r8
+rho_sa % values = reshape( (/ &
   0.73467418591996_r8, 0.73461431621966_r8, 0.73464217686925_r8, &
   0.73457020125693_r8, 0.73463472524136_r8, 0.73474206479087_r8, &
   0.73619422831268_r8, 0.73888682673201_r8, 0.74278833988862_r8, &
@@ -2912,12 +3154,11 @@ type(gsw_result) :: rho_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_ct = gsw_result( &
-  variable_name = "rho_CT", &
-  computation_accuracy = 8.3013e-12_r8, &
-  values = (/ &
+rho_ct % variable_name = "rho_CT"
+rho_ct % computation_accuracy = 8.3013e-12_r8
+rho_ct % values = reshape( (/ &
   -0.325288496588_r8, -0.325397658686_r8, -0.325145799924_r8, &
   -0.32531143784_r8, -0.324997945901_r8, -0.324462714463_r8, &
   -0.318884664812_r8, -0.308496591688_r8, -0.292919965105_r8, &
@@ -2956,12 +3197,11 @@ type(gsw_result) :: rho_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_p = gsw_result( &
-  variable_name = "rho_P", &
-  computation_accuracy = 1.7791e-18_r8, &
-  values = (/ &
+rho_p % variable_name = "rho_P"
+rho_p % computation_accuracy = 1.7791e-18_r8
+rho_p % values = reshape( (/ &
   4.2148601433889e-07_r8, 4.2139395797513e-07_r8, 4.2136235318989e-07_r8, &
   4.2126017654302e-07_r8, 4.2122876314814e-07_r8, 4.2123999725329e-07_r8, &
   4.2190482991361e-07_r8, 4.233892410188e-07_r8, 4.2586824479248e-07_r8, &
@@ -3000,12 +3240,11 @@ type(gsw_result) :: rho_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_sa = gsw_result( &
-  variable_name = "rho_SA_SA", &
-  computation_accuracy = 1.946e-14_r8, &
-  values = (/ &
+rho_sa_sa % variable_name = "rho_SA_SA"
+rho_sa_sa % computation_accuracy = 1.946e-14_r8
+rho_sa_sa % values = reshape( (/ &
   0.00020613727537939_r8, 0.00020618058440038_r8, 0.00020614710742184_r8, &
   0.00020620753695328_r8, 0.00020620231861555_r8, 0.0002061241953214_r8, &
   0.00020502057051094_r8, 0.00020180711847375_r8, 0.00019520706598513_r8, &
@@ -3044,12 +3283,11 @@ type(gsw_result) :: rho_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_ct = gsw_result( &
-  variable_name = "rho_SA_CT", &
-  computation_accuracy = 5.1778e-14_r8, &
-  values = (/ &
+rho_sa_ct % variable_name = "rho_SA_CT"
+rho_sa_ct % computation_accuracy = 5.1778e-14_r8
+rho_sa_ct % values = reshape( (/ &
   -0.0018502582706184_r8, -0.0018496608293815_r8, -0.0018501307389897_r8, &
   -0.0018493742338183_r8, -0.0018501619113689_r8, -0.0018515522401729_r8, &
   -0.001869407000257_r8, -0.0019062387565219_r8, -0.0019682396647075_r8, &
@@ -3088,12 +3326,11 @@ type(gsw_result) :: rho_sa_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_ct_ct = gsw_result( &
-  variable_name = "rho_CT_CT", &
-  computation_accuracy = 2.2724e-13_r8, &
-  values = (/ &
+rho_ct_ct % variable_name = "rho_CT_CT"
+rho_ct_ct % computation_accuracy = 2.2724e-13_r8
+rho_ct_ct % values = reshape( (/ &
   -0.0073527296658543_r8, -0.0073489208340225_r8, -0.0073514788671844_r8, &
   -0.007346695587652_r8, -0.0073506622499345_r8, -0.0073583248761721_r8, &
   -0.0074528104862947_r8, -0.0076274351871721_r8, -0.0078847332000374_r8, &
@@ -3132,12 +3369,11 @@ type(gsw_result) :: rho_ct_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_p = gsw_result( &
-  variable_name = "rho_SA_P", &
-  computation_accuracy = 1.1e-20_r8, &
-  values = (/ &
+rho_sa_p % variable_name = "rho_SA_P"
+rho_sa_p % computation_accuracy = 1.1e-20_r8
+rho_sa_p % values = reshape( (/ &
   -8.7632153074573e-10_r8, -8.7598674763513e-10_r8, -8.7599012525601e-10_r8, &
   -8.7563490046175e-10_r8, -8.7614504862574e-10_r8, -8.7663683955821e-10_r8, &
   -8.8523980745339e-10_r8, -9.0052100824322e-10_r8, -9.2095949210354e-10_r8, &
@@ -3176,12 +3412,11 @@ type(gsw_result) :: rho_sa_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_ct_p = gsw_result( &
-  variable_name = "rho_CT_P", &
-  computation_accuracy = 5.9599e-20_r8, &
-  values = (/ &
+rho_ct_p % variable_name = "rho_CT_P"
+rho_ct_p % computation_accuracy = 5.9599e-20_r8
+rho_ct_p % values = reshape( (/ &
   -1.1986431475584e-09_r8, -1.1984024481951e-09_r8, -1.200107062099e-09_r8, &
   -1.1995699665427e-09_r8, -1.2017315565841e-09_r8, -1.2050348038663e-09_r8, &
   -1.2374505063254e-09_r8, -1.2977930035405e-09_r8, -1.389665699076e-09_r8, &
@@ -3220,12 +3455,11 @@ type(gsw_result) :: rho_ct_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_wrt_h = gsw_result( &
-  variable_name = "rho_SA_wrt_h", &
-  computation_accuracy = 1.9399e-12_r8, &
-  values = (/ &
+rho_sa_wrt_h % variable_name = "rho_SA_wrt_h"
+rho_sa_wrt_h % computation_accuracy = 1.9399e-12_r8
+rho_sa_wrt_h % values = reshape( (/ &
   0.73467418591996_r8, 0.73460858212909_r8, 0.73463071748018_r8, &
   0.7345530052199_r8, 0.73461181924421_r8, 0.73471347738695_r8, &
   0.73615147365712_r8, 0.73883172858194_r8, 0.74272282216598_r8, &
@@ -3264,12 +3498,11 @@ type(gsw_result) :: rho_sa_wrt_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_h = gsw_result( &
-  variable_name = "rho_h", &
-  computation_accuracy = 2.0795e-15_r8, &
-  values = (/ &
+rho_h % variable_name = "rho_h"
+rho_h % computation_accuracy = 2.0795e-15_r8
+rho_h % values = reshape( (/ &
   -8.14877896971e-05_r8, -8.15144996876e-05_r8, -8.14507728961e-05_r8, &
   -8.14916302556e-05_r8, -8.14124678298e-05_r8, -8.12777647274e-05_r8, &
   -7.98789394477e-05_r8, -7.72755135176e-05_r8, -7.33727224366e-05_r8, &
@@ -3308,12 +3541,11 @@ type(gsw_result) :: rho_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_sa_wrt_h = gsw_result( &
-  variable_name = "rho_SA_SA_wrt_h", &
-  computation_accuracy = 1.946e-14_r8, &
-  values = (/ &
+rho_sa_sa_wrt_h % variable_name = "rho_SA_SA_wrt_h"
+rho_sa_sa_wrt_h % computation_accuracy = 1.946e-14_r8
+rho_sa_sa_wrt_h % values = reshape( (/ &
   0.00020613727537939_r8, 0.0002061087583548_r8, 0.00020600342495137_r8, &
   0.00020599210195312_r8, 0.00020591497289479_r8, 0.00020576477454965_r8, &
   0.00020446946525781_r8, 0.00020106138001096_r8, 0.00019424827979015_r8, &
@@ -3352,12 +3584,11 @@ type(gsw_result) :: rho_sa_sa_wrt_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_sa_h = gsw_result( &
-  variable_name = "rho_SA_h", &
-  computation_accuracy = 1.3135e-17_r8, &
-  values = (/ &
+rho_sa_h % variable_name = "rho_SA_h"
+rho_sa_h % computation_accuracy = 1.3135e-17_r8
+rho_sa_h % values = reshape( (/ &
   -4.6350688211476e-07_r8, -4.6338333969969e-07_r8, -4.6352720613296e-07_r8, &
   -4.6336375645948e-07_r8, -4.6358726812249e-07_r8, -4.6396188909023e-07_r8, &
   -4.6850640521299e-07_r8, -4.7780885480227e-07_r8, -4.9342649050382e-07_r8, &
@@ -3396,12 +3627,11 @@ type(gsw_result) :: rho_sa_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_h_h = gsw_result( &
-  variable_name = "rho_h_h", &
-  computation_accuracy = 1.4263e-20_r8, &
-  values = (/ &
+rho_h_h % variable_name = "rho_h_h"
+rho_h_h % computation_accuracy = 1.4263e-20_r8
+rho_h_h % values = reshape( (/ &
   -4.6141983996876e-10_r8, -4.6116991717184e-10_r8, -4.613195585917e-10_r8, &
   -4.6100849766995e-10_r8, -4.6124656075756e-10_r8, -4.6171658743833e-10_r8, &
   -4.6761824838173e-10_r8, -4.7855111636706e-10_r8, -4.946739987382e-10_r8, &
@@ -3440,12 +3670,11 @@ type(gsw_result) :: rho_h_h = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sigma0 = gsw_result( &
-  variable_name = "sigma0", &
-  computation_accuracy = 2.9308e-10_r8, &
-  values = (/ &
+sigma0 % variable_name = "sigma0"
+sigma0 % computation_accuracy = 2.9308e-10_r8
+sigma0 % values = reshape( (/ &
   21.91567313796_r8, 21.915758763153_r8, 21.92797587457_r8, &
   21.928069319644_r8, 21.968628624375_r8, 22.003111966245_r8, &
   22.420729987886_r8, 23.071054644127_r8, 23.792148470519_r8, &
@@ -3484,12 +3713,11 @@ type(gsw_result) :: sigma0 = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sigma1 = gsw_result( &
-  variable_name = "sigma1", &
-  computation_accuracy = 2.9945e-10_r8, &
-  values = (/ &
+sigma1 % variable_name = "sigma1"
+sigma1 % computation_accuracy = 2.9945e-10_r8
+sigma1 % values = reshape( (/ &
   26.084138104742_r8, 26.084242415463_r8, 26.097074557038_r8, &
   26.097086323044_r8, 26.138263521206_r8, 26.173785342968_r8, &
   26.600396019988_r8, 27.267741784268_r8, 28.015722626613_r8, &
@@ -3528,12 +3756,11 @@ type(gsw_result) :: sigma1 = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sigma2 = gsw_result( &
-  variable_name = "sigma2", &
-  computation_accuracy = 3.0559e-10_r8, &
-  values = (/ &
+sigma2 % variable_name = "sigma2"
+sigma2 % computation_accuracy = 3.0559e-10_r8
+sigma2 % values = reshape( (/ &
   30.162087602062_r8, 30.162210017706_r8, 30.175638901372_r8, &
   30.175571564622_r8, 30.217350742656_r8, 30.253881413036_r8, &
   30.689239857888_r8, 31.373137012335_r8, 32.147248923553_r8, &
@@ -3572,12 +3799,11 @@ type(gsw_result) :: sigma2 = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sigma3 = gsw_result( &
-  variable_name = "sigma3", &
-  computation_accuracy = 3.1173e-10_r8, &
-  values = (/ &
+sigma3 % variable_name = "sigma3"
+sigma3 % computation_accuracy = 3.1173e-10_r8
+sigma3 % values = reshape( (/ &
   34.152743058376_r8, 34.1528829535_r8, 34.166888774414_r8, &
   34.166745105744_r8, 34.209108700656_r8, 34.246615943491_r8, &
   34.690452931711_r8, 35.390382549122_r8, 36.189786234199_r8, &
@@ -3615,12 +3841,11 @@ type(gsw_result) :: sigma3 = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sigma4 = gsw_result( &
-  variable_name = "sigma4", &
-  computation_accuracy = 3.1741e-10_r8, &
-  values = (/ &
+sigma4 % variable_name = "sigma4"
+sigma4 % computation_accuracy = 3.1741e-10_r8
+sigma4 % values = reshape( (/ &
   38.059063992319_r8, 38.059220722781_r8, 38.073783145936_r8, &
   38.073566002913_r8, 38.11649617402_r8, 38.154946916142_r8, &
   38.606986324042_r8, 39.32241063972_r8, 40.146225672342_r8, &
@@ -3659,12 +3884,11 @@ type(gsw_result) :: sigma4 = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sound_speed = gsw_result( &
-  variable_name = "sound_speed", &
-  computation_accuracy = 2.5918e-09_r8, &
-  values = (/ &
+sound_speed % variable_name = "sound_speed"
+sound_speed % computation_accuracy = 2.5918e-09_r8
+sound_speed % values = reshape( (/ &
   1540.3109958442_r8, 1540.4792323405_r8, 1540.5370039972_r8, &
   1540.7238212785_r8, 1540.7812704222_r8, 1540.7607246356_r8, &
   1539.5462897252_r8, 1536.8450800569_r8, 1532.3655193859_r8, &
@@ -3703,12 +3927,11 @@ type(gsw_result) :: sound_speed = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: kappa = gsw_result( &
-  variable_name = "kappa", &
-  computation_accuracy = 1.714e-21_r8, &
-  values = (/ &
+kappa % variable_name = "kappa"
+kappa % computation_accuracy = 1.714e-21_r8
+kappa % values = reshape( (/ &
   4.1244696154297e-10_r8, 4.1233983982842e-10_r8, 4.122869820066e-10_r8, &
   4.1216997803548e-10_r8, 4.1210589449785e-10_r8, 4.1208598134732e-10_r8, &
   4.125233681595e-10_r8, 4.1366838185366e-10_r8, 4.1575317931135e-10_r8, &
@@ -3747,12 +3970,11 @@ type(gsw_result) :: kappa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: cabbeling = gsw_result( &
-  variable_name = "cabbeling", &
-  computation_accuracy = 1.5877e-16_r8, &
-  values = (/ &
+cabbeling % variable_name = "cabbeling"
+cabbeling % computation_accuracy = 1.5877e-16_r8
+cabbeling % values = reshape( (/ &
   8.7588243173554e-06_r8, 8.7548449123664e-06_r8, 8.7560580765147e-06_r8, &
   8.7512744544768e-06_r8, 8.7535281507586e-06_r8, 8.758854510151e-06_r8, &
   8.8329465856152e-06_r8, 8.9731624663844e-06_r8, 9.1833085687301e-06_r8, &
@@ -3791,12 +4013,11 @@ type(gsw_result) :: cabbeling = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: thermobaric = gsw_result( &
-  variable_name = "thermobaric", &
-  computation_accuracy = 5.1742e-23_r8, &
-  values = (/ &
+thermobaric % variable_name = "thermobaric"
+thermobaric % computation_accuracy = 5.1742e-23_r8
+thermobaric % values = reshape( (/ &
   1.5526214786187e-12_r8, 1.5523350507267e-12_r8, 1.5536135929024e-12_r8, &
   1.5531004182612e-12_r8, 1.5549114331089e-12_r8, 1.5575589896041e-12_r8, &
   1.5848525354408e-12_r8, 1.6353451118641e-12_r8, 1.7112147956412e-12_r8, &
@@ -3835,12 +4056,11 @@ type(gsw_result) :: thermobaric = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_from_rho = gsw_result( &
-  variable_name = "SA_from_rho", &
-  computation_accuracy = 1.3051e-10_r8, &
-  values = (/ &
+sa_from_rho % variable_name = "SA_from_rho"
+sa_from_rho % computation_accuracy = 1.3051e-10_r8
+sa_from_rho % values = reshape( (/ &
   34.507499465692_r8, 34.507024988455_r8, 34.501848858511_r8, &
   34.504435326018_r8, 34.530643613166_r8, 34.537484086977_r8, &
   34.736078147786_r8, 34.989090287231_r8, 35.120394623393_r8, &
@@ -3878,12 +4098,11 @@ type(gsw_result) :: sa_from_rho = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_from_rho = gsw_result( &
-  variable_name = "CT_from_rho", &
-  computation_accuracy = 6.2856e-10_r8, &
-  values = (/ &
+ct_from_rho % variable_name = "CT_from_rho"
+ct_from_rho % computation_accuracy = 6.2856e-10_r8
+ct_from_rho % values = reshape( (/ &
   27.994827331979_r8, 27.993492458241_r8, 27.944213680466_r8, &
   27.949774879518_r8, 27.884179948892_r8, 27.793319825682_r8, &
   26.947346080828_r8, 25.464307276521_r8, 23.37982067668_r8, &
@@ -3921,12 +4140,11 @@ type(gsw_result) :: ct_from_rho = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_maxdensity = gsw_result( &
-  variable_name = "CT_maxdensity", &
-  computation_accuracy = 6.904e-11_r8, &
-  values = (/ &
+ct_maxdensity % variable_name = "CT_maxdensity"
+ct_maxdensity % computation_accuracy = 6.904e-11_r8
+ct_maxdensity % values = reshape( (/ &
   -3.6640510449813_r8, -3.6865300504791_r8, -3.7079898915943_r8, &
   -3.7311634544798_r8, -3.7595255266563_r8, -3.7836531675534_r8, &
   -3.8860100066592_r8, -3.9979679594893_r8, -4.083335008031_r8, &
@@ -3965,12 +4183,11 @@ type(gsw_result) :: ct_maxdensity = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: internal_energy = gsw_result( &
-  variable_name = "internal_energy", &
-  computation_accuracy = 2.4993e-06_r8, &
-  values = (/ &
+internal_energy % variable_name = "internal_energy"
+internal_energy % computation_accuracy = 2.4993e-06_r8
+internal_energy % values = reshape( (/ &
   111652.50217481_r8, 111647.17964992_r8, 111450.47660214_r8, &
   111472.69035333_r8, 111210.86618798_r8, 110848.19015662_r8, &
   107471.29198658_r8, 101551.36001111_r8, 93230.561237194_r8, &
@@ -4009,12 +4226,11 @@ type(gsw_result) :: internal_energy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: enthalpy = gsw_result( &
-  variable_name = "enthalpy", &
-  computation_accuracy = 2.4994e-06_r8, &
-  values = (/ &
+enthalpy % variable_name = "enthalpy"
+enthalpy % computation_accuracy = 2.4994e-06_r8
+enthalpy % values = reshape( (/ &
   111751.65419162_r8, 111844.17895824_r8, 111745.31161508_r8, &
   111865.35532773_r8, 111701.33361479_r8, 111436.44769234_r8, &
   108313.46459255_r8, 102637.16940333_r8, 94559.552547879_r8, &
@@ -4053,12 +4269,11 @@ type(gsw_result) :: enthalpy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: enthalpy_diff = gsw_result( &
-  variable_name = "enthalpy_diff", &
-  computation_accuracy = 3.0752e-11_r8, &
-  values = (/ &
+enthalpy_diff % variable_name = "enthalpy_diff"
+enthalpy_diff % computation_accuracy = 3.0752e-11_r8
+enthalpy_diff % values = reshape( (/ &
   97.85341452692198_r8, 97.84937151634202_r8, 97.84416683707531_r8, &
   97.84012533003096_r8, 97.83220896844693_r8, 97.82487279345622_r8, &
   97.77438678126379_r8, 97.70201662485873_r8, 97.62280769716332_r8, &
@@ -4097,12 +4312,11 @@ type(gsw_result) :: enthalpy_diff = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_from_enthalpy = gsw_result( &
-  variable_name = "CT_from_enthalpy", &
-  computation_accuracy = 6.2611e-10_r8, &
-  values = (/ &
+ct_from_enthalpy % variable_name = "CT_from_enthalpy"
+ct_from_enthalpy % computation_accuracy = 6.2611e-10_r8
+ct_from_enthalpy % values = reshape( (/ &
   27.994827331979_r8, 27.993492458241_r8, 27.944213680466_r8, &
   27.949774879518_r8, 27.884179948892_r8, 27.793319825682_r8, &
   26.947346080828_r8, 25.46430727652_r8, 23.379820676679_r8, &
@@ -4141,12 +4355,11 @@ type(gsw_result) :: ct_from_enthalpy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: dynamic_enthalpy = gsw_result( &
-  variable_name = "dynamic_enthalpy", &
-  computation_accuracy = 2.2888e-07_r8, &
-  values = (/ &
+dynamic_enthalpy % variable_name = "dynamic_enthalpy"
+dynamic_enthalpy % computation_accuracy = 2.2888e-07_r8
+dynamic_enthalpy % values = reshape( (/ &
   0._r8, 97.853406318988_r8, 195.70043711869_r8, 293.54457747267_r8, &
   391.36916624726_r8, 489.18485822373_r8, 743.21724307628_r8, &
   987.01713593714_r8, 1230.3955454424_r8, 1473.3371450362_r8, &
@@ -4184,12 +4397,11 @@ type(gsw_result) :: dynamic_enthalpy = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa = gsw_result( &
-  variable_name = "h_SA", &
-  computation_accuracy = 2.3732e-10_r8, &
-  values = (/ &
+h_sa % variable_name = "h_SA"
+h_sa % computation_accuracy = 2.3732e-10_r8
+h_sa % values = reshape( (/ &
   -0._r8, -0.0703444245252_r8, -0.140690980113_r8, -0.211015989962_r8, &
   -0.281357361579_r8, -0.351724780023_r8, -0.535243154846_r8, &
   -0.713009174108_r8, -0.892943868807_r8, -1.07624312914_r8, &
@@ -4221,12 +4433,11 @@ type(gsw_result) :: h_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_ct = gsw_result( &
-  variable_name = "h_CT", &
-  computation_accuracy = 3.1741e-10_r8, &
-  values = (/ &
+h_ct % variable_name = "h_CT"
+h_ct % computation_accuracy = 3.1741e-10_r8
+h_ct % values = reshape( (/ &
   3991.86795711963_r8, 3991.899109148192_r8, 3991.930197377962_r8, &
   3991.961343996476_r8, 3991.992314745479_r8, 3992.023101906704_r8, &
   3992.099382103533_r8, 3992.164886984026_r8, 3992.218843420379_r8, &
@@ -4265,12 +4476,11 @@ type(gsw_result) :: h_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa_sa = gsw_result( &
-  variable_name = "h_SA_SA", &
-  computation_accuracy = 6.9146e-13_r8, &
-  values = (/ &
+h_sa_sa % variable_name = "h_SA_SA"
+h_sa_sa % computation_accuracy = 6.9146e-13_r8
+h_sa_sa % values = reshape( (/ &
   0._r8, 8.1397526382069e-05_r8, 0.00016282088545724_r8, &
   0.00024416964286206_r8, 0.0003256106759347_r8, 0.00040717897221163_r8, &
   0.00062203535285597_r8, 0.00083569228649105_r8, 0.0010619098317105_r8, &
@@ -4308,12 +4518,11 @@ type(gsw_result) :: h_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa_ct = gsw_result( &
-  variable_name = "h_SA_CT", &
-  computation_accuracy = 2.2971e-12_r8, &
-  values = (/ &
+h_sa_ct % variable_name = "h_SA_CT"
+h_sa_ct % computation_accuracy = 2.2971e-12_r8
+h_sa_ct % values = reshape( (/ &
   0._r8, 0.00013235155845024_r8, 0.00026491788177432_r8, &
   0.0003972000465178_r8, 0.00053015311342368_r8, 0.00066381937927289_r8, &
   0.0010271783761263_r8, 0.0014130686536778_r8, 0.0018611667326179_r8, &
@@ -4351,12 +4560,11 @@ type(gsw_result) :: h_sa_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_ct_ct = gsw_result( &
-  variable_name = "h_CT_CT", &
-  computation_accuracy = 1.111e-11_r8, &
-  values = (/ &
+h_ct_ct % variable_name = "h_CT_CT"
+h_ct_ct % computation_accuracy = 1.111e-11_r8
+h_ct_ct % values = reshape( (/ &
   0._r8, 0.00072370638757511_r8, 0.0014481147400949_r8, &
   0.0021713197701715_r8, 0.0028968481383241_r8, 0.0036249402798941_r8, &
   0.0055722870733224_r8, 0.0075569109188247_r8, 0.0097087336310178_r8, &
@@ -4394,12 +4602,11 @@ type(gsw_result) :: h_ct_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_sa = gsw_result( &
-  variable_name = "CT_SA", &
-  computation_accuracy = 1.0062e-12_r8, &
-  values = (/ &
+ct_sa % variable_name = "CT_SA"
+ct_sa % computation_accuracy = 1.0062e-12_r8
+ct_sa % values = reshape( (/ &
   -0.0409833106342_r8, -0.040981657685_r8, -0.0409220221954_r8, &
   -0.0409289788576_r8, -0.0408533232719_r8, -0.040745170869_r8, &
   -0.0397520455331_r8, -0.0379932800899_r8, -0.0354768140836_r8, &
@@ -4438,12 +4645,11 @@ type(gsw_result) :: ct_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_pt = gsw_result( &
-  variable_name = "CT_pt", &
-  computation_accuracy = 2.9643e-13_r8, &
-  values = (/ &
+ct_pt % variable_name = "CT_pt"
+ct_pt % computation_accuracy = 2.9643e-13_r8
+ct_pt % values = reshape( (/ &
   1.002958538576044_r8, 1.002958941179812_r8, 1.002959035423763_r8, &
   1.002956628419809_r8, 1.002917125345774_r8, 1.00289764618034_r8, &
   1.002553017765266_r8, 1.002055543529764_r8, 1.001612650133013_r8, &
@@ -4482,12 +4688,11 @@ type(gsw_result) :: ct_pt = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_sa_sa = gsw_result( &
-  variable_name = "CT_SA_SA", &
-  computation_accuracy = 1.4311e-14_r8, &
-  values = (/ &
+ct_sa_sa % variable_name = "CT_SA_SA"
+ct_sa_sa % computation_accuracy = 1.4311e-14_r8
+ct_sa_sa % values = reshape( (/ &
   -6.36878576718e-05_r8, -6.36927715328e-05_r8, -6.38743953078e-05_r8, &
   -6.38539027523e-05_r8, -6.40960964028e-05_r8, -6.44319069003e-05_r8, &
   -6.75834092337e-05_r8, -7.32357228752e-05_r8, -8.15403612966e-05_r8, &
@@ -4526,12 +4731,11 @@ type(gsw_result) :: ct_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_sa_pt = gsw_result( &
-  variable_name = "CT_SA_pt", &
-  computation_accuracy = 1.4572e-14_r8, &
-  values = (/ &
+ct_sa_pt % variable_name = "CT_SA_pt"
+ct_sa_pt % computation_accuracy = 1.4572e-14_r8
+ct_sa_pt % values = reshape( (/ &
   -0.001201729901071_r8, -0.0012017376744939_r8, -0.0012019771449474_r8, &
   -0.0012019423143274_r8, -0.0012021333798387_r8, -0.0012025141567314_r8, &
   -0.0012056259620472_r8, -0.0012118811172112_r8, -0.0012226346776453_r8, &
@@ -4570,12 +4774,11 @@ type(gsw_result) :: ct_sa_pt = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_pt_pt = gsw_result( &
-  variable_name = "CT_pt_pt", &
-  computation_accuracy = 5.5511e-14_r8, &
-  values = (/ &
+ct_pt_pt % variable_name = "CT_pt_pt"
+ct_pt_pt % computation_accuracy = 5.5511e-14_r8
+ct_pt_pt % values = reshape( (/ &
   0.000124111537847_r8, 0.000124112731492_r8, 0.000124210668895_r8, &
   0.000124208357588_r8, 0.000124484183051_r8, 0.000124738725149_r8, &
   0.000127795116511_r8, 0.000133057441876_r8, 0.000139702953539_r8, &
@@ -4614,12 +4817,11 @@ type(gsw_result) :: ct_pt_pt = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: eta_sa = gsw_result( &
-  variable_name = "eta_SA", &
-  computation_accuracy = 4.6535e-12_r8, &
-  values = (/ &
+eta_sa % variable_name = "eta_SA"
+eta_sa % computation_accuracy = 4.6535e-12_r8
+eta_sa % values = reshape( (/ &
   -0.26024481744639_r8, -0.26023878112853_r8, -0.260110523892_r8, &
   -0.26014033331836_r8, -0.26022323761198_r8, -0.26011269553237_r8, &
   -0.26012725656202_r8, -0.2594833716252_r8, -0.25702700693321_r8, &
@@ -4658,12 +4860,11 @@ type(gsw_result) :: eta_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: eta_ct = gsw_result( &
-  variable_name = "eta_CT", &
-  computation_accuracy = 3.1376e-11_r8, &
-  values = (/ &
+eta_ct % variable_name = "eta_CT"
+eta_ct % computation_accuracy = 3.1376e-11_r8
+eta_ct % values = reshape( (/ &
   13.257086921543_r8, 13.257146372642_r8, 13.259319253783_r8, &
   13.25907040666_r8, 13.261904312328_r8, 13.2658848561_r8, 13.30282987942_r8, &
   13.368309650579_r8, 13.461893968637_r8, 13.587328864815_r8, &
@@ -4701,12 +4902,11 @@ type(gsw_result) :: eta_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: eta_sa_sa = gsw_result( &
-  variable_name = "eta_SA_SA", &
-  computation_accuracy = 6.9959e-13_r8, &
-  values = (/ &
+eta_sa_sa % variable_name = "eta_SA_SA"
+eta_sa_sa % computation_accuracy = 6.9959e-13_r8
+eta_sa_sa % values = reshape( (/ &
   -0.0076606993719205_r8, -0.0076607801120426_r8, -0.0076614314661349_r8, &
   -0.007660979908159_r8, -0.0076556016423327_r8, -0.0076537101763022_r8, &
   -0.0076108544746285_r8, -0.0075539552227363_r8, -0.0075152041413028_r8, &
@@ -4745,12 +4945,11 @@ type(gsw_result) :: eta_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: eta_sa_ct = gsw_result( &
-  variable_name = "eta_SA_CT", &
-  computation_accuracy = 4.9819e-14_r8, &
-  values = (/ &
+eta_sa_ct % variable_name = "eta_SA_CT"
+eta_sa_ct % computation_accuracy = 4.9819e-14_r8
+eta_sa_ct % values = reshape( (/ &
   -0.00179905358102_r8, -0.001798996434_r8, -0.00179696732085_r8, &
   -0.00179720965407_r8, -0.00179472518103_r8, -0.00179108340896_r8, &
   -0.00175777806136_r8, -0.00169742979163_r8, -0.00160798123016_r8, &
@@ -4789,12 +4988,11 @@ type(gsw_result) :: eta_sa_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: eta_ct_ct = gsw_result( &
-  variable_name = "eta_CT_CT", &
-  computation_accuracy = 2.3814e-13_r8, &
-  values = (/ &
+eta_ct_ct % variable_name = "eta_CT_CT"
+eta_ct_ct % computation_accuracy = 2.3814e-13_r8
+eta_ct_ct % values = reshape( (/ &
   -0.043897224337832_r8, -0.043897600429681_r8, -0.043911987346934_r8, &
   -0.043910444487873_r8, -0.043930947039087_r8, -0.043958176410965_r8, &
   -0.044218556247544_r8, -0.044677105730752_r8, -0.045324848684811_r8, &
@@ -4833,12 +5031,11 @@ type(gsw_result) :: eta_ct_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_sa = gsw_result( &
-  variable_name = "pt_SA", &
-  computation_accuracy = 9.6705e-13_r8, &
-  values = (/ &
+pt_sa % variable_name = "pt_SA"
+pt_sa % computation_accuracy = 9.6705e-13_r8
+pt_sa % values = reshape( (/ &
   0.040862417595445_r8, 0.04086075311991_r8, 0.040801289733733_r8, &
   0.04080832380764_r8, 0.040734495642218_r8, 0.040627446902701_r8, &
   0.039650816294649_r8, 0.037915343450963_r8, 0.035419694508532_r8, &
@@ -4877,12 +5074,11 @@ type(gsw_result) :: pt_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_ct = gsw_result( &
-  variable_name = "pt_CT", &
-  computation_accuracy = 2.7334e-13_r8, &
-  values = (/ &
+pt_ct % variable_name = "pt_CT"
+pt_ct % computation_accuracy = 2.7334e-13_r8
+pt_ct % values = reshape( (/ &
   0.9970501885549081_r8, 0.9970497883230083_r8, 0.9970496946343255_r8, &
   0.9970520874621792_r8, 0.9970913595230831_r8, 0.9971107259136801_r8, &
   0.9974534835365053_r8, 0.9979486730620505_r8, 0.9983899463202677_r8, &
@@ -4921,12 +5117,11 @@ type(gsw_result) :: pt_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_sa_sa = gsw_result( &
-  variable_name = "pt_SA_SA", &
-  computation_accuracy = 1.7347e-14_r8, &
-  values = (/ &
+pt_sa_sa % variable_name = "pt_SA_SA"
+pt_sa_sa % computation_accuracy = 1.7347e-14_r8
+pt_sa_sa % values = reshape( (/ &
   0.00016121484144908_r8, 0.00016121633563233_r8, 0.00016127483338065_r8, &
   0.00016126874639556_r8, 0.00016135543935046_r8, 0.00016146829623402_r8, &
   0.00016257553986414_r8, 0.00016460386981953_r8, 0.00016770533940763_r8, &
@@ -4965,12 +5160,11 @@ type(gsw_result) :: pt_sa_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_sa_ct = gsw_result( &
-  variable_name = "pt_SA_CT", &
-  computation_accuracy = 1.1991e-14_r8, &
-  values = (/ &
+pt_sa_ct % variable_name = "pt_SA_CT"
+pt_sa_ct % computation_accuracy = 1.1991e-14_r8
+pt_sa_ct % values = reshape( (/ &
   0.0011896089830878_r8, 0.0011896159125316_r8, 0.0011898571127334_r8, &
   0.0011898274234723_r8, 0.0011901090576876_r8, 0.0011905368358324_r8, &
   0.0011944520815229_r8, 0.001201890045969_r8, 0.0012137685175098_r8, &
@@ -5009,12 +5203,11 @@ type(gsw_result) :: pt_sa_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pt_ct_ct = gsw_result( &
-  variable_name = "pt_CT_CT", &
-  computation_accuracy = 4.4409e-14_r8, &
-  values = (/ &
+pt_ct_ct % variable_name = "pt_CT_CT"
+pt_ct_ct % computation_accuracy = 4.4409e-14_r8
+pt_ct_ct % values = reshape( (/ &
   -0.000123016457615_r8, -0.000123017492609_r8, -0.000123114531048_r8, &
   -0.000123113126504_r8, -0.000123401100305_r8, -0.000123660633_r8, &
   -0.000126821303487_r8, -0.000132240287515_r8, -0.000139029251694_r8, &
@@ -5053,12 +5246,11 @@ type(gsw_result) :: pt_ct_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_freezing = gsw_result( &
-  variable_name = "CT_freezing", &
-  computation_accuracy = 2.2651e-11_r8, &
-  values = (/ &
+ct_freezing % variable_name = "CT_freezing"
+ct_freezing % computation_accuracy = 2.2651e-11_r8
+ct_freezing % values = reshape( (/ &
   -1.8791958949408_r8, -1.8868182053422_r8, -1.8941709221796_r8, &
   -1.9019789045974_r8, -1.9111648742909_r8, -1.9192282573065_r8, &
   -1.9507388874847_r8, -1.9846958607985_r8, -2.0115939142263_r8, &
@@ -5097,12 +5289,11 @@ type(gsw_result) :: ct_freezing = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_freezing_poly = gsw_result( &
-  variable_name = "CT_freezing_poly", &
-  computation_accuracy = 2.2571e-11_r8, &
-  values = (/ &
+ct_freezing_poly % variable_name = "CT_freezing_poly"
+ct_freezing_poly % computation_accuracy = 2.2571e-11_r8
+ct_freezing_poly % values = reshape( (/ &
   -1.879165299189_r8, -1.8867915277169_r8, -1.8941481125296_r8, &
   -1.9019599274485_r8, -1.911149705101_r8, -1.9192168306304_r8, &
   -1.9507370581506_r8, -1.9847028855903_r8, -2.0116093878303_r8, &
@@ -5141,12 +5332,11 @@ type(gsw_result) :: ct_freezing_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: t_freezing = gsw_result( &
-  variable_name = "t_freezing", &
-  computation_accuracy = 2.1665e-11_r8, &
-  values = (/ &
+t_freezing % variable_name = "t_freezing"
+t_freezing % computation_accuracy = 2.1665e-11_r8
+t_freezing % values = reshape( (/ &
   -1.8826905931951_r8, -1.8901461677747_r8, -1.8973379624874_r8, &
   -1.9049737446842_r8, -1.9139542679789_r8, -1.9218381661121_r8, &
   -1.9526256815874_r8, -1.9857887399157_r8, -2.0120573882085_r8, &
@@ -5185,12 +5375,11 @@ type(gsw_result) :: t_freezing = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: t_freezing_poly = gsw_result( &
-  variable_name = "t_freezing_poly", &
-  computation_accuracy = 2.1582e-11_r8, &
-  values = (/ &
+t_freezing_poly % variable_name = "t_freezing_poly"
+t_freezing_poly % computation_accuracy = 2.1582e-11_r8
+t_freezing_poly % values = reshape( (/ &
   -1.8826599878942_r8, -1.8901194793719_r8, -1.8973151416915_r8, &
   -1.9049547564308_r8, -1.9139390879013_r8, -1.9218267300584_r8, &
   -1.9526238497569_r8, -1.985795778632_r8, -2.0120728991556_r8, &
@@ -5229,12 +5418,11 @@ type(gsw_result) :: t_freezing_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing", &
-  computation_accuracy = 5.3551e-08_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing % variable_name = "pot_enthalpy_ice_freezing"
+pot_enthalpy_ice_freezing % computation_accuracy = 5.3551e-08_r8
+pot_enthalpy_ice_freezing % values = reshape( (/ &
   -337292.5286083188_r8, -337312.7579547644_r8, -337332.4363577975_r8, &
   -337353.038040561_r8, -337376.4389086334_r8, -337397.5541162898_r8, &
   -337473.8724052532_r8, -337554.6512174989_r8, -337621.0606094321_r8, &
@@ -5273,12 +5461,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing_poly = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing_poly", &
-  computation_accuracy = 5.3318e-08_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing_poly % variable_name = "pot_enthalpy_ice_freezing_poly"
+pot_enthalpy_ice_freezing_poly % computation_accuracy = 5.3318e-08_r8
+pot_enthalpy_ice_freezing_poly % values = reshape( (/ &
   -337292.6233524391_r8, -337312.8580831874_r8, -337332.5417696337_r8, &
   -337353.148655121_r8, -337376.5546690344_r8, -337397.6749009112_r8, &
   -337474.0060546685_r8, -337554.7966502972_r8, -337621.2171142157_r8, &
@@ -5317,12 +5504,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_freezing_from_ct = gsw_result( &
-  variable_name = "SA_freezing_from_CT", &
-  computation_accuracy = 1.364e-10_r8, &
-  values = (/ &
+sa_freezing_from_ct % variable_name = "SA_freezing_from_CT"
+sa_freezing_from_ct % computation_accuracy = 1.364e-10_r8
+sa_freezing_from_ct % values = reshape( (/ &
   34.507499465695_r8, 34.507024988455_r8, 34.501848858516_r8, &
   34.504435326018_r8, 34.530643613167_r8, 34.537484086977_r8, &
   34.736078147784_r8, 34.989090287231_r8, 35.12039462339_r8, &
@@ -5361,12 +5547,11 @@ type(gsw_result) :: sa_freezing_from_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_freezing_from_ct_poly = gsw_result( &
-  variable_name = "SA_freezing_from_CT_poly", &
-  computation_accuracy = 1.3004e-10_r8, &
-  values = (/ &
+sa_freezing_from_ct_poly % variable_name = "SA_freezing_from_CT_poly"
+sa_freezing_from_ct_poly % computation_accuracy = 1.3004e-10_r8
+sa_freezing_from_ct_poly % values = reshape( (/ &
   34.507499465607_r8, 34.507024988369_r8, 34.501848858425_r8, &
   34.504435325932_r8, 34.530643613079_r8, 34.537484086889_r8, &
   34.736078147695_r8, 34.989090287136_r8, 35.120394623297_r8, &
@@ -5405,12 +5590,11 @@ type(gsw_result) :: sa_freezing_from_ct_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_freezing_from_t = gsw_result( &
-  variable_name = "SA_freezing_from_t", &
-  computation_accuracy = 1.3474e-10_r8, &
-  values = (/ &
+sa_freezing_from_t % variable_name = "SA_freezing_from_t"
+sa_freezing_from_t % computation_accuracy = 1.3474e-10_r8
+sa_freezing_from_t % values = reshape( (/ &
   34.507499465694_r8, 34.507024988456_r8, 34.501848858513_r8, &
   34.504435326017_r8, 34.530643613166_r8, 34.537484086978_r8, &
   34.736078147785_r8, 34.98909028723_r8, 35.120394623392_r8, &
@@ -5449,12 +5633,11 @@ type(gsw_result) :: sa_freezing_from_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sa_freezing_from_t_poly = gsw_result( &
-  variable_name = "SA_freezing_from_t_poly", &
-  computation_accuracy = 1.3007e-10_r8, &
-  values = (/ &
+sa_freezing_from_t_poly % variable_name = "SA_freezing_from_t_poly"
+sa_freezing_from_t_poly % computation_accuracy = 1.3007e-10_r8
+sa_freezing_from_t_poly % values = reshape( (/ &
   34.507499465692_r8, 34.507024988454_r8, 34.501848858511_r8, &
   34.504435326018_r8, 34.530643613166_r8, 34.537484086977_r8, &
   34.736078147786_r8, 34.98909028723_r8, 35.120394623393_r8, &
@@ -5492,12 +5675,11 @@ type(gsw_result) :: sa_freezing_from_t_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ctfreezing_sa = gsw_result( &
-  variable_name = "CTfreezing_SA", &
-  computation_accuracy = 3.2634e-14_r8, &
-  values = (/ &
+ctfreezing_sa % variable_name = "CTfreezing_SA"
+ctfreezing_sa % computation_accuracy = 3.2634e-14_r8
+ctfreezing_sa % values = reshape( (/ &
   -0.05814490213410573_r8, -0.05815075695164051_r8, -0.05815542738436928_r8, &
   -0.05816201376122387_r8, -0.0581744580447603_r8, -0.05818206995235999_r8, &
   -0.05824676222710169_r8, -0.05832438675461858_r8, -0.05837159481981246_r8, &
@@ -5536,12 +5718,11 @@ type(gsw_result) :: ctfreezing_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ctfreezing_p = gsw_result( &
-  variable_name = "CTfreezing_P", &
-  computation_accuracy = 9.6244e-20_r8, &
-  values = (/ &
+ctfreezing_p % variable_name = "CTfreezing_P"
+ctfreezing_p % computation_accuracy = 9.6244e-20_r8
+ctfreezing_p % values = reshape( (/ &
   -7.6480068092038e-08_r8, -7.6518457514173e-08_r8, -7.6556555881901e-08_r8, &
   -7.6595105116669e-08_r8, -7.6635040414003e-08_r8, -7.6673812803457e-08_r8, &
   -7.6785147469249e-08_r8, -7.6895553809619e-08_r8, -7.69986626822e-08_r8, &
@@ -5580,12 +5761,11 @@ type(gsw_result) :: ctfreezing_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ctfreezing_sa_poly = gsw_result( &
-  variable_name = "CTfreezing_SA_poly", &
-  computation_accuracy = 3.2564e-14_r8, &
-  values = (/ &
+ctfreezing_sa_poly % variable_name = "CTfreezing_SA_poly"
+ctfreezing_sa_poly % computation_accuracy = 3.2564e-14_r8
+ctfreezing_sa_poly % values = reshape( (/ &
   -0.05814467152917618_r8, -0.05815038625171885_r8, -0.05815491563437256_r8, &
   -0.05816136541989279_r8, -0.05817368399260965_r8, -0.0581811629021938_r8, &
   -0.05824558332937864_r8, -0.05832296649102838_r8, -0.05836988848874046_r8, &
@@ -5624,12 +5804,11 @@ type(gsw_result) :: ctfreezing_sa_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ctfreezing_p_poly = gsw_result( &
-  variable_name = "CTfreezing_P_poly", &
-  computation_accuracy = 9.5424e-20_r8, &
-  values = (/ &
+ctfreezing_p_poly % variable_name = "CTfreezing_P_poly"
+ctfreezing_p_poly % computation_accuracy = 9.5424e-20_r8
+ctfreezing_p_poly % values = reshape( (/ &
   -7.6519219369902e-08_r8, -7.6557158499616e-08_r8, -7.6594815665582e-08_r8, &
   -7.663291556094e-08_r8, -7.6672372042886e-08_r8, -7.6710694882539e-08_r8, &
   -7.6820632618496e-08_r8, -7.6929637076692e-08_r8, -7.7031528924063e-08_r8, &
@@ -5668,12 +5847,11 @@ type(gsw_result) :: ctfreezing_p_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: tfreezing_sa = gsw_result( &
-  variable_name = "tfreezing_SA", &
-  computation_accuracy = 2.8484e-14_r8, &
-  values = (/ &
+tfreezing_sa % variable_name = "tfreezing_SA"
+tfreezing_sa % computation_accuracy = 2.8484e-14_r8
+tfreezing_sa % values = reshape( (/ &
   -0.0567798139031856_r8, -0.05678223413923639_r8, -0.05678381518356748_r8, &
   -0.05678678319366636_r8, -0.05679397565929661_r8, -0.0567977086108083_r8, &
   -0.05683986295353308_r8, -0.0568917809875421_r8, -0.05692190838769959_r8, &
@@ -5712,12 +5890,11 @@ type(gsw_result) :: tfreezing_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: tfreezing_p = gsw_result( &
-  variable_name = "tfreezing_P", &
-  computation_accuracy = 7.3771e-20_r8, &
-  values = (/ &
+tfreezing_p % variable_name = "tfreezing_P"
+tfreezing_p % computation_accuracy = 7.3771e-20_r8
+tfreezing_p % values = reshape( (/ &
   -7.480941459441868e-08_r8, -7.484142543119165e-08_r8, &
   -7.487331343513785e-08_r8, -7.490539089547e-08_r8, &
   -7.493805577390966e-08_r8, -7.497023025286e-08_r8, &
@@ -5772,12 +5949,11 @@ type(gsw_result) :: tfreezing_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: tfreezing_sa_poly = gsw_result( &
-  variable_name = "tfreezing_SA_poly", &
-  computation_accuracy = 2.8491e-14_r8, &
-  values = (/ &
+tfreezing_sa_poly % variable_name = "tfreezing_SA_poly"
+tfreezing_sa_poly % computation_accuracy = 2.8491e-14_r8
+tfreezing_sa_poly % values = reshape( (/ &
   -0.05677829479024063_r8, -0.0567807670382359_r8, -0.05678240120546947_r8, &
   -0.05678541898982356_r8, -0.05679265212180497_r8, -0.05679643211457153_r8, &
   -0.05683864055310561_r8, -0.05689058494300873_r8, -0.05692077819438569_r8, &
@@ -5816,12 +5992,11 @@ type(gsw_result) :: tfreezing_sa_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: tfreezing_p_poly = gsw_result( &
-  variable_name = "tfreezing_P_poly", &
-  computation_accuracy = 7.2183e-20_r8, &
-  values = (/ &
+tfreezing_p_poly % variable_name = "tfreezing_P_poly"
+tfreezing_p_poly % computation_accuracy = 7.2183e-20_r8
+tfreezing_p_poly % values = reshape( (/ &
   -7.48621143377235e-08_r8, -7.489348575458774e-08_r8, &
   -7.492473540464642e-08_r8, -7.495618195749665e-08_r8, &
   -7.498823116402291e-08_r8, -7.501978353580322e-08_r8, &
@@ -5876,12 +6051,11 @@ type(gsw_result) :: tfreezing_p_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing_sa = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing_SA", &
-  computation_accuracy = 5.447e-11_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing_sa % variable_name = "pot_enthalpy_ice_freezing_SA"
+pot_enthalpy_ice_freezing_sa % computation_accuracy = 5.447e-11_r8
+pot_enthalpy_ice_freezing_sa % values = reshape( (/ &
   -118.2770096024129_r8, -118.2770858177355_r8, -118.2755244900544_r8, &
   -118.2766657809087_r8, -118.2860412973467_r8, -118.2886706672191_r8, &
   -118.3587579103741_r8, -118.448335109222_r8, -118.495416784849_r8, &
@@ -5920,12 +6094,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing_sa = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing_p = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing_P", &
-  computation_accuracy = 1.1905e-16_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing_p % variable_name = "pot_enthalpy_ice_freezing_P"
+pot_enthalpy_ice_freezing_p % computation_accuracy = 1.1905e-16_r8
+pot_enthalpy_ice_freezing_p % values = reshape( (/ &
   -0.0002028289015986082_r8, -0.0002028804196652307_r8, &
   -0.0002029319085347564_r8, -0.0002029833982269374_r8, &
   -0.0002030349272731101_r8, -0.0002030863917016377_r8, &
@@ -5980,12 +6153,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing_p = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing_sa_poly = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing_SA_poly", &
-  computation_accuracy = 5.4158e-11_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing_sa_poly % variable_name = "pot_enthalpy_ice_freezing_SA_poly"
+pot_enthalpy_ice_freezing_sa_poly % computation_accuracy = 5.4158e-11_r8
+pot_enthalpy_ice_freezing_sa_poly % values = reshape( (/ &
   -118.2786136748115_r8, -118.2786691962934_r8, -118.277093410823_r8, &
   -118.2782095157019_r8, -118.2875281648098_r8, -118.2901267940559_r8, &
   -118.3599003949369_r8, -118.4491097058922_r8, -118.4959866045523_r8, &
@@ -6024,12 +6196,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing_sa_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_enthalpy_ice_freezing_p_poly = gsw_result( &
-  variable_name = "pot_enthalpy_ice_freezing_P_poly", &
-  computation_accuracy = 1.1636e-16_r8, &
-  values = (/ &
+pot_enthalpy_ice_freezing_p_poly % variable_name = "pot_enthalpy_ice_freezing_P_poly"
+pot_enthalpy_ice_freezing_p_poly % computation_accuracy = 1.1636e-16_r8
+pot_enthalpy_ice_freezing_p_poly % values = reshape( (/ &
   -0.0002028832220404636_r8, -0.0002029338014859178_r8, &
   -0.0002029843592261198_r8, -0.0002030349225727318_r8, &
   -0.000203085526573594_r8, -0.000203136076554657_r8, &
@@ -6084,12 +6255,11 @@ type(gsw_result) :: pot_enthalpy_ice_freezing_p_poly = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: latentheat_melting = gsw_result( &
-  variable_name = "latentheat_melting", &
-  computation_accuracy = 6.3214e-08_r8, &
-  values = (/ &
+latentheat_melting % variable_name = "latentheat_melting"
+latentheat_melting % computation_accuracy = 6.3214e-08_r8
+latentheat_melting % values = reshape( (/ &
   329985.5184172138_r8, 329967.4069665318_r8, 329949.6870640397_r8, &
   329931.2780902656_r8, 329910.8047362334_r8, 329891.9944452619_r8, &
   329827.3410740866_r8, 329759.7153231357_r8, 329702.5300849362_r8, &
@@ -6128,12 +6298,11 @@ type(gsw_result) :: latentheat_melting = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: latentheat_evap_ct = gsw_result( &
-  variable_name = "latentheat_evap_CT", &
-  computation_accuracy = 1.4557e-06_r8, &
-  values = (/ &
+latentheat_evap_ct % variable_name = "latentheat_evap_CT"
+latentheat_evap_ct % computation_accuracy = 1.4557e-06_r8
+latentheat_evap_ct % values = reshape( (/ &
   2431864.952769883_r8, 2431868.202103747_r8, 2431986.861042973_r8, &
   2431973.261047543_r8, 2432127.743472645_r8, 2432344.798548297_r8, &
   2434351.343116321_r8, 2437877.091674121_r8, 2442850.427368078_r8, &
@@ -6172,12 +6341,11 @@ type(gsw_result) :: latentheat_evap_ct = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: latentheat_evap_t = gsw_result( &
-  variable_name = "latentheat_evap_t", &
-  computation_accuracy = 1.4431e-06_r8, &
-  values = (/ &
+latentheat_evap_t % variable_name = "latentheat_evap_t"
+latentheat_evap_t % computation_accuracy = 1.4431e-06_r8
+latentheat_evap_t % values = reshape( (/ &
   2431864.952769883_r8, 2431862.551762854_r8, 2431975.574268352_r8, &
   2431956.325670936_r8, 2432105.197918318_r8, 2432316.682174483_r8, &
   2434309.552635047_r8, 2437823.807558516_r8, 2442788.011152495_r8, &
@@ -6216,12 +6384,11 @@ type(gsw_result) :: latentheat_evap_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: grav = gsw_result( &
-  variable_name = "grav", &
-  computation_accuracy = 5.3291e-14_r8, &
-  values = (/ &
+grav % variable_name = "grav"
+grav % computation_accuracy = 5.3291e-14_r8
+grav % values = reshape( (/ &
   9.782207133388146_r8, 9.782229115001646_r8, 9.782251095547741_r8, &
   9.782273075026763_r8, 9.782295053439038_r8, 9.782317030784899_r8, &
   9.782374166895663_r8, 9.782429098672781_r8, 9.782484023797332_r8, &
@@ -6260,12 +6427,11 @@ type(gsw_result) :: grav = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: enthalpy_ct_exact = gsw_result( &
-  variable_name = "enthalpy_CT_exact", &
-  computation_accuracy = 2.4993e-06_r8, &
-  values = (/ &
+enthalpy_ct_exact % variable_name = "enthalpy_CT_exact"
+enthalpy_ct_exact % computation_accuracy = 2.4993e-06_r8
+enthalpy_ct_exact % values = reshape( (/ &
   111751.65419162_r8, 111844.17892919_r8, 111745.31155707_r8, &
   111865.3552419_r8, 111701.33349996_r8, 111436.44754759_r8, &
   108313.46433704_r8, 102637.16898192_r8, 94559.551909165_r8, &
@@ -6304,12 +6470,11 @@ type(gsw_result) :: enthalpy_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa_ct_exact = gsw_result( &
-  variable_name = "h_SA_CT_exact", &
-  computation_accuracy = 2.3714e-10_r8, &
-  values = (/ &
+h_sa_ct_exact % variable_name = "h_SA_CT_exact"
+h_sa_ct_exact % computation_accuracy = 2.3714e-10_r8
+h_sa_ct_exact % values = reshape( (/ &
   0._r8, -0.0703453379025_r8, -0.140692842553_r8, -0.211018738227_r8, &
   -0.28136087909_r8, -0.351729215062_r8, -0.535248658826_r8, &
   -0.713014572037_r8, -0.892951458055_r8, -1.07625661092_r8, &
@@ -6341,12 +6506,11 @@ type(gsw_result) :: h_sa_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_ct_ct_exact = gsw_result( &
-  variable_name = "h_CT_CT_exact", &
-  computation_accuracy = 3.1605e-10_r8, &
-  values = (/ &
+h_ct_ct_exact % variable_name = "h_CT_CT_exact"
+h_ct_ct_exact % computation_accuracy = 3.1605e-10_r8
+h_ct_ct_exact % values = reshape( (/ &
   3991.86795711963_r8, 3991.899115705432_r8, 3991.930210459405_r8, &
   3991.961363614644_r8, 3991.992340862369_r8, 3992.023134437034_r8, &
   3992.099429834566_r8, 3992.164942642608_r8, 3992.218889657059_r8, &
@@ -6385,12 +6549,11 @@ type(gsw_result) :: h_ct_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa_sa_ct_exact = gsw_result( &
-  variable_name = "h_SA_SA_CT_exact", &
-  computation_accuracy = 7.2642e-13_r8, &
-  values = (/ &
+h_sa_sa_ct_exact % variable_name = "h_SA_SA_CT_exact"
+h_sa_sa_ct_exact % computation_accuracy = 7.2642e-13_r8
+h_sa_sa_ct_exact % values = reshape( (/ &
   0._r8, 8.3293771940984e-05_r8, 0.00016661627683259_r8, &
   0.00024985471597921_r8, 0.00033322864885257_r8, 0.00041674434162694_r8, &
   0.0006374713322103_r8, 0.00085799266620436_r8, 0.0010918055595788_r8, &
@@ -6428,12 +6591,11 @@ type(gsw_result) :: h_sa_sa_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_sa_ct_ct_exact = gsw_result( &
-  variable_name = "h_SA_CT_CT_exact", &
-  computation_accuracy = 2.1886e-12_r8, &
-  values = (/ &
+h_sa_ct_ct_exact % variable_name = "h_SA_CT_CT_exact"
+h_sa_ct_ct_exact % computation_accuracy = 2.1886e-12_r8
+h_sa_ct_ct_exact % values = reshape( (/ &
   0._r8, 0.00013268757223357_r8, 0.00026558329352477_r8, &
   0.00039818703394291_r8, 0.00053144224710609_r8, 0.00066540649384499_r8, &
   0.0010293060843694_r8, 0.0014153525397819_r8, 0.0018632306307213_r8, &
@@ -6471,12 +6633,11 @@ type(gsw_result) :: h_sa_ct_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: h_ct_ct_ct_exact = gsw_result( &
-  variable_name = "h_CT_CT_CT_exact", &
-  computation_accuracy = 1.1351e-11_r8, &
-  values = (/ &
+h_ct_ct_ct_exact % variable_name = "h_CT_CT_CT_exact"
+h_ct_ct_ct_exact % computation_accuracy = 1.1351e-11_r8
+h_ct_ct_ct_exact % values = reshape( (/ &
   0._r8, 0.0007239355778385_r8, 0.0014485822042462_r8, 0.0021719997800172_r8, &
   0.0028977880486357_r8, 0.0036261831957023_r8, 0.0055754565807141_r8, &
   0.0075641679358376_r8, 0.0097224372899309_r8, 0.01213376483139_r8, &
@@ -6514,12 +6675,11 @@ type(gsw_result) :: h_ct_ct_ct_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: rho_t_exact = gsw_result( &
-  variable_name = "rho_t_exact", &
-  computation_accuracy = 2.9445e-10_r8, &
-  values = (/ &
+rho_t_exact % variable_name = "rho_t_exact"
+rho_t_exact % computation_accuracy = 2.9445e-10_r8
+rho_t_exact % values = reshape( (/ &
   1021.915980252376_r8, 1021.95820244202_r8, 1022.012562533378_r8, &
   1022.054777270649_r8, 1022.137480309065_r8, 1022.214133439513_r8, &
   1022.741973341495_r8, 1023.499560650793_r8, 1024.329987849211_r8, &
@@ -6558,12 +6718,11 @@ type(gsw_result) :: rho_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: pot_rho_t_exact = gsw_result( &
-  variable_name = "pot_rho_t_exact", &
-  computation_accuracy = 2.9297e-10_r8, &
-  values = (/ &
+pot_rho_t_exact % variable_name = "pot_rho_t_exact"
+pot_rho_t_exact % computation_accuracy = 2.9297e-10_r8
+pot_rho_t_exact % values = reshape( (/ &
   1021.915980252376_r8, 1021.916065964516_r8, 1021.928286405551_r8, &
   1021.928379495913_r8, 1021.968943563418_r8, 1022.003433190205_r8, &
   1022.421109956852_r8, 1023.071528441043_r8, 1023.792722022634_r8, &
@@ -6602,12 +6761,11 @@ type(gsw_result) :: pot_rho_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: alpha_wrt_t_exact = gsw_result( &
-  variable_name = "alpha_wrt_t_exact", &
-  computation_accuracy = 8.5949e-15_r8, &
-  values = (/ &
+alpha_wrt_t_exact % variable_name = "alpha_wrt_t_exact"
+alpha_wrt_t_exact % computation_accuracy = 8.5949e-15_r8
+alpha_wrt_t_exact % values = reshape( (/ &
   0.00031932154689476_r8, 0.00031939555594613_r8, 0.00031911127821026_r8, &
   0.00031923984048154_r8, 0.00031887380972951_r8, 0.00031829851431434_r8, &
   0.00031250507120278_r8, 0.00030189699151599_r8, 0.00028623167442661_r8, &
@@ -6646,12 +6804,11 @@ type(gsw_result) :: alpha_wrt_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: beta_const_t_exact = gsw_result( &
-  variable_name = "beta_const_t_exact", &
-  computation_accuracy = 1.8049e-15_r8, &
-  values = (/ &
+beta_const_t_exact % variable_name = "beta_const_t_exact"
+beta_const_t_exact % computation_accuracy = 1.8049e-15_r8
+beta_const_t_exact % values = reshape( (/ &
   0.00073197647430931_r8, 0.00073189381057819_r8, 0.00073185563197511_r8, &
   0.00073176606119531_r8, 0.00073173538343879_r8, 0.00073173225731012_r8, &
   0.00073224704776871_r8, 0.00073340593192962_r8, 0.00073532885276884_r8, &
@@ -6690,12 +6847,11 @@ type(gsw_result) :: beta_const_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: specvol_t_exact = gsw_result( &
-  variable_name = "specvol_t_exact", &
-  computation_accuracy = 2.8189e-16_r8, &
-  values = (/ &
+specvol_t_exact % variable_name = "specvol_t_exact"
+specvol_t_exact % computation_accuracy = 2.8189e-16_r8
+specvol_t_exact % values = reshape( (/ &
   0.0009785540292197368_r8, 0.0009785136002729369_r8, &
   0.0009784615538591687_r8, 0.0009784211396873022_r8, &
   0.0009783419738190488_r8, 0.0009782686105456522_r8, &
@@ -6748,12 +6904,11 @@ type(gsw_result) :: specvol_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: sound_speed_t_exact = gsw_result( &
-  variable_name = "sound_speed_t_exact", &
-  computation_accuracy = 2.5902e-09_r8, &
-  values = (/ &
+sound_speed_t_exact % variable_name = "sound_speed_t_exact"
+sound_speed_t_exact % computation_accuracy = 2.5902e-09_r8
+sound_speed_t_exact % values = reshape( (/ &
   1540.4511400817_r8, 1540.6174829909_r8, 1540.6733946822_r8, &
   1540.8583527734_r8, 1540.914104975_r8, 1540.8918342152_r8, &
   1539.6737875821_r8, 1536.9672850869_r8, 1532.4751224261_r8, &
@@ -6792,12 +6947,11 @@ type(gsw_result) :: sound_speed_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: kappa_t_exact = gsw_result( &
-  variable_name = "kappa_t_exact", &
-  computation_accuracy = 1.7127e-21_r8, &
-  values = (/ &
+kappa_t_exact % variable_name = "kappa_t_exact"
+kappa_t_exact % computation_accuracy = 1.7127e-21_r8
+kappa_t_exact % values = reshape( (/ &
   4.1237179539499e-10_r8, 4.1226571787447e-10_r8, 4.1221386930498e-10_r8, &
   4.1209789253237e-10_r8, 4.1203473144474e-10_r8, 4.120157436542e-10_r8, &
   4.1245491953047e-10_r8, 4.1360244028808e-10_r8, 4.1569351243739e-10_r8, &
@@ -6836,12 +6990,11 @@ type(gsw_result) :: kappa_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: enthalpy_t_exact = gsw_result( &
-  variable_name = "enthalpy_t_exact", &
-  computation_accuracy = 2.4993e-06_r8, &
-  values = (/ &
+enthalpy_t_exact % variable_name = "enthalpy_t_exact"
+enthalpy_t_exact % computation_accuracy = 2.4993e-06_r8
+enthalpy_t_exact % values = reshape( (/ &
   111751.65419162_r8, 111844.17892919_r8, 111745.31155707_r8, &
   111865.3552419_r8, 111701.33349996_r8, 111436.44754759_r8, &
   108313.46433704_r8, 102637.16898192_r8, 94559.551909165_r8, &
@@ -6880,12 +7033,11 @@ type(gsw_result) :: enthalpy_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_sa_wrt_t = gsw_result( &
-  variable_name = "CT_SA_wrt_t", &
-  computation_accuracy = 1.0223e-12_r8, &
-  values = (/ &
+ct_sa_wrt_t % variable_name = "CT_SA_wrt_t"
+ct_sa_wrt_t % computation_accuracy = 1.0223e-12_r8
+ct_sa_wrt_t % values = reshape( (/ &
   -0.0409833106342_r8, -0.0409894510556_r8, -0.0409376254811_r8, &
   -0.0409523700556_r8, -0.0408845525164_r8, -0.0407842933687_r8, &
   -0.0398128856157_r8, -0.0380777753711_r8, -0.0355896901211_r8, &
@@ -6924,12 +7076,11 @@ type(gsw_result) :: ct_sa_wrt_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_t_wrt_t = gsw_result( &
-  variable_name = "CT_T_wrt_t", &
-  computation_accuracy = 6.2705e-13_r8, &
-  values = (/ &
+ct_t_wrt_t % variable_name = "CT_T_wrt_t"
+ct_t_wrt_t % computation_accuracy = 6.2705e-13_r8
+ct_t_wrt_t % values = reshape( (/ &
   1.002958538576044_r8, 1.002896185663372_r8, 1.002833512323822_r8, &
   1.002768412900711_r8, 1.002666156643026_r8, 1.002583825491344_r8, &
   1.002073851937162_r8, 1.001413248070416_r8, 1.000800704852227_r8, &
@@ -6968,12 +7119,11 @@ type(gsw_result) :: ct_t_wrt_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: ct_p_wrt_t = gsw_result( &
-  variable_name = "CT_P_wrt_t", &
-  computation_accuracy = 6.1712e-19_r8, &
-  values = (/ &
+ct_p_wrt_t % variable_name = "CT_P_wrt_t"
+ct_p_wrt_t % computation_accuracy = 6.1712e-19_r8
+ct_p_wrt_t % values = reshape( (/ &
   -2.35702902289e-08_r8, -2.35746733554e-08_r8, -2.35485782607e-08_r8, &
   -2.35575345011e-08_r8, -2.35235924693e-08_r8, -2.34723464522e-08_r8, &
   -2.29692572777e-08_r8, -2.20645273137e-08_r8, -2.07573371066e-08_r8, &
@@ -7012,12 +7162,11 @@ type(gsw_result) :: ct_p_wrt_t = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: chem_potential_water_t_exact = gsw_result( &
-  variable_name = "chem_potential_water_t_exact", &
-  computation_accuracy = 4.8118e-10_r8, &
-  values = (/ &
+chem_potential_water_t_exact % variable_name = "chem_potential_water_t_exact"
+chem_potential_water_t_exact % computation_accuracy = 4.8118e-10_r8
+chem_potential_water_t_exact % values = reshape( (/ &
   -8.2813019097643_r8, -8.1813570058991_r8, -8.0610290757152_r8, &
   -7.9642520846518_r8, -7.8401963043867_r8, -7.7038894634784_r8, &
   -7.1194196809707_r8, -6.3130352258349_r8, -5.3098624806101_r8, &
@@ -7056,12 +7205,11 @@ type(gsw_result) :: chem_potential_water_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: t_deriv_chem_potential_water_t_exact = gsw_result( &
-  variable_name = "t_deriv_chem_potential_water_t_exact", &
-  computation_accuracy = 9.1325e-12_r8, &
-  values = (/ &
+t_deriv_chem_potential_water_t_exact % variable_name = "t_deriv_chem_potential_water_t_exact"
+t_deriv_chem_potential_water_t_exact % computation_accuracy = 9.1325e-12_r8
+t_deriv_chem_potential_water_t_exact % values = reshape( (/ &
   -0.417380847621_r8, -0.417365578057_r8, -0.416684354598_r8, &
   -0.416766918177_r8, -0.415887140889_r8, -0.41464155826_r8, &
   -0.403114772169_r8, -0.382728871345_r8, -0.353695057771_r8, &
@@ -7100,12 +7248,11 @@ type(gsw_result) :: t_deriv_chem_potential_water_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: dilution_coefficient_t_exact = gsw_result( &
-  variable_name = "dilution_coefficient_t_exact", &
-  computation_accuracy = 2.0061e-10_r8, &
-  values = (/ &
+dilution_coefficient_t_exact % variable_name = "dilution_coefficient_t_exact"
+dilution_coefficient_t_exact % computation_accuracy = 2.0061e-10_r8
+dilution_coefficient_t_exact % values = reshape( (/ &
   78.833320052832_r8, 78.83593293107_r8, 78.823088765264_r8, &
   78.828707627146_r8, 78.82145115118_r8, 78.800473970403_r8, &
   78.627440586818_r8, 78.282228915059_r8, 77.712325060703_r8, &
@@ -7144,12 +7291,11 @@ type(gsw_result) :: dilution_coefficient_t_exact = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: deltasa_atlas = gsw_result( &
-  variable_name = "deltaSA_atlas", &
-  computation_accuracy = 6.9455e-13_r8, &
-  values = (/ &
+deltasa_atlas % variable_name = "deltaSA_atlas"
+deltasa_atlas % computation_accuracy = 6.9455e-13_r8
+deltasa_atlas % values = reshape( (/ &
   0.00017939635663096_r8, 0.00018024758715744_r8, 0.00018145414888945_r8, &
   0.00018480149666306_r8, 0.0001890819429285_r8, 0.00019257785168297_r8, &
   0.00021838682262078_r8, 0.0002769048901837_r8, 0.0003841754706041_r8, &
@@ -7186,12 +7332,11 @@ type(gsw_result) :: deltasa_atlas = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: fdelta = gsw_result( &
-  variable_name = "Fdelta", &
-  computation_accuracy = 2.7029e-14_r8, &
-  values = (/ &
+fdelta % variable_name = "Fdelta"
+fdelta % computation_accuracy = 2.7029e-14_r8
+fdelta % values = reshape( (/ &
   7.0162092855842e-06_r8, 7.045771655865e-06_r8, 7.0925570787417e-06_r8, &
   7.2228681299504e-06_r8, 7.3856585860477e-06_r8, 7.516523009202e-06_r8, &
   8.4887977309356e-06_r8, 1.0702138779874e-05_r8, 1.479793570398e-05_r8, &
@@ -7228,12 +7373,11 @@ type(gsw_result) :: fdelta = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result_mpres) :: n2 = gsw_result_mpres( &
-  variable_name = "n2", &
-  computation_accuracy = 1.5894e-14_r8, &
-  values = (/ &
+n2 % variable_name = "n2"
+n2 % computation_accuracy = 1.5894e-14_r8
+n2 % values = reshape( (/ &
   8.2026964985796e-08_r8, 1.1699772859452e-05_r8, 8.7438092338887e-08_r8, &
   3.8833373834459e-05_r8, 3.3043599666939e-05_r8, 0.00015391835025989_r8, &
   0.00024952146968971_r8, 0.00027722386889469_r8, 0.00029577102803556_r8, &
@@ -7271,12 +7415,11 @@ type(gsw_result_mpres) :: n2 = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: p_mid_n2 = gsw_result_mpres( &
-  variable_name = "p_mid_n2", &
-  computation_accuracy = 2.3e-08_r8, &
-  values = (/ &
+p_mid_n2 % variable_name = "p_mid_n2"
+p_mid_n2 % computation_accuracy = 2.3e-08_r8
+p_mid_n2 % values = reshape( (/ &
   5._r8, 15._r8, 25._r8, 35._r8, 45._r8, 63._r8, 88.5_r8, 113.5_r8, 138.5_r8, &
   163.5_r8, 189._r8, 227._r8, 277.5_r8, 328._r8, 378.5_r8, 454.5_r8, &
   555.5_r8, 656.5_r8, 757.5_r8, 858.5_r8, 959.5_r8, 1060.5_r8, 1162._r8, &
@@ -7295,12 +7438,11 @@ type(gsw_result_mpres) :: p_mid_n2 = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: tu = gsw_result_mpres( &
-  variable_name = "Tu", &
-  computation_accuracy = 2.191e-08_r8, &
-  values = (/ &
+tu % variable_name = "Tu"
+tu % computation_accuracy = 2.191e-08_r8
+tu % values = reshape( (/ &
   83.7512715531_r8, 58.3454831514_r8, -88.5886471321_r8, 2.92826882605_r8, &
   35.3335360092_r8, 16.7767955292_r8, 23.1453658821_r8, 36.1807645983_r8, &
   45.0628267869_r8, 53.6905299283_r8, 56.7883441369_r8, 56.9326967577_r8, &
@@ -7330,12 +7472,11 @@ type(gsw_result_mpres) :: tu = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: rsubrho = gsw_result_mpres( &
-  variable_name = "Rsubrho", &
-  computation_accuracy = 1.7097e-08_r8, &
-  values = (/ &
+rsubrho % variable_name = "Rsubrho"
+rsubrho % computation_accuracy = 1.7097e-08_r8
+rsubrho % values = reshape( (/ &
   1.2459175325039_r8, 4.2153481295466_r8, 0.95190936871968_r8, &
   -1.107820226202_r8, -5.8709296665608_r8, -1.863179843003_r8, &
   -2.4932807508948_r8, -6.4452938606987_r8, 911.96381930288_r8, &
@@ -7373,12 +7514,11 @@ type(gsw_result_mpres) :: rsubrho = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: p_mid_tursr = gsw_result_mpres( &
-  variable_name = "p_mid_TuRsr", &
-  computation_accuracy = 2.3e-08_r8, &
-  values = (/ &
+p_mid_tursr % variable_name = "p_mid_TuRsr"
+p_mid_tursr % computation_accuracy = 2.3e-08_r8
+p_mid_tursr % values = reshape( (/ &
   5._r8, 15._r8, 25._r8, 35._r8, 45._r8, 63._r8, 88.5_r8, 113.5_r8, 138.5_r8, &
   163.5_r8, 189._r8, 227._r8, 277.5_r8, 328._r8, 378.5_r8, 454.5_r8, &
   555.5_r8, 656.5_r8, 757.5_r8, 858.5_r8, 959.5_r8, 1060.5_r8, 1162._r8, &
@@ -7397,12 +7537,11 @@ type(gsw_result_mpres) :: p_mid_tursr = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min = gsw_result_mpres( &
-  variable_name = "n2min", &
-  computation_accuracy = 1.6328e-14_r8, &
-  values = (/ &
+n2min % variable_name = "n2min"
+n2min % computation_accuracy = 1.6328e-14_r8
+n2min % values = reshape( (/ &
   8.194346517331e-08_r8, 1.1693792052724e-05_r8, 8.6908546214712e-08_r8, &
   3.8824431193258e-05_r8, 3.3020752923137e-05_r8, 0.00015310139213068_r8, &
   0.00024668867358782_r8, 0.00027105946540631_r8, 0.00028423794269635_r8, &
@@ -7440,12 +7579,11 @@ type(gsw_result_mpres) :: n2min = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_pmid = gsw_result_mpres( &
-  variable_name = "n2min_pmid", &
-  computation_accuracy = 2.3e-08_r8, &
-  values = (/ &
+n2min_pmid % variable_name = "n2min_pmid"
+n2min_pmid % computation_accuracy = 2.3e-08_r8
+n2min_pmid % values = reshape( (/ &
   0._r8, 20._r8, 30._r8, 40._r8, 50._r8, 76._r8, 101._r8, 126._r8, 151._r8, &
   176._r8, 202._r8, 252._r8, 303._r8, 353._r8, 404._r8, 505._r8, 606._r8, &
   707._r8, 808._r8, 909._r8, 1010._r8, 1111._r8, 1213._r8, 1314._r8, &
@@ -7464,12 +7602,11 @@ type(gsw_result_mpres) :: n2min_pmid = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_specvol = gsw_result_mpres( &
-  variable_name = "n2min_specvol", &
-  computation_accuracy = 2.8189e-16_r8, &
-  values = (/ &
+n2min_specvol % variable_name = "n2min_specvol"
+n2min_specvol % computation_accuracy = 2.8189e-16_r8
+n2min_specvol % values = reshape( (/ &
   0.0009785543233027595_r8, 0.0009784618366719601_r8, &
   0.000978421415045363_r8, 0.0009783422466640218_r8, &
   0.0009782688824288848_r8, 0.0009777640332867593_r8, &
@@ -7521,12 +7658,11 @@ type(gsw_result_mpres) :: n2min_specvol = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_alpha = gsw_result_mpres( &
-  variable_name = "n2min_alpha", &
-  computation_accuracy = 8.2511e-15_r8, &
-  values = (/ &
+n2min_alpha % variable_name = "n2min_alpha"
+n2min_alpha % computation_accuracy = 8.2511e-15_r8
+n2min_alpha % values = reshape( (/ &
   0.00031831246465714_r8, 0.00031814275657959_r8, 0.00031829167734161_r8, &
   0.00031795922055419_r8, 0.00031741177706767_r8, 0.00031179395602026_r8, &
   0.00030141362492837_r8, 0.00028596263812853_r8, 0.00026450886155659_r8, &
@@ -7564,12 +7700,11 @@ type(gsw_result_mpres) :: n2min_alpha = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_beta = gsw_result_mpres( &
-  variable_name = "n2min_beta", &
-  computation_accuracy = 1.8397e-15_r8, &
-  values = (/ &
+n2min_beta % variable_name = "n2min_beta"
+n2min_beta % computation_accuracy = 1.8397e-15_r8
+n2min_beta % values = reshape( (/ &
   0.00071891860085091_r8, 0.00071881933367617_r8, 0.00071871921576397_r8, &
   0.00071872418757004_r8, 0.00071877529859646_r8, 0.00071982423795744_r8, &
   0.00072192226059341_r8, 0.00072514590519558_r8, 0.00072975281215256_r8, &
@@ -7607,12 +7742,11 @@ type(gsw_result_mpres) :: n2min_beta = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_dsa = gsw_result_mpres( &
-  variable_name = "n2min_dsa", &
-  computation_accuracy = 8.8818e-16_r8, &
-  values = (/ &
+n2min_dsa % variable_name = "n2min_dsa"
+n2min_dsa % computation_accuracy = 8.8818e-16_r8
+n2min_dsa % values = reshape( (/ &
   -0.0004744772376454875_r8, -0.005176129943286867_r8, &
   0.002586467507178725_r8, 0.02620828714793788_r8, 0.006840473811116965_r8, &
   0.1985940608084107_r8, 0.2530121394447065_r8, 0.131304336162323_r8, &
@@ -7651,12 +7785,11 @@ type(gsw_result_mpres) :: n2min_dsa = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_dct = gsw_result_mpres( &
-  variable_name = "n2min_dct", &
-  computation_accuracy = 1.724e-12_r8, &
-  values = (/ &
+n2min_dct % variable_name = "n2min_dct"
+n2min_dct % computation_accuracy = 1.724e-12_r8
+n2min_dct % values = reshape( (/ &
   -0.0013348737376226_r8, -0.049278777774731_r8, 0.0055611990517122_r8, &
   -0.065594930625537_r8, -0.090860123210103_r8, -0.84597374485428_r8, &
   -1.4830388043076_r8, -2.0844865998417_r8, -2.7413460849488_r8, &
@@ -7694,12 +7827,11 @@ type(gsw_result_mpres) :: n2min_dct = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: n2min_dp = gsw_result_mpres( &
-  variable_name = "n2min_dp", &
-  computation_accuracy = 2.2737e-13_r8, &
-  values = (/ &
+n2min_dp % variable_name = "n2min_dp"
+n2min_dp % computation_accuracy = 2.2737e-13_r8
+n2min_dp % values = reshape( (/ &
   10._r8, 10._r8, 10._r8, 10._r8, 10._r8, 26._r8, 25._r8, 25._r8, 25._r8, &
   25._r8, 26._r8, 50._r8, 51._r8, 50._r8, 51._r8, 101._r8, 101._r8, 101._r8, &
   101._r8, 101._r8, 101._r8, 101._r8, 102._r8, 101._r8, 102._r8, 101._r8, &
@@ -7716,12 +7848,11 @@ type(gsw_result_mpres) :: n2min_dp = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: ipvfn2 = gsw_result_mpres( &
-  variable_name = "IPVfN2", &
-  computation_accuracy = 3.4747e-09_r8, &
-  values = (/ &
+ipvfn2 % variable_name = "IPVfN2"
+ipvfn2 % computation_accuracy = 3.4747e-09_r8
+ipvfn2 % values = reshape( (/ &
   0.998915064829_r8, 0.999297107902_r8, 1.02277262967_r8, 0.999605429655_r8, &
   0.998815151264_r8, 0.998889357966_r8, 0.998028321472_r8, 0.996209050884_r8, &
   0.993415543976_r8, 0.988650700453_r8, 0.983220768023_r8, 0.974597457349_r8, &
@@ -7751,12 +7882,11 @@ type(gsw_result_mpres) :: ipvfn2 = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result_mpres) :: p_mid_ipvfn2 = gsw_result_mpres( &
-  variable_name = "p_mid_IPVfN2", &
-  computation_accuracy = 2.3e-08_r8, &
-  values = (/ &
+p_mid_ipvfn2 % variable_name = "p_mid_IPVfN2"
+p_mid_ipvfn2 % computation_accuracy = 2.3e-08_r8
+p_mid_ipvfn2 % values = reshape( (/ &
   5._r8, 15._r8, 25._r8, 35._r8, 45._r8, 63._r8, 88.5_r8, 113.5_r8, 138.5_r8, &
   163.5_r8, 189._r8, 227._r8, 277.5_r8, 328._r8, 378.5_r8, 454.5_r8, &
   555.5_r8, 656.5_r8, 757.5_r8, 858.5_r8, 959.5_r8, 1060.5_r8, 1162._r8, &
@@ -7775,12 +7905,11 @@ type(gsw_result_mpres) :: p_mid_ipvfn2 = gsw_result_mpres( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_mpres_m,cast_mpres_n/) )
 
-type(gsw_result) :: n2_lowerlimit = gsw_result( &
-  variable_name = "n2_lowerlimit", &
-  computation_accuracy = 1.725e-18_r8, &
-  values = (/ &
+n2_lowerlimit % variable_name = "n2_lowerlimit"
+n2_lowerlimit % computation_accuracy = 1.725e-18_r8
+n2_lowerlimit % values = reshape( (/ &
   1e-07_r8, 9.9253737531188e-08_r8, 9.8514900498007e-08_r8, &
   9.7783415016138e-08_r8, 9.7059207936424e-08_r8, 9.6342206837554e-08_r8, &
   9.4511215491954e-08_r8, 9.279497746644e-08_r8, 9.1121113508756e-08_r8, &
@@ -7819,19 +7948,15 @@ type(gsw_result) :: n2_lowerlimit = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result_cast) :: mlp = gsw_result_cast( &
-  variable_name = "mlp", &
-  computation_accuracy = 2.3e-08_r8, &
-  values = (/ &
-  50._r8, 50._r8, 9e90_r8 &
-  /) )
+mlp % variable_name = "mlp"
+mlp % computation_accuracy = 2.3e-08_r8
+mlp % values = (/ 50._r8, 50._r8, 9e90_r8 /)
 
-type(gsw_result) :: geo_strf_dyn_height = gsw_result( &
-  variable_name = "geo_strf_dyn_height", &
-  computation_accuracy = 3.2646e-07_r8, &
-  values = (/ &
+geo_strf_dyn_height % variable_name = "geo_strf_dyn_height"
+geo_strf_dyn_height % computation_accuracy = 3.2646e-07_r8
+geo_strf_dyn_height % values = reshape( (/ &
   0._r8, -0.589583852182_r8, -1.17898875589_r8, -1.76835996825_r8, &
   -2.35629697345_r8, -2.94107494231_r8, -4.41504899203_r8, -5.70371913969_r8, &
   -6.82833809933_r8, -7.77225648508_r8, -8.56194300993_r8, -9.26464935526_r8, &
@@ -7862,12 +7987,11 @@ type(gsw_result) :: geo_strf_dyn_height = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: geo_strf_dyn_height_pc = gsw_result( &
-  variable_name = "geo_strf_dyn_height_pc", &
-  computation_accuracy = 4.2179e-08_r8, &
-  values = (/ &
+geo_strf_dyn_height_pc % variable_name = "geo_strf_dyn_height_pc"
+geo_strf_dyn_height_pc % computation_accuracy = 4.2179e-08_r8
+geo_strf_dyn_height_pc % values = reshape( (/ &
   0._r8, -0.29470152206_r8, -0.883871636364_r8, -1.47292133789_r8, &
   -2.06049336665_r8, -2.64493938313_r8, -3.64315019735_r8, -4.95368424359_r8, &
   -6.07569585812_r8, -7.02216247979_r8, -7.81375276812_r8, -8.50314412232_r8, &
@@ -7898,12 +8022,11 @@ type(gsw_result) :: geo_strf_dyn_height_pc = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result) :: geo_strf_dyn_height_pc_p_mid = gsw_result( &
-  variable_name = "geo_strf_dyn_height_pc_p_mid", &
-  computation_accuracy = 1e-15_r8, &
-  values = (/ &
+geo_strf_dyn_height_pc_p_mid % variable_name = "geo_strf_dyn_height_pc_p_mid"
+geo_strf_dyn_height_pc_p_mid % computation_accuracy = 1e-15_r8
+geo_strf_dyn_height_pc_p_mid % values = reshape( (/ &
   0._r8, 5._r8, 15._r8, 25._r8, 35._r8, 45._r8, 63._r8, 88.5_r8, 113.5_r8, &
   138.5_r8, 163.5_r8, 189._r8, 227._r8, 277.5_r8, 328._r8, 378.5_r8, &
   454.5_r8, 555.5_r8, 656.5_r8, 757.5_r8, 858.5_r8, 959.5_r8, 1060.5_r8, &
@@ -7922,12 +8045,11 @@ type(gsw_result) :: geo_strf_dyn_height_pc_p_mid = gsw_result( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_m,cast_n/) )
 
-type(gsw_result_ice) :: rho_ice = gsw_result_ice( &
-  variable_name = "rho_ice", &
-  computation_accuracy = 1.1221e-10_r8, &
-  values = (/ &
+rho_ice % variable_name = "rho_ice"
+rho_ice % computation_accuracy = 1.1221e-10_r8
+rho_ice % values = reshape( (/ &
   917.0725744920776_r8, 917.056072336695_r8, 917.1013541739903_r8, &
   917.2348189282852_r8, 917.1907519837395_r8, 917.5662845738501_r8, &
   917.3183127245584_r8, 917.2088052553296_r8, 917.6569448140186_r8, &
@@ -7964,12 +8086,11 @@ type(gsw_result_ice) :: rho_ice = gsw_result_ice( &
   919.3558537741848_r8, 919.6428490009646_r8, 920.1626401152499_r8, &
   920.0451812190762_r8, 920.3733778644217_r8, 920.6970030771812_r8, &
   921.1178395359448_r8, 921.661545043789_r8, 921.9452599025518_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: alpha_wrt_t_ice = gsw_result_ice( &
-  variable_name = "alpha_wrt_t_ice", &
-  computation_accuracy = 3.3873e-16_r8, &
-  values = (/ &
+alpha_wrt_t_ice % variable_name = "alpha_wrt_t_ice"
+alpha_wrt_t_ice % computation_accuracy = 3.3873e-16_r8
+alpha_wrt_t_ice % values = reshape( (/ &
   0.00015867502981839_r8, 0.00015874871682068_r8, 0.0001586152330998_r8, &
   0.00015818417045966_r8, 0.00015835147855663_r8, 0.00015709159656146_r8, &
   0.00015798747177663_r8, 0.00015840343834605_r8, 0.00015692565159078_r8, &
@@ -8006,12 +8127,11 @@ type(gsw_result_ice) :: alpha_wrt_t_ice = gsw_result_ice( &
   0.00015420997666824_r8, 0.00015369994215162_r8, 0.00015237325755508_r8, &
   0.00015327207989466_r8, 0.0001526176702292_r8, 0.00015197841779699_r8, &
   0.0001509937269398_r8, 0.00014956502636122_r8, 0.00014905632274574_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: specvol_ice = gsw_result_ice( &
-  variable_name = "specvol_ice", &
-  computation_accuracy = 1.3336e-16_r8, &
-  values = (/ &
+specvol_ice % variable_name = "specvol_ice"
+specvol_ice % computation_accuracy = 1.3336e-16_r8
+specvol_ice % values = reshape( (/ &
   0.001090426240860874_r8, 0.001090445862761653_r8, 0.001090392022047197_r8, &
   0.001090233361581737_r8, 0.001090285742455598_r8, 0.001089839520928382_r8, &
   0.001090134129155087_r8, 0.001090264282538831_r8, 0.001089731849850131_r8, &
@@ -8048,12 +8168,11 @@ type(gsw_result_ice) :: specvol_ice = gsw_result_ice( &
   0.001087718097290348_r8, 0.00108737865040361_r8, 0.001086764400557222_r8, &
   0.001086903143903196_r8, 0.001086515564281465_r8, 0.001086133653805508_r8, &
   0.001085637425612988_r8, 0.001084996987644189_r8, 0.00108466309605594_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pressure_coefficient_ice = gsw_result_ice( &
-  variable_name = "pressure_coefficient_ice", &
-  computation_accuracy = 1.5646e-06_r8, &
-  values = (/ &
+pressure_coefficient_ice % variable_name = "pressure_coefficient_ice"
+pressure_coefficient_ice % computation_accuracy = 1.5646e-06_r8
+pressure_coefficient_ice % values = reshape( (/ &
   1352054.4081673_r8, 1352377.9086491_r8, 1351803.1555507_r8, &
   1349928.7960488_r8, 1350664.1532572_r8, 1345110.5151939_r8, &
   1349088.7567804_r8, 1350916.3442238_r8, 1344415.0717808_r8, &
@@ -8090,12 +8209,11 @@ type(gsw_result_ice) :: pressure_coefficient_ice = gsw_result_ice( &
   1333023.2697216_r8, 1330814.5373764_r8, 1324895.2846607_r8, &
   1329010.9475929_r8, 1326124.6616779_r8, 1323289.4887058_r8, &
   1318873.6222536_r8, 1312370.2263364_r8, 1310068.7164959_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: sound_speed_ice = gsw_result_ice( &
-  variable_name = "sound_speed_ice", &
-  computation_accuracy = 1.3333e-09_r8, &
-  values = (/ &
+sound_speed_ice % variable_name = "sound_speed_ice"
+sound_speed_ice % computation_accuracy = 1.3333e-09_r8
+sound_speed_ice % values = reshape( (/ &
   3095.703522406592_r8, 3095.419875364491_r8, 3095.922166375146_r8, &
   3097.549896982661_r8, 3096.913649225968_r8, 3101.651154762964_r8, &
   3098.277202345323_r8, 3096.692824235721_r8, 3102.257173176591_r8, &
@@ -8132,12 +8250,11 @@ type(gsw_result_ice) :: sound_speed_ice = gsw_result_ice( &
   3112.028897055726_r8, 3113.879966337284_r8, 3118.92510087816_r8, &
   3115.239284904962_r8, 3117.654289817829_r8, 3120.012960948077_r8, &
   3123.760458335762_r8, 3129.290190566825_r8, 3131.157287837835_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: kappa_ice = gsw_result_ice( &
-  variable_name = "kappa_ice", &
-  computation_accuracy = 1.0713e-22_r8, &
-  values = (/ &
+kappa_ice % variable_name = "kappa_ice"
+kappa_ice % computation_accuracy = 1.0713e-22_r8
+kappa_ice % values = reshape( (/ &
   1.137830501222573e-10_r8, 1.138059518359331e-10_r8, &
   1.137634091037491e-10_r8, 1.136273414534416e-10_r8, &
   1.136794962916872e-10_r8, 1.132861065691551e-10_r8, &
@@ -8190,12 +8307,11 @@ type(gsw_result_ice) :: kappa_ice = gsw_result_ice( &
   1.117186071631419e-10_r8, 1.11997421259374e-10_r8, &
   1.117841016378322e-10_r8, 1.115759194133638e-10_r8, &
   1.112575162073459e-10_r8, 1.107992587479614e-10_r8, 1.106331036227652e-10_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: kappa_const_t_ice = gsw_result_ice( &
-  variable_name = "kappa_const_t_ice", &
-  computation_accuracy = 1.2219e-22_r8, &
-  values = (/ &
+kappa_const_t_ice % variable_name = "kappa_const_t_ice"
+kappa_const_t_ice % computation_accuracy = 1.2219e-22_r8
+kappa_const_t_ice % values = reshape( (/ &
   1.173584649108e-10_r8, 1.1738487874241e-10_r8, 1.1733604293533e-10_r8, &
   1.1717964008373e-10_r8, 1.1723971364366e-10_r8, 1.1678712996962e-10_r8, &
   1.1710680337569e-10_r8, 1.1725628979422e-10_r8, 1.1672410915694e-10_r8, &
@@ -8232,12 +8348,11 @@ type(gsw_result_ice) :: kappa_const_t_ice = gsw_result_ice( &
   1.1568438463977e-10_r8, 1.1549313434359e-10_r8, 1.1500777406276e-10_r8, &
   1.1532792876708e-10_r8, 1.1508546265635e-10_r8, 1.1484895715875e-10_r8, &
   1.1448688061695e-10_r8, 1.139655741648e-10_r8, 1.1377748424099e-10_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: internal_energy_ice = gsw_result_ice( &
-  variable_name = "internal_energy_ice", &
-  computation_accuracy = 1.2601e-06_r8, &
-  values = (/ &
+internal_energy_ice % variable_name = "internal_energy_ice"
+internal_energy_ice % computation_accuracy = 1.2601e-06_r8
+internal_energy_ice % values = reshape( (/ &
   -338485.52543942_r8, -338100.62787003_r8, -338598.56136929_r8, &
   -340356.22331632_r8, -339577.81816009_r8, -344790.59192119_r8, &
   -340864.17320025_r8, -338926.69841841_r8, -344957.12322566_r8, &
@@ -8274,12 +8389,11 @@ type(gsw_result_ice) :: internal_energy_ice = gsw_result_ice( &
   -344866.07428584_r8, -345220.94187662_r8, -348965.41693898_r8, &
   -343425.79898675_r8, -344376.16037796_r8, -345251.65307171_r8, &
   -347576.15140857_r8, -351704.38041466_r8, -352023.26994042_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: enthalpy_ice = gsw_result_ice( &
-  variable_name = "enthalpy_ice", &
-  computation_accuracy = 1.2496e-06_r8, &
-  values = (/ &
+enthalpy_ice % variable_name = "enthalpy_ice"
+enthalpy_ice % computation_accuracy = 1.2496e-06_r8
+enthalpy_ice % values = reshape( (/ &
   -338375.03800056_r8, -337881.09385671_r8, -338269.99899325_r8, &
   -339918.68541248_r8, -339031.23066026_r8, -344135.24417127_r8, &
   -339925.21342146_r8, -337715.06046462_r8, -343473.64401516_r8, &
@@ -8316,12 +8430,11 @@ type(gsw_result_ice) :: enthalpy_ice = gsw_result_ice( &
   -325492.37374662_r8, -323091.34556419_r8, -324087.93984739_r8, &
   -315773.54285918_r8, -313963.1501006_r8, -312068.83082086_r8, &
   -311640.11415119_r8, -313011.95021426_r8, -310566.00923056_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: entropy_ice = gsw_result_ice( &
-  variable_name = "entropy_ice", &
-  computation_accuracy = 4.6493e-09_r8, &
-  values = (/ &
+entropy_ice % variable_name = "entropy_ice"
+entropy_ice % computation_accuracy = 4.6493e-09_r8
+entropy_ice % values = reshape( (/ &
   -1239.2291908496_r8, -1237.808063629_r8, -1239.6467496457_r8, &
   -1246.1501708896_r8, -1243.2675532861_r8, -1262.6489366557_r8, &
   -1248.0335397995_r8, -1240.8595837801_r8, -1263.2714645842_r8, &
@@ -8358,12 +8471,11 @@ type(gsw_result_ice) :: entropy_ice = gsw_result_ice( &
   -1263.0035040656_r8, -1264.3518875086_r8, -1278.4241019998_r8, &
   -1257.7044387224_r8, -1261.279921878_r8, -1264.5846748477_r8, &
   -1273.3311124301_r8, -1288.9313663785_r8, -1290.1813039913_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: cp_ice = gsw_result_ice( &
-  variable_name = "cp_ice", &
-  computation_accuracy = 4.457e-09_r8, &
-  values = (/ &
+cp_ice % variable_name = "cp_ice"
+cp_ice % computation_accuracy = 4.457e-09_r8
+cp_ice % values = reshape( (/ &
   2078.9899137873_r8, 2080.3550250568_r8, 2078.5921482_r8, &
   2072.3549584602_r8, 2075.1212480904_r8, 2056.5437052233_r8, &
   2070.5550518896_r8, 2077.4400237469_r8, 2055.9565205783_r8, &
@@ -8400,12 +8512,11 @@ type(gsw_result_ice) :: cp_ice = gsw_result_ice( &
   2056.4021599901_r8, 2055.1356384206_r8, 2041.660746493_r8, &
   2061.5735385337_r8, 2058.1659609704_r8, 2055.0172991216_r8, &
   2046.6405877938_r8, 2031.6874624203_r8, 2030.5065656792_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: chem_potential_water_ice = gsw_result_ice( &
-  variable_name = "chem_potential_water_ice", &
-  computation_accuracy = 7.7579e-07_r8, &
-  values = (/ &
+chem_potential_water_ice % variable_name = "chem_potential_water_ice"
+chem_potential_water_ice % computation_accuracy = 7.7579e-07_r8
+chem_potential_water_ice % values = reshape( (/ &
   -2856.1466436639_r8, -2515.0896636323_r8, -2699.8798430037_r8, &
   -3640.6634793403_r8, -3061.6084746122_r8, -6111.5727361786_r8, &
   -3432.1471607215_r8, -1990.003173102_r8, -5364.3051252554_r8, &
@@ -8442,12 +8553,11 @@ type(gsw_result_ice) :: chem_potential_water_ice = gsw_result_ice( &
   13047.723000914_r8, 15658.033958288_r8, 16156.887545832_r8, &
   22424.348314103_r8, 24677.665536837_r8, 26983.943192945_r8, &
   28374.33395978_r8, 28615.085332449_r8, 31251.718658662_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: helmholtz_energy_ice = gsw_result_ice( &
-  variable_name = "Helmholtz_energy_ice", &
-  computation_accuracy = 7.7232e-07_r8, &
-  values = (/ &
+helmholtz_energy_ice % variable_name = "Helmholtz_energy_ice"
+helmholtz_energy_ice % computation_accuracy = 7.7232e-07_r8
+helmholtz_energy_ice % values = reshape( (/ &
   -2966.63408252_r8, -2734.62367695_r8, -3028.44221905_r8, -4078.20138318_r8, &
   -3608.19597445_r8, -6766.9204861_r8, -4371.10693952_r8, -3201.64112689_r8, &
   -6847.78433575_r8, -7266.89671475_r8, -4591.36132081_r8, -3014.85232818_r8, &
@@ -8475,12 +8585,11 @@ type(gsw_result_ice) :: helmholtz_energy_ice = gsw_result_ice( &
   -8501.72768697_r8, -6959.15516584_r8, -7826.04409992_r8, -6325.97753831_r8, &
   -6471.56235414_r8, -8720.58954575_r8, -5227.90781346_r8, -5735.34474052_r8, &
   -6198.8790579_r8, -7561.7032976_r8, -10077.344868_r8, -10205.5420512_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: adiabatic_lapse_rate_ice = gsw_result_ice( &
-  variable_name = "adiabatic_lapse_rate_ice", &
-  computation_accuracy = 5.247e-20_r8, &
-  values = (/ &
+adiabatic_lapse_rate_ice % variable_name = "adiabatic_lapse_rate_ice"
+adiabatic_lapse_rate_ice % computation_accuracy = 5.247e-20_r8
+adiabatic_lapse_rate_ice % values = reshape( (/ &
   2.2532939131206e-08_r8, 2.2544603686578e-08_r8, 2.2523901152231e-08_r8, &
   2.2456726358678e-08_r8, 2.2483006691338e-08_r8, 2.2286509763096e-08_r8, &
   2.2426715129186e-08_r8, 2.2492048524301e-08_r8, 2.2261792956974e-08_r8, &
@@ -8517,12 +8626,11 @@ type(gsw_result_ice) :: adiabatic_lapse_rate_ice = gsw_result_ice( &
   2.1863834583552e-08_r8, 2.1788361013749e-08_r8, 2.1586247825881e-08_r8, &
   2.1729381567717e-08_r8, 2.1631577874055e-08_r8, 2.1536200947689e-08_r8, &
   2.1387407775522e-08_r8, 2.1170159186773e-08_r8, 2.1095251515047e-08_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pt0_from_t_ice = gsw_result_ice( &
-  variable_name = "pt0_from_t_ice", &
-  computation_accuracy = 6.0526e-10_r8, &
-  values = (/ &
+pt0_from_t_ice % variable_name = "pt0_from_t_ice"
+pt0_from_t_ice % computation_accuracy = 6.0526e-10_r8
+pt0_from_t_ice % values = reshape( (/ &
   -2.40194642416_r8, -2.21686964922_r8, -2.45632512542_r8, -3.30320859054_r8, &
   -2.92784394715_r8, -5.45120600207_r8, -3.5484429277_r8, -2.6142700592_r8, &
   -5.5322397299_r8, -5.86929674065_r8, -3.74737597714_r8, -2.48653730851_r8, &
@@ -8550,12 +8658,11 @@ type(gsw_result_ice) :: pt0_from_t_ice = gsw_result_ice( &
   -7.10631781994_r8, -5.9152114289_r8, -6.6224930493_r8, -5.49735975135_r8, &
   -5.67287465251_r8, -7.50431811712_r8, -4.80754992701_r8, -5.27299932524_r8, &
   -5.70317536793_r8, -6.84154776201_r8, -8.87144183175_r8, -9.03405340779_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pt_from_t_ice = gsw_result_ice( &
-  variable_name = "pt_from_t_ice", &
-  computation_accuracy = 6.0536e-10_r8, &
-  values = (/ &
+pt_from_t_ice % variable_name = "pt_from_t_ice"
+pt_from_t_ice % computation_accuracy = 6.0536e-10_r8
+pt_from_t_ice % values = reshape( (/ &
   -2.40194642416_r8, -2.21686964922_r8, -2.45632512542_r8, -3.30320859054_r8, &
   -2.92784394715_r8, -5.45120600207_r8, -3.5484429277_r8, -2.6142700592_r8, &
   -5.5322397299_r8, -5.86929674065_r8, -3.74737597714_r8, -2.48653730851_r8, &
@@ -8583,12 +8690,11 @@ type(gsw_result_ice) :: pt_from_t_ice = gsw_result_ice( &
   -7.10631781994_r8, -5.9152114289_r8, -6.6224930493_r8, -5.49735975135_r8, &
   -5.67287465251_r8, -7.50431811712_r8, -4.80754992701_r8, -5.27299932524_r8, &
   -5.70317536793_r8, -6.84154776201_r8, -8.87144183175_r8, -9.03405340779_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: t_from_pt0_ice = gsw_result_ice( &
-  variable_name = "t_from_pt0_ice", &
-  computation_accuracy = 6.0023e-10_r8, &
-  values = (/ &
+t_from_pt0_ice % variable_name = "t_from_pt0_ice"
+t_from_pt0_ice % computation_accuracy = 6.0023e-10_r8
+t_from_pt0_ice % values = reshape( (/ &
   -2.40194642416_r8, -2.21461506654_r8, -2.45181985622_r8, -3.29647047469_r8, &
   -2.91884879072_r8, -5.44005971336_r8, -3.53139158119_r8, -2.59154062237_r8, &
   -5.50417060482_r8, -5.83570234402_r8, -3.70793695923_r8, -2.44108369441_r8, &
@@ -8616,12 +8722,11 @@ type(gsw_result_ice) :: t_from_pt0_ice = gsw_result_ice( &
   -6.81709361827_r8, -5.60240635161_r8, -6.2883915056_r8, -5.10632818297_r8, &
   -5.22666088119_r8, -7.00606008133_r8, -4.24907164131_r8, -4.66018282032_r8, &
   -5.0360644467_r8, -6.1224807697_r8, -8.10327644438_r8, -8.21225300912_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pot_enthalpy_from_pt_ice = gsw_result_ice( &
-  variable_name = "pot_enthalpy_from_pt_ice", &
-  computation_accuracy = 1.2603e-06_r8, &
-  values = (/ &
+pot_enthalpy_from_pt_ice % variable_name = "pot_enthalpy_from_pt_ice"
+pot_enthalpy_from_pt_ice % computation_accuracy = 1.2603e-06_r8
+pot_enthalpy_from_pt_ice % values = reshape( (/ &
   -338375.03800056_r8, -337990.13906349_r8, -338488.07987869_r8, &
   -340245.76099591_r8, -339467.3548735_r8, -344680.17936627_r8, &
   -340753.75111848_r8, -338816.29062666_r8, -344846.80411902_r8, &
@@ -8658,12 +8763,11 @@ type(gsw_result_ice) :: pot_enthalpy_from_pt_ice = gsw_result_ice( &
   -344775.08845198_r8, -345135.86850932_r8, -348886.97712483_r8, &
   -343354.95198125_r8, -344313.5737781_r8, -345198.13027078_r8, &
   -347532.35872672_r8, -351671.00390044_r8, -352001.23398293_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pt_from_pot_enthalpy_ice = gsw_result_ice( &
-  variable_name = "pt_from_pot_enthalpy_ice", &
-  computation_accuracy = 6.0536e-10_r8, &
-  values = (/ &
+pt_from_pot_enthalpy_ice % variable_name = "pt_from_pot_enthalpy_ice"
+pt_from_pot_enthalpy_ice % computation_accuracy = 6.0536e-10_r8
+pt_from_pot_enthalpy_ice % values = reshape( (/ &
   -2.40194642416_r8, -2.21686964922_r8, -2.45632512542_r8, -3.30320859054_r8, &
   -2.92784394715_r8, -5.45120600207_r8, -3.5484429277_r8, -2.6142700592_r8, &
   -5.5322397299_r8, -5.86929674065_r8, -3.74737597714_r8, -2.48653730851_r8, &
@@ -8691,12 +8795,11 @@ type(gsw_result_ice) :: pt_from_pot_enthalpy_ice = gsw_result_ice( &
   -7.10631781994_r8, -5.9152114289_r8, -6.6224930493_r8, -5.49735975135_r8, &
   -5.67287465251_r8, -7.50431811712_r8, -4.80754992701_r8, -5.27299932524_r8, &
   -5.70317536793_r8, -6.84154776201_r8, -8.87144183175_r8, -9.03405340779_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pot_enthalpy_from_pt_ice_poly = gsw_result_ice( &
-  variable_name = "pot_enthalpy_from_pt_ice_poly", &
-  computation_accuracy = 1.2605e-06_r8, &
-  values = (/ &
+pot_enthalpy_from_pt_ice_poly % variable_name = "pot_enthalpy_from_pt_ice_poly"
+pot_enthalpy_from_pt_ice_poly % computation_accuracy = 1.2605e-06_r8
+pot_enthalpy_from_pt_ice_poly % values = reshape( (/ &
   -338375.03588375_r8, -337990.13783234_r8, -338488.07752548_r8, &
   -340245.75617159_r8, -339467.35088372_r8, -344680.17489189_r8, &
   -340753.74594004_r8, -338816.28764507_r8, -344846.79976204_r8, &
@@ -8733,12 +8836,11 @@ type(gsw_result_ice) :: pot_enthalpy_from_pt_ice_poly = gsw_result_ice( &
   -344775.08404395_r8, -345135.86436564_r8, -348886.97627438_r8, &
   -343354.94675758_r8, -344313.56906144_r8, -345198.12617453_r8, &
   -347532.35664461_r8, -351671.00529632_r8, -352001.23560227_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pt_from_pot_enthalpy_ice_poly = gsw_result_ice( &
-  variable_name = "pt_from_pot_enthalpy_ice_poly", &
-  computation_accuracy = 6.0578e-10_r8, &
-  values = (/ &
+pt_from_pot_enthalpy_ice_poly % variable_name = "pt_from_pot_enthalpy_ice_poly"
+pt_from_pot_enthalpy_ice_poly % computation_accuracy = 6.0578e-10_r8
+pt_from_pot_enthalpy_ice_poly % values = reshape( (/ &
   -2.40194642416_r8, -2.21686964922_r8, -2.45632512542_r8, -3.30320859054_r8, &
   -2.92784394715_r8, -5.45120600207_r8, -3.5484429277_r8, -2.6142700592_r8, &
   -5.5322397299_r8, -5.86929674065_r8, -3.74737597714_r8, -2.48653730851_r8, &
@@ -8766,12 +8868,11 @@ type(gsw_result_ice) :: pt_from_pot_enthalpy_ice_poly = gsw_result_ice( &
   -7.10631781994_r8, -5.9152114289_r8, -6.6224930493_r8, -5.49735975135_r8, &
   -5.67287465251_r8, -7.50431811712_r8, -4.80754992701_r8, -5.27299932524_r8, &
   -5.70317536793_r8, -6.84154776201_r8, -8.87144183175_r8, -9.03405340779_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: pressure_freezing_ct = gsw_result_ice( &
-  variable_name = "pressure_freezing_CT", &
-  computation_accuracy = 7.8061e-07_r8, &
-  values = (/ &
+pressure_freezing_ct % variable_name = "pressure_freezing_CT"
+pressure_freezing_ct % computation_accuracy = 7.8061e-07_r8
+pressure_freezing_ct % values = reshape( (/ &
   1096.2576803_r8, 1070.15780265_r8, 1034.10979826_r8, 1016.50879419_r8, &
   9e90_r8, 9e90_r8, 437.916027373_r8, 755.449491706_r8, 881.374551326_r8, &
   954.261417834_r8, 887.895489475_r8, 600.592848315_r8, 9e90_r8, 9e90_r8, &
@@ -8790,12 +8891,11 @@ type(gsw_result_ice) :: pressure_freezing_ct = gsw_result_ice( &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_sa_ct_ratio = gsw_result_ice( &
-  variable_name = "melting_ice_SA_CT_ratio", &
-  computation_accuracy = 2.9516e-12_r8, &
-  values = (/ &
+melting_ice_sa_ct_ratio % variable_name = "melting_ice_SA_CT_ratio"
+melting_ice_sa_ct_ratio % computation_accuracy = 2.9516e-12_r8
+melting_ice_sa_ct_ratio % values = reshape( (/ &
   0.33168549572671_r8, 0.33771954459289_r8, 0.33752562735487_r8, &
   0.33680549826042_r8, 0.35861380642615_r8, 0.36438130865652_r8, &
   0.38251615461128_r8, 0.3908894615964_r8, 0.38731789147645_r8, &
@@ -8832,12 +8932,11 @@ type(gsw_result_ice) :: melting_ice_sa_ct_ratio = gsw_result_ice( &
   0.41071033691799_r8, 0.41093576995677_r8, 0.40692463116963_r8, &
   0.41396910274313_r8, 0.41313141666861_r8, 0.41240125815685_r8, &
   0.40993676584045_r8, 0.40536542049367_r8, 0.40531920773799_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_sa_ct_ratio_poly = gsw_result_ice( &
-  variable_name = "melting_ice_SA_CT_ratio_poly", &
-  computation_accuracy = 2.9517e-12_r8, &
-  values = (/ &
+melting_ice_sa_ct_ratio_poly % variable_name = "melting_ice_SA_CT_ratio_poly"
+melting_ice_sa_ct_ratio_poly % computation_accuracy = 2.9517e-12_r8
+melting_ice_sa_ct_ratio_poly % values = reshape( (/ &
   0.33168549572671_r8, 0.33771954422683_r8, 0.33752562660978_r8, &
   0.33680549713831_r8, 0.35861380423964_r8, 0.36438130559991_r8, &
   0.38251615129452_r8, 0.39088945807584_r8, 0.3873178877609_r8, &
@@ -8874,12 +8973,11 @@ type(gsw_result_ice) :: melting_ice_sa_ct_ratio_poly = gsw_result_ice( &
   0.41071027632691_r8, 0.41093570125641_r8, 0.40692455313962_r8, &
   0.41396901093423_r8, 0.41313131127007_r8, 0.41240113820642_r8, &
   0.40993663120213_r8, 0.40536527150044_r8, 0.40531904237398_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio = gsw_result_ice( &
-  variable_name = "melting_ice_equilibrium_SA_CT_ratio", &
-  computation_accuracy = 1.6376e-12_r8, &
-  values = (/ &
+melting_ice_equilibrium_sa_ct_ratio % variable_name = "melting_ice_equilibrium_SA_CT_ratio"
+melting_ice_equilibrium_sa_ct_ratio % computation_accuracy = 1.6376e-12_r8
+melting_ice_equilibrium_sa_ct_ratio % values = reshape( (/ &
   0.33414334412702_r8, 0.33986838553319_r8, 0.34030594345545_r8, &
   0.3414284479325_r8, 0.36618238158968_r8, 0.38026225193919_r8, &
   0.38998972217873_r8, 0.39502432853306_r8, 0.3980275064054_r8, &
@@ -8916,12 +9014,11 @@ type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio = gsw_result_ice( &
   0.42975425996488_r8, 0.43064426260056_r8, 0.43149243568032_r8, &
   0.43232396924991_r8, 0.43314863421959_r8, 0.43395810257978_r8, &
   0.4347868367356_r8, 0.4356215064151_r8, 0.43646972355485_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio_poly = gsw_result_ice( &
-  variable_name = "melting_ice_equilibrium_SA_CT_ratio_poly", &
-  computation_accuracy = 1.6377e-12_r8, &
-  values = (/ &
+melting_ice_equilibrium_sa_ct_ratio_poly % variable_name = "melting_ice_equilibrium_SA_CT_ratio_poly"
+melting_ice_equilibrium_sa_ct_ratio_poly % computation_accuracy = 1.6377e-12_r8
+melting_ice_equilibrium_sa_ct_ratio_poly % values = reshape( (/ &
   0.33414329019901_r8, 0.33986833703748_r8, 0.34030590325666_r8, &
   0.34142841561703_r8, 0.36618234802077_r8, 0.38026222358012_r8, &
   0.38998971464819_r8, 0.39502434147261_r8, 0.39802753953618_r8, &
@@ -8958,12 +9055,11 @@ type(gsw_result_ice) :: melting_ice_equilibrium_sa_ct_ratio_poly = gsw_result_ic
   0.42975479407749_r8, 0.43064479066062_r8, 0.43149295254953_r8, &
   0.43232447513727_r8, 0.43314913463365_r8, 0.43395860801411_r8, &
   0.43478736298117_r8, 0.43562207421379_r8, 0.4364703586858_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_into_seawater_sa_final = gsw_result_ice( &
-  variable_name = "melting_ice_into_seawater_SA_final", &
-  computation_accuracy = 3.6441e-10_r8, &
-  values = (/ &
+melting_ice_into_seawater_sa_final % variable_name = "melting_ice_into_seawater_SA_final"
+melting_ice_into_seawater_sa_final % computation_accuracy = 3.6441e-10_r8
+melting_ice_into_seawater_sa_final % values = reshape( (/ &
   27.614593517892_r8, 28.068255102176_r8, 28.095599027261_r8, &
   28.185691875733_r8, 29.885738875836_r8, 30.803040903732_r8, &
   31.954085286935_r8, 32.412350816674_r8, 32.713166969798_r8, &
@@ -9000,12 +9096,11 @@ type(gsw_result_ice) :: melting_ice_into_seawater_sa_final = gsw_result_ice( &
   33.914419302866_r8, 33.857178609065_r8, 33.79626372226_r8, &
   33.689672074486_r8, 33.603301666135_r8, 33.516564492698_r8, &
   33.436500401445_r8, 33.367328293786_r8, 33.273365486828_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_ice_into_seawater_ct_final = gsw_result_ice( &
-  variable_name = "melting_ice_into_seawater_CT_final", &
-  computation_accuracy = 6.0576e-10_r8, &
-  values = (/ &
+melting_ice_into_seawater_ct_final % variable_name = "melting_ice_into_seawater_CT_final"
+melting_ice_into_seawater_ct_final % computation_accuracy = 6.0576e-10_r8
+melting_ice_into_seawater_ct_final % values = reshape( (/ &
   -1.41093471265_r8, -1.45647956398_r8, -1.45017799343_r8, -1.44272895296_r8, &
   -1.59486646519_r8, -1.70267455304_r8, -1.70850050254_r8, -1.83425824545_r8, &
   -1.79773202937_r8, -1.84824280761_r8, -1.84644529844_r8, -1.96019808883_r8, &
@@ -9033,12 +9128,11 @@ type(gsw_result_ice) :: melting_ice_into_seawater_ct_final = gsw_result_ice( &
   -2.88566200644_r8, -2.96770758118_r8, -3.05008080349_r8, -3.25700506621_r8, &
   -3.46586716836_r8, -3.67684998285_r8, -3.88831812192_r8, -4.10330292846_r8, &
   -4.32145341296_r8, -4.54142769721_r8, -4.76522432974_r8, -4.98984452431_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_sa_freeze = gsw_result_ice( &
-  variable_name = "ice_fraction_to_freeze_seawater_SA_freeze", &
-  computation_accuracy = 3.638e-10_r8, &
-  values = (/ &
+ice_fraction_to_freeze_seawater_sa_freeze % variable_name = "ice_fraction_to_freeze_seawater_SA_freeze"
+ice_fraction_to_freeze_seawater_sa_freeze % computation_accuracy = 3.638e-10_r8
+ice_fraction_to_freeze_seawater_sa_freeze % values = reshape( (/ &
   27.623573185756_r8, 28.081447302697_r8, 28.103654114307_r8, &
   28.187063599892_r8, 29.90364103373_r8, 30.837290619367_r8, &
   31.961184743507_r8, 32.45029786444_r8, 32.723169623335_r8, &
@@ -9075,12 +9169,11 @@ type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_sa_freeze = gsw_result_i
   33.952421284689_r8, 33.894878041591_r8, 33.833431862073_r8, &
   33.7283452129_r8, 33.641628663235_r8, 33.554345344699_r8, &
   33.474348681112_r8, 33.40198259909_r8, 33.310797408192_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_ct_freeze = gsw_result_ice( &
-  variable_name = "ice_fraction_to_freeze_seawater_CT_freeze", &
-  computation_accuracy = 3.3783e-11_r8, &
-  values = (/ &
+ice_fraction_to_freeze_seawater_ct_freeze % variable_name = "ice_fraction_to_freeze_seawater_CT_freeze"
+ice_fraction_to_freeze_seawater_ct_freeze % computation_accuracy = 3.3783e-11_r8
+ice_fraction_to_freeze_seawater_ct_freeze % values = reshape( (/ &
   -1.4836625652296_r8, -1.5171697900132_r8, -1.5260414554195_r8, &
   -1.5383844861429_r8, -1.6436140963126_r8, -1.7046365705155_r8, &
   -1.789083655638_r8, -1.8364479337119_r8, -1.8714067827215_r8, &
@@ -9117,12 +9210,11 @@ type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_ct_freeze = gsw_result_i
   -3.2592412765773_r8, -3.4680881553499_r8, -3.6790418402018_r8, &
   -3.8906002619339_r8, -4.1055659804147_r8, -4.3236851989152_r8, &
   -4.5436641584868_r8, -4.7672724490261_r8, -4.9920567217524_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_w_ih = gsw_result_ice( &
-  variable_name = "ice_fraction_to_freeze_seawater_w_Ih", &
-  computation_accuracy = 7.0421e-12_r8, &
-  values = (/ &
+ice_fraction_to_freeze_seawater_w_ih % variable_name = "ice_fraction_to_freeze_seawater_w_Ih"
+ice_fraction_to_freeze_seawater_w_ih % computation_accuracy = 7.0421e-12_r8
+ice_fraction_to_freeze_seawater_w_ih % values = reshape( (/ &
   0.00166855877594_r8, 0.0020030321173_r8, 0.00242845831891_r8, &
   0.00266888879646_r8, 0.0127290315875_r8, 0.0191615461061_r8, &
   0.00835092384763_r8, 0.00572139096865_r8, 0.00469528575818_r8, &
@@ -9159,12 +9251,11 @@ type(gsw_result_ice) :: ice_fraction_to_freeze_seawater_w_ih = gsw_result_ice( &
   0.0327100414034_r8, 0.0346703973265_r8, 0.0366162791779_r8, &
   0.0397289408318_r8, 0.0422713764524_r8, 0.0447583421255_r8, &
   0.0470553077127_r8, 0.0491096180216_r8, 0.0516976204519_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dsa_dct_frazil = gsw_result_ice( &
-  variable_name = "dSA_dCT_frazil", &
-  computation_accuracy = 1.6976e-12_r8, &
-  values = (/ &
+dsa_dct_frazil % variable_name = "dSA_dCT_frazil"
+dsa_dct_frazil % computation_accuracy = 1.6976e-12_r8
+dsa_dct_frazil % values = reshape( (/ &
   0.33459111646994_r8, 0.34043318315061_r8, 0.34092692826698_r8, &
   0.34205198351191_r8, 0.36949047578447_r8, 0.38578782051496_r8, &
   0.39224121311839_r8, 0.39688053760759_r8, 0.39936089295767_r8, &
@@ -9201,12 +9292,11 @@ type(gsw_result_ice) :: dsa_dct_frazil = gsw_result_ice( &
   0.43995260758833_r8, 0.44160033100708_r8, 0.44267605165332_r8, &
   0.44424942583703_r8, 0.4460693995696_r8, 0.44812668936002_r8, &
   0.44870967634161_r8, 0.45109927868808_r8, 0.45152857035841_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dsa_dp_frazil = gsw_result_ice( &
-  variable_name = "dSA_dP_frazil", &
-  computation_accuracy = 1.4507e-19_r8, &
-  values = (/ &
+dsa_dp_frazil % variable_name = "dSA_dP_frazil"
+dsa_dp_frazil % computation_accuracy = 1.4507e-19_r8
+dsa_dp_frazil % values = reshape( (/ &
   -2.4975389078882e-08_r8, -2.5425456233617e-08_r8, -2.5475393934859e-08_r8, &
   -2.5572750347456e-08_r8, -2.7637514659792e-08_r8, -2.886862166101e-08_r8, &
   -2.9395606619289e-08_r8, -2.9781121126576e-08_r8, -3.0005377359089e-08_r8, &
@@ -9243,12 +9333,11 @@ type(gsw_result_ice) :: dsa_dp_frazil = gsw_result_ice( &
   -3.5647292459274e-08_r8, -3.6173049938889e-08_r8, -3.6652756669472e-08_r8, &
   -3.7173752863471e-08_r8, -3.7715106419719e-08_r8, -3.8278215907974e-08_r8, &
   -3.8716790617798e-08_r8, -3.930867389774e-08_r8, -3.9734034883564e-08_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dct_dp_frazil = gsw_result_ice( &
-  variable_name = "dCT_dP_frazil", &
-  computation_accuracy = 8.8383e-20_r8, &
-  values = (/ &
+dct_dp_frazil % variable_name = "dCT_dP_frazil"
+dct_dp_frazil % computation_accuracy = 8.8383e-20_r8
+dct_dp_frazil % values = reshape( (/ &
   -7.4644507428595e-08_r8, -7.46855990897e-08_r8, -7.4723912435891e-08_r8, &
   -7.4762759990151e-08_r8, -7.4798990694184e-08_r8, -7.4830308594178e-08_r8, &
   -7.4942677200055e-08_r8, -7.5037998351085e-08_r8, -7.5133489252963e-08_r8, &
@@ -9285,12 +9374,11 @@ type(gsw_result_ice) :: dct_dp_frazil = gsw_result_ice( &
   -8.1025301008398e-08_r8, -8.1913548063689e-08_r8, -8.279814670927e-08_r8, &
   -8.3677661019889e-08_r8, -8.4549862546298e-08_r8, -8.5418290891445e-08_r8, &
   -8.6284724085875e-08_r8, -8.713974008573e-08_r8, -8.799893847697e-08_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dsa_dct_frazil_poly = gsw_result_ice( &
-  variable_name = "dSA_dCT_frazil_poly", &
-  computation_accuracy = 1.6977e-12_r8, &
-  values = (/ &
+dsa_dct_frazil_poly % variable_name = "dSA_dCT_frazil_poly"
+dsa_dct_frazil_poly % computation_accuracy = 1.6977e-12_r8
+dsa_dct_frazil_poly % values = reshape( (/ &
   0.33459101869473_r8, 0.34043308373712_r8, 0.34092683275722_r8, &
   0.34205189686973_r8, 0.36949027117826_r8, 0.38578763143698_r8, &
   0.39224117599942_r8, 0.39688054070922_r8, 0.39936092460662_r8, &
@@ -9327,12 +9415,11 @@ type(gsw_result_ice) :: dsa_dct_frazil_poly = gsw_result_ice( &
   0.43995265362162_r8, 0.44160026860286_r8, 0.44267592554796_r8, &
   0.44424923097801_r8, 0.4460691528311_r8, 0.44812641746992_r8, &
   0.44870950486772_r8, 0.45109916807441_r8, 0.45152865929133_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dsa_dp_frazil_poly = gsw_result_ice( &
-  variable_name = "dSA_dP_frazil_poly", &
-  computation_accuracy = 1.4507e-19_r8, &
-  values = (/ &
+dsa_dp_frazil_poly % variable_name = "dSA_dP_frazil_poly"
+dsa_dp_frazil_poly % computation_accuracy = 1.4507e-19_r8
+dsa_dp_frazil_poly % values = reshape( (/ &
   -2.4990378528585e-08_r8, -2.5440434269897e-08_r8, -2.5490219461352e-08_r8, &
   -2.558743810527e-08_r8, -2.7652571913228e-08_r8, -2.8883713565401e-08_r8, &
   -2.9410165950428e-08_r8, -2.9795240008683e-08_r8, -3.0019051704916e-08_r8, &
@@ -9369,12 +9456,11 @@ type(gsw_result_ice) :: dsa_dp_frazil_poly = gsw_result_ice( &
   -3.5644196343586e-08_r8, -3.6168999686957e-08_r8, -3.6648091010328e-08_r8, &
   -3.7168761555434e-08_r8, -3.7710052297117e-08_r8, -3.8273331943447e-08_r8, &
   -3.8712302173085e-08_r8, -3.9304733294069e-08_r8, -3.9730810052296e-08_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: dct_dp_frazil_poly = gsw_result_ice( &
-  variable_name = "dCT_dP_frazil_poly", &
-  computation_accuracy = 8.7258e-20_r8, &
-  values = (/ &
+dct_dp_frazil_poly % variable_name = "dCT_dP_frazil_poly"
+dct_dp_frazil_poly % computation_accuracy = 8.7258e-20_r8
+dct_dp_frazil_poly % values = reshape( (/ &
   -7.4689328560207e-08_r8, -7.4729617905005e-08_r8, -7.4767419317518e-08_r8, &
   -7.4805719071966e-08_r8, -7.4839783534886e-08_r8, -7.4869464989882e-08_r8, &
   -7.4979802606119e-08_r8, -7.5073572404027e-08_r8, -7.5167723869043e-08_r8, &
@@ -9411,12 +9497,11 @@ type(gsw_result_ice) :: dct_dp_frazil_poly = gsw_result_ice( &
   -8.1018255146705e-08_r8, -8.1904387878633e-08_r8, -8.2787630623833e-08_r8, &
   -8.3666462345039e-08_r8, -8.4538578957499e-08_r8, -8.5407444085834e-08_r8, &
   -8.6274754051615e-08_r8, -8.7131025893591e-08_r8, -8.7991779114648e-08_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_sa_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_SA_final", &
-  computation_accuracy = 3.6572e-10_r8, &
-  values = (/ &
+frazil_properties_potential_sa_final % variable_name = "frazil_properties_potential_SA_final"
+frazil_properties_potential_sa_final % computation_accuracy = 3.6572e-10_r8
+frazil_properties_potential_sa_final % values = reshape( (/ &
   27.61945299247_r8, 28.077387196801_r8, 28.099512156485_r8, &
   28.185691875733_r8, 29.898278492069_r8, 30.833134150415_r8, &
   31.958028921858_r8, 32.447867444435_r8, 32.721254612213_r8, &
@@ -9453,12 +9538,11 @@ type(gsw_result_ice) :: frazil_properties_potential_sa_final = gsw_result_ice( &
   33.922012277638_r8, 33.85611600569_r8, 33.790358788593_r8, &
   33.674376716374_r8, 33.574946173078_r8, 33.470720008763_r8, &
   33.412220981719_r8, 33.296687379164_r8, 33.270299588068_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_ct_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_CT_final", &
-  computation_accuracy = 6.104e-10_r8, &
-  values = (/ &
+frazil_properties_potential_ct_final % variable_name = "frazil_properties_potential_CT_final"
+frazil_properties_potential_ct_final % computation_accuracy = 6.104e-10_r8
+frazil_properties_potential_ct_final % values = reshape( (/ &
   -1.48342974905_r8, -1.51693991538_r8, -1.52580689883_r8, -1.52990473633_r8, &
   -1.64330810094_r8, -1.70439844956_r8, -1.78890196017_r8, -1.83630767882_r8, &
   -1.87129611568_r8, -1.90491887605_r8, -1.93967981426_r8, -1.97897598197_r8, &
@@ -9486,12 +9570,11 @@ type(gsw_result_ice) :: frazil_properties_potential_ct_final = gsw_result_ice( &
   -2.88689535327_r8, -2.96852325934_r8, -3.05084881655_r8, -3.25745184482_r8, &
   -3.4658045719_r8, -3.67650178925_r8, -3.88741561913_r8, -4.10162885848_r8, &
   -4.31874570187_r8, -4.48443651344_r8, -4.76105010931_r8, -4.82557926698_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_w_ih_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_w_Ih_final", &
-  computation_accuracy = 7.1653e-12_r8, &
-  values = (/ &
+frazil_properties_potential_w_ih_final % variable_name = "frazil_properties_potential_w_Ih_final"
+frazil_properties_potential_w_ih_final % computation_accuracy = 7.1653e-12_r8
+frazil_properties_potential_w_ih_final % values = reshape( (/ &
   0.000175943910977_r8, 0.000325247308841_r8, 0.000139259685443_r8, 0._r8, &
   0.000419409306027_r8, 0.002017432853_r8, 0.000123400442883_r8, &
   0.00120454864895_r8, 0.000247167858043_r8, 0.000461262093306_r8, &
@@ -9523,12 +9606,11 @@ type(gsw_result_ice) :: frazil_properties_potential_w_ih_final = gsw_result_ice(
   0.00355555619926_r8, 0.00281035898774_r8, 0.00212658964777_r8, &
   0.00260870991664_r8, 0.00137727293636_r8, 0.000533324448916_r8, &
   0.00110991724646_r8, 0.00249479651339_r8, 0._r8, 0.00211731119253_r8, 0._r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_poly_sa_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_poly_SA_final", &
-  computation_accuracy = 3.6578e-10_r8, &
-  values = (/ &
+frazil_properties_potential_poly_sa_final % variable_name = "frazil_properties_potential_poly_SA_final"
+frazil_properties_potential_poly_sa_final % computation_accuracy = 3.6578e-10_r8
+frazil_properties_potential_poly_sa_final % values = reshape( (/ &
   27.619462009144_r8, 28.077395240092_r8, 28.099518740265_r8, 9e90_r8, &
   29.898283690558_r8, 30.833138422429_r8, 31.958029861582_r8, &
   32.447864928944_r8, 32.721248702259_r8, 32.97016250481_r8, &
@@ -9561,12 +9643,11 @@ type(gsw_result_ice) :: frazil_properties_potential_poly_sa_final = gsw_result_i
   33.921947620388_r8, 33.856059908809_r8, 33.790313145771_r8, &
   33.674342511332_r8, 33.574923909669_r8, 33.470709584706_r8, 9e90_r8, &
   33.296698299423_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_poly_ct_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_poly_CT_final", &
-  computation_accuracy = 3.3237e-11_r8, &
-  values = (/ &
+frazil_properties_potential_poly_ct_final % variable_name = "frazil_properties_potential_poly_CT_final"
+frazil_properties_potential_poly_ct_final % computation_accuracy = 3.3237e-11_r8
+frazil_properties_potential_poly_ct_final % values = reshape( (/ &
   -1.4834027127773_r8, -1.5169161924119_r8, -1.5257874983377_r8, 9e90_r8, &
   -1.6432937054344_r8, -1.7043869362712_r8, -1.7888995253979_r8, &
   -1.8363140441232_r8, -1.8713110314647_r8, -1.9049419808812_r8, &
@@ -9599,12 +9680,11 @@ type(gsw_result_ice) :: frazil_properties_potential_poly_ct_final = gsw_result_i
   -3.2576083532515_r8, -3.4659405236976_r8, -3.6766125464238_r8, &
   -3.88749883286_r8, -4.1016831600569_r8, -4.3187712737818_r8, 9e90_r8, &
   -4.7610234582053_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_potential_poly_w_ih_final = gsw_result_ice( &
-  variable_name = "frazil_properties_potential_poly_w_Ih_final", &
-  computation_accuracy = 7.1663e-12_r8, &
-  values = (/ &
+frazil_properties_potential_poly_w_ih_final % variable_name = "frazil_properties_potential_poly_w_Ih_final"
+frazil_properties_potential_poly_w_ih_final % computation_accuracy = 7.1663e-12_r8
+frazil_properties_potential_poly_w_ih_final % values = reshape( (/ &
   0.000176270314407_r8, 0.000325533684252_r8, 0.000139493955038_r8, 9e90_r8, &
   0.000419583105568_r8, 0.00201757112615_r8, 0.000123429844205_r8, &
   0.00120447121825_r8, 0.000246987287503_r8, 0.000460982348892_r8, &
@@ -9637,12 +9717,11 @@ type(gsw_result_ice) :: frazil_properties_potential_poly_w_ih_final = gsw_result
   0.0021246876417_r8, 0.00260705731618_r8, 0.00137592403026_r8, &
   0.000532309230885_r8, 0.0011092548861_r8, 0.0024944858522_r8, 9e90_r8, &
   0.00211763846635_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_sa_final = gsw_result_ice( &
-  variable_name = "frazil_properties_SA_final", &
-  computation_accuracy = 3.6609e-10_r8, &
-  values = (/ &
+frazil_properties_sa_final % variable_name = "frazil_properties_SA_final"
+frazil_properties_sa_final % computation_accuracy = 3.6609e-10_r8
+frazil_properties_sa_final % values = reshape( (/ &
   27.623623561427_r8, 28.081503352371_r8, 28.103699698138_r8, &
   28.187078397573_r8, 29.903781057656_r8, 30.838813040454_r8, &
   31.961260688773_r8, 32.45049028041_r8, 32.723392388456_r8, &
@@ -9679,12 +9758,11 @@ type(gsw_result_ice) :: frazil_properties_sa_final = gsw_result_ice( &
   33.953616215346_r8, 33.896296968559_r8, 33.835302383735_r8, &
   33.728530715664_r8, 33.642029190536_r8, 33.555164066308_r8, &
   33.47498991009_r8, 33.405732116443_r8, 33.311631801947_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_ct_final = gsw_result_ice( &
-  variable_name = "frazil_properties_CT_final", &
-  computation_accuracy = 3.3901e-11_r8, &
-  values = (/ &
+frazil_properties_ct_final % variable_name = "frazil_properties_CT_final"
+frazil_properties_ct_final % computation_accuracy = 3.3901e-11_r8
+frazil_properties_ct_final % values = reshape( (/ &
   -1.4836654117882_r8, -1.5171729634541_r8, -1.5260440368264_r8, &
   -1.5383853245131_r8, -1.6436220863971_r8, -1.704723789896_r8, &
   -1.7890880281931_r8, -1.836459037731_r8, -1.8714196562076_r8, &
@@ -9721,12 +9799,11 @@ type(gsw_result_ice) :: frazil_properties_ct_final = gsw_result_ice( &
   -3.2593115971857_r8, -3.4681717549482_r8, -3.679152155709_r8, &
   -3.8906112094329_r8, -4.1055896315956_r8, -4.3237335657105_r8, &
   -4.5437020513942_r8, -4.7674940656_r8, -4.9921060369551_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: frazil_properties_w_ih_final = gsw_result_ice( &
-  variable_name = "frazil_properties_w_Ih_final", &
-  computation_accuracy = 7.0921e-12_r8, &
-  values = (/ &
+frazil_properties_w_ih_final % variable_name = "frazil_properties_w_Ih_final"
+frazil_properties_w_ih_final % computation_accuracy = 7.0921e-12_r8
+frazil_properties_w_ih_final % values = reshape( (/ &
   0.000326895691821_r8, 0.000471778523702_r8, 0.000288242151903_r8, &
   4.91899805953e-05_r8, 0.000603341155626_r8, 0.00220120883855_r8, &
   0.000224503091641_r8, 0.00128527706379_r8, 0.000312480397419_r8, &
@@ -9763,12 +9840,11 @@ type(gsw_result_ice) :: frazil_properties_w_ih_final = gsw_result_ice( &
   0.00305540762409_r8, 0.00379102615695_r8, 0.00270374831512_r8, &
   0.00213805244893_r8, 0.00310172815894_r8, 0.00500509229493_r8, &
   0.0018750992469_r8, 0.00537465203624_r8, 0.0012407742174_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_sa_ct_ratio = gsw_result_ice( &
-  variable_name = "melting_seaice_SA_CT_ratio", &
-  computation_accuracy = 3.6147e-11_r8, &
-  values = (/ &
+melting_seaice_sa_ct_ratio % variable_name = "melting_seaice_SA_CT_ratio"
+melting_seaice_sa_ct_ratio % computation_accuracy = 3.6147e-11_r8
+melting_seaice_sa_ct_ratio % values = reshape( (/ &
   0.29520427930467_r8, 0.30391484541865_r8, 0.31529758880791_r8, &
   0.33148841493996_r8, 0.34640517850802_r8, 0.28560011901917_r8, &
   0.3734463993028_r8, 0.35560260360796_r8, 0.34337438382702_r8, &
@@ -9805,12 +9881,11 @@ type(gsw_result_ice) :: melting_seaice_sa_ct_ratio = gsw_result_ice( &
   0.37642259432303_r8, 0.37245281640892_r8, 0.36148571284822_r8, &
   0.40935645292888_r8, 0.4038359241186_r8, 0.39458225686148_r8, &
   0.39706605708896_r8, 0.33792875644904_r8, 0.39099525620137_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_sa_ct_ratio_poly = gsw_result_ice( &
-  variable_name = "melting_seaice_SA_CT_ratio_poly", &
-  computation_accuracy = 3.6145e-11_r8, &
-  values = (/ &
+melting_seaice_sa_ct_ratio_poly % variable_name = "melting_seaice_SA_CT_ratio_poly"
+melting_seaice_sa_ct_ratio_poly % computation_accuracy = 3.6145e-11_r8
+melting_seaice_sa_ct_ratio_poly % values = reshape( (/ &
   0.29520421795749_r8, 0.30391447349777_r8, 0.3152976431775_r8, &
   0.33148845968334_r8, 0.34640532367275_r8, 0.2856000291539_r8, &
   0.37344647093321_r8, 0.35560329960651_r8, 0.34337435390838_r8, &
@@ -9847,12 +9922,11 @@ type(gsw_result_ice) :: melting_seaice_sa_ct_ratio_poly = gsw_result_ice( &
   0.3764223039194_r8, 0.37245236102598_r8, 0.36148755439463_r8, &
   0.40935640856272_r8, 0.40383522539265_r8, 0.39458065149826_r8, &
   0.39706552414606_r8, 0.33793222636922_r8, 0.39099590196662_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio = gsw_result_ice( &
-  variable_name = "melting_seaice_equilibrium_SA_CT_ratio", &
-  computation_accuracy = 1.6376e-12_r8, &
-  values = (/ &
+melting_seaice_equilibrium_sa_ct_ratio % variable_name = "melting_seaice_equilibrium_SA_CT_ratio"
+melting_seaice_equilibrium_sa_ct_ratio % computation_accuracy = 1.6376e-12_r8
+melting_seaice_equilibrium_sa_ct_ratio % values = reshape( (/ &
   0.33414334412702_r8, 0.33986838553319_r8, 0.34030594345545_r8, &
   0.3414284479325_r8, 0.36618238158968_r8, 0.38026225193919_r8, &
   0.38998972217873_r8, 0.39502432853306_r8, 0.3980275064054_r8, &
@@ -9889,12 +9963,11 @@ type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio = gsw_result_ice(
   0.42975425996488_r8, 0.43064426260056_r8, 0.43149243568032_r8, &
   0.43232396924991_r8, 0.43314863421959_r8, 0.43395810257978_r8, &
   0.4347868367356_r8, 0.4356215064151_r8, 0.43646972355485_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio_poly = gsw_result_ice( &
-  variable_name = "melting_seaice_equilibrium_SA_CT_ratio_poly", &
-  computation_accuracy = 1.6377e-12_r8, &
-  values = (/ &
+melting_seaice_equilibrium_sa_ct_ratio_poly % variable_name = "melting_seaice_equilibrium_SA_CT_ratio_poly"
+melting_seaice_equilibrium_sa_ct_ratio_poly % computation_accuracy = 1.6377e-12_r8
+melting_seaice_equilibrium_sa_ct_ratio_poly % values = reshape( (/ &
   0.33414329019901_r8, 0.33986833703748_r8, 0.34030590325666_r8, &
   0.34142841561703_r8, 0.36618234802077_r8, 0.38026222358012_r8, &
   0.38998971464819_r8, 0.39502434147261_r8, 0.39802753953618_r8, &
@@ -9931,12 +10004,11 @@ type(gsw_result_ice) :: melting_seaice_equilibrium_sa_ct_ratio_poly = gsw_result
   0.42975479407749_r8, 0.43064479066062_r8, 0.43149295254953_r8, &
   0.43232447513727_r8, 0.43314913463365_r8, 0.43395860801411_r8, &
   0.43478736298117_r8, 0.43562207421379_r8, 0.4364703586858_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_into_seawater_sa_final = gsw_result_ice( &
-  variable_name = "melting_seaice_into_seawater_SA_final", &
-  computation_accuracy = 9e90_r8, &
-  values = (/ &
+melting_seaice_into_seawater_sa_final % variable_name = "melting_seaice_into_seawater_SA_final"
+melting_seaice_into_seawater_sa_final % computation_accuracy = 9e90_r8
+melting_seaice_into_seawater_sa_final % values = reshape( (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
@@ -9951,12 +10023,11 @@ type(gsw_result_ice) :: melting_seaice_into_seawater_sa_final = gsw_result_ice( 
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: melting_seaice_into_seawater_ct_final = gsw_result_ice( &
-  variable_name = "melting_seaice_into_seawater_CT_final", &
-  computation_accuracy = 9e90_r8, &
-  values = (/ &
+melting_seaice_into_seawater_ct_final % variable_name = "melting_seaice_into_seawater_CT_final"
+melting_seaice_into_seawater_ct_final % computation_accuracy = 9e90_r8
+melting_seaice_into_seawater_ct_final % values = reshape( (/ &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
@@ -9971,12 +10042,11 @@ type(gsw_result_ice) :: melting_seaice_into_seawater_ct_final = gsw_result_ice( 
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8, &
   9e90_r8, 9e90_r8, 9e90_r8, 9e90_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_sa_freeze = gsw_result_ice( &
-  variable_name = "seaice_fraction_to_freeze_seawater_SA_freeze", &
-  computation_accuracy = 4.3858e-10_r8, &
-  values = (/ &
+seaice_fraction_to_freeze_seawater_sa_freeze % variable_name = "seaice_fraction_to_freeze_seawater_SA_freeze"
+seaice_fraction_to_freeze_seawater_sa_freeze % computation_accuracy = 4.3858e-10_r8
+seaice_fraction_to_freeze_seawater_sa_freeze % values = reshape( (/ &
   27.628567831265_r8, 28.086993426582_r8, 28.108080585916_r8, &
   28.188232438451_r8, 29.916512316887_r8, 30.965442620278_r8, &
   31.967432241299_r8, 32.466815536561_r8, 32.740342958196_r8, &
@@ -10013,12 +10083,11 @@ type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_sa_freeze = gsw_resul
   34.046193948537_r8, 34.006429893195_r8, 33.974025098384_r8, &
   33.743526698623_r8, 33.674258822846_r8, 33.620727694079_r8, &
   33.525053779096_r8, 33.683335870158_r8, 33.373521548156_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_ct_freeze = gsw_result_ice( &
-  variable_name = "seaice_fraction_to_freeze_seawater_CT_freeze", &
-  computation_accuracy = 3.7364e-11_r8, &
-  values = (/ &
+seaice_fraction_to_freeze_seawater_ct_freeze % variable_name = "seaice_fraction_to_freeze_seawater_CT_freeze"
+seaice_fraction_to_freeze_seawater_ct_freeze % computation_accuracy = 3.7364e-11_r8
+seaice_fraction_to_freeze_seawater_ct_freeze % values = reshape( (/ &
   -1.483944798547_r8, -1.517483805989_r8, -1.5262921282243_r8, &
   -1.5384507074382_r8, -1.6443485803816_r8, -1.7119803227179_r8, &
   -1.7894433605082_r8, -1.837401174955_r8, -1.8723992566111_r8, &
@@ -10055,12 +10124,11 @@ type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_ct_freeze = gsw_resul
   -3.2647607206391_r8, -3.4746619136662_r8, -3.6873356356849_r8, &
   -3.8914962268889_r8, -4.1074929093166_r8, -4.3276072668164_r8, &
   -4.5466608004786_r8, -4.783909923726_r8, -4.9957642956297_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_w_ih = gsw_result_ice( &
-  variable_name = "seaice_fraction_to_freeze_seawater_w_Ih", &
-  computation_accuracy = 1.1472e-11_r8, &
-  values = (/ &
+seaice_fraction_to_freeze_seawater_w_ih % variable_name = "seaice_fraction_to_freeze_seawater_w_Ih"
+seaice_fraction_to_freeze_seawater_w_ih % computation_accuracy = 1.1472e-11_r8
+seaice_fraction_to_freeze_seawater_w_ih % values = reshape( (/ &
   0.00198165098038_r8, 0.00246001600695_r8, 0.00270372932439_r8, &
   0.00270784190064_r8, 0.013310303111_r8, 0.0212621836904_r8, &
   0.00856187144409_r8, 0.0069819318337_r8, 0.00499001722768_r8, &
@@ -10097,7 +10165,11 @@ type(gsw_result_ice) :: seaice_fraction_to_freeze_seawater_w_ih = gsw_result_ice
   0.0356217515117_r8, 0.0382796677036_r8, 0.0391586184315_r8, &
   0.0417670576392_r8, 0.0452205818466_r8, 0.049505477746_r8, &
   0.0488148325977_r8, 0.0541045099485_r8, 0.0528418448232_r8 &
-  /) )
+  /), (/cast_ice_m,cast_ice_n/) )
 
-end module
+  gsw_data_initialize = .true.
+
+end subroutine gsw_mod_check_data_initialize
+
+end module gsw_mod_check_data
 !--------------------------------------------------------------------------
