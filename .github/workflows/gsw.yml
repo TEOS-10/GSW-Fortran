@@ -1,0 +1,19 @@
+name: Build and test
+on: push
+jobs:
+   gfortran:
+      strategy:
+         matrix:
+            version: [9, 10, 11 ] # , 12]
+            os: [ubuntu-latest]
+         fail-fast: false
+      runs-on: ${{ matrix.os }}
+      steps:
+      - name: Install compiler
+        run: |
+           sudo apt-get update
+           sudo apt-get install gfortran-${{ matrix.version }} cmake
+      - name: Clone gsw
+        uses: actions/checkout@v2
+      - name: Build and run
+        run: mkdir build && cmake . -B build -DCMAKE_Fortran_COMPILER=gfortran-${{ matrix.version }} && cmake --build build --target gsw_check_functions.x --target gsw_poly_check.x && ./build/test/gsw_check_functions.x && ./build/test/gsw_poly_check.x
