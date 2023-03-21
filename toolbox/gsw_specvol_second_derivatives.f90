@@ -108,7 +108,7 @@ if (present(v_sa_p) .and. flags(4)) then
        + b122*xs + b032*ys))) + z*(3.0_r8*(b003 + b103*xs + b013*ys) &
        + 4.0_r8*b004*z))
 
-   v_sa_p = 1e-8_r8*0.5_r8*gsw_sfac*v_sa_p_part
+   v_sa_p = 1e-8_r8*0.5_r8*gsw_sfac*v_sa_p_part/xs
 
 end if
 
