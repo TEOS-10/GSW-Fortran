@@ -20,7 +20,7 @@ option( GSW_BUILD_SHARED_LIBS "Build shared library" OFF )
 
 # Ensure at least one of GSW_BUILD_SHARED_LIBS and GSW_BUILD_STATIC_LIBS is set
 if( NOT ( GSW_BUILD_STATIC_LIBS OR GSW_BUILD_SHARED_LIBS ) )
-    message( STATUS "Niether GSW_BUILD_STATIC_LIBS nor GSW_BUILD_SHARED_LIBS is set.  Defaulting to GSW_BUILD_STATIC_LIBS=ON" )
+    message( STATUS "Neither GSW_BUILD_STATIC_LIBS nor GSW_BUILD_SHARED_LIBS is set.  Defaulting to GSW_BUILD_STATIC_LIBS=ON" )
     set( GSW_BUILD_STATIC_LIBS ON CACHE BOOL "Build static library" FORCE )
     set( GSW_BUILD_STATIC_LIBS ON )
 endif()
